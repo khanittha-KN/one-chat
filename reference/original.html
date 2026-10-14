@@ -1,0 +1,1064 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>OneChat Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  /* Layout follows the OneChat staging console: channel sidebar, conversation list, chat, plus a customer panel for the Flow. */
+  :root {
+    color-scheme: dark;
+    --bg: #0f1117;
+    --side: #111626;
+    --panel: #151b2b;
+    --surface: #1a2133;
+    --raise: #232b40;
+    --line: #2a3349;
+    --fg: #e6e9f2;
+    --fg2: #b4bbcd;
+    --muted: #8a92a8;
+    --brand: #3d86ee;
+    --btn: #0a66d6;
+    --ok: #3cc58a;
+    --danger: #ee6c6c;
+    --font: 'IBM Plex Sans Thai', 'Noto Sans Thai', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+  * { box-sizing: border-box; }
+  button { font-family: inherit; font-size: inherit; color: inherit; cursor: pointer; }
+  input, select, textarea { font-family: inherit; font-size: 14px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  ::placeholder { color: var(--muted); }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .login { height: 100%; display: grid; place-items: center; padding: 16px; }
+  .login-card { width: min(100%, 360px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .login-card h1 { margin: 0; text-align: center; font-size: 26px; color: var(--brand); font-weight: 700; }
+  .login-card .sub { margin: -8px 0 4px; text-align: center; color: var(--muted); font-size: 13px; }
+  .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--fg2); }
+  .btn { background: var(--btn); color: #fff; border: 0; border-radius: 8px; padding: 10px 14px; font-weight: 600; }
+  .btn:hover { filter: brightness(1.12); }
+  .btn.sm { padding: 6px 12px; font-size: 13px; }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--fg); }
+  .btn.ok { background: #1f9d68; }
+  .btn.danger { background: #c4393d; }
+  .btn:disabled { background: var(--raise); color: var(--muted); cursor: not-allowed; filter: none; }
+  .hint { color: var(--muted); font-size: 12px; text-align: center; margin: 0; }
+
+  #app { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+  .viewtabs { display: none; flex: none; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .viewtabs button { flex: 1; background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 10px 2px; color: var(--muted); font-weight: 600; font-size: 13px; }
+  .viewtabs button[aria-selected="true"] { color: var(--brand); border-bottom-color: var(--brand); }
+  .shell { flex: 1; min-height: 0; display: grid; grid-template-columns: 224px minmax(0, 1fr); }
+
+  /* sidebar: channels (Merchant) */
+  .side { background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .brand { display: flex; align-items: center; gap: 8px; padding: 16px 16px 14px; font-weight: 700; font-size: 18px; color: var(--brand); border-bottom: 1px solid var(--line); }
+  .selbar { padding: 12px 16px 6px; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+  .selbar button { background: none; border: 0; color: var(--brand); padding: 0; }
+  .selbar i { width: 1px; height: 12px; background: var(--line); }
+  .chs { flex: 1; overflow: auto; padding: 4px 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+  .ch { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 8px; }
+  .ch:hover { background: var(--surface); }
+  .ch label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; cursor: pointer; }
+  .ch label span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ch label small { margin-left: auto; color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .ch input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--btn); padding: 0; flex: none; }
+  .ch .gear { background: none; border: 0; color: var(--muted); padding: 2px; display: grid; place-items: center; border-radius: 6px; }
+  .ch .gear:hover { color: var(--fg); background: var(--raise); }
+  .me { border-top: 1px solid var(--line); padding: 10px 14px; display: flex; align-items: center; gap: 8px; color: var(--fg2); font-size: 13px; }
+  .me .grow { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .me button { background: none; border: 0; color: var(--muted); padding: 4px; display: grid; place-items: center; }
+
+  .main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .top { flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 52px; background: var(--side); border-bottom: 1px solid var(--line); position: relative; }
+  .top h1 { margin: 0; font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .dotg { width: 8px; height: 8px; border-radius: 99px; background: var(--ok); }
+  .top .grow { flex: 1; }
+  .gs { flex: none; display: flex; flex-direction: column; gap: 6px; }
+  .gs input { width: 100%; }
+  .gsres { background: var(--raise); border: 1px solid var(--line); border-radius: 8px; max-height: 260px; overflow: auto; }
+  .gsres button { display: block; width: 100%; text-align: left; padding: 8px 12px; background: transparent; border: 0; border-bottom: 1px solid var(--line); color: var(--fg); font: inherit; font-size: 13px; cursor: pointer; }
+  .gsres button:hover, .gsres button:focus-visible { background: var(--surface); }
+  .gsres small { display: block; color: var(--fg2); }
+  .gsres .none { padding: 10px 12px; font-size: 13px; color: var(--muted); }
+  .meta { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .meta b { color: var(--ok); font-family: var(--mono); font-weight: 500; }
+  .burger { width: 40px; height: 34px; display: grid; place-items: center; background: transparent; border: 1px solid var(--line); border-radius: 8px; }
+  .menu { position: absolute; right: 12px; top: calc(100% + 4px); z-index: 20; width: min(300px, calc(100% - 24px)); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px; box-shadow: 0 12px 32px rgba(0, 0, 0, .5); max-height: 75vh; overflow: auto; }
+  .menu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 0; }
+  .menu button { width: 100%; text-align: left; background: transparent; border: 0; border-radius: 6px; padding: 9px 10px; display: flex; align-items: center; gap: 10px; }
+  .menu button:hover { background: var(--raise); }
+  .menu .dot { width: 8px; height: 8px; border-radius: 99px; flex: none; }
+
+  .console { flex: 1; min-height: 0; display: grid; grid-template-columns: 310px minmax(0, 1fr) 360px; }
+  .col { min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+  #colList { border-right: 1px solid var(--line); background: var(--panel); }
+  #colPanel { border-left: 1px solid var(--line); background: var(--panel); }
+
+  /* conversation list */
+  .lh { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 8px; }
+  .lh b { font-size: 15px; }
+  .lh button { background: none; border: 0; color: var(--muted); padding: 4px; display: grid; place-items: center; border-radius: 6px; }
+  .tabs { flex: none; display: flex; border-bottom: 1px solid var(--line); }
+  .tabs button { flex: 1; background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 9px 4px; font-weight: 600; color: var(--muted); display: flex; gap: 6px; justify-content: center; align-items: center; }
+  .tabs button[aria-selected="true"] { color: var(--brand); border-bottom-color: var(--brand); }
+  .tabs .count { background: var(--raise); color: var(--fg2); border-radius: 99px; padding: 0 7px; font-size: 12px; font-family: var(--mono); }
+  .cases { padding: 0; display: flex; flex-direction: column; flex: 1; }
+  .case { width: 100%; text-align: left; background: var(--cbg); border: 0; border-bottom: 1px solid var(--line); border-left: 4px solid var(--cb); color: var(--fg); padding: 11px 12px; display: flex; gap: 10px; }
+  .case[aria-current="true"] { box-shadow: inset 0 0 0 2px var(--brand); }
+  .av { width: 38px; height: 38px; border-radius: 99px; background: var(--raise); display: grid; place-items: center; font-weight: 600; color: var(--fg2); flex: none; }
+  .cb { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .r1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .r1 b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r1 .ago { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .r2 { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font-size: 12px; }
+  .chip { background: rgba(255, 255, 255, .09); border-radius: 6px; padding: 0 7px; color: var(--fg2); }
+  .chip.adm { color: var(--fg); }
+  .r3 { font-size: 13px; color: var(--fg2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .st-yellow { --cb: #f6d55c; --cbg: #3a3318; }
+  .st-orange { --cb: #f4a259; --cbg: #3d2a17; }
+  .st-red { --cb: #ee6c6c; --cbg: #40202a; }
+  .st-white { --cb: #e6eaf3; --cbg: #1f2538; }
+  .empty { color: var(--muted); text-align: center; padding: 28px 12px; }
+  .legend { margin-top: auto; padding: 10px 12px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; background: var(--cb); vertical-align: -1px; }
+
+  /* chat */
+  #colChat { background: var(--bg); }
+  .chead { flex: none; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+  .chead .l1 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chead .oa { font-size: 12px; color: var(--ok); }
+  .chead .oa b { font-weight: 600; }
+  .chead .edit { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chead .edit input { flex: 1; min-width: 90px; padding: 6px 9px; }
+  .status { font-size: 12px; padding: 1px 10px; border-radius: 99px; background: var(--cbg); color: var(--cb); border: 1px solid var(--cb); font-weight: 600; }
+  .note { flex: none; display: flex; align-items: center; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .note span { padding: 7px 12px; font-weight: 700; color: var(--fg2); border-right: 1px solid var(--line); }
+  .note input { flex: 1; border: 0; border-radius: 0; background: transparent; }
+  .msgs { flex: 1; min-height: 160px; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .m { max-width: 82%; display: flex; flex-direction: column; gap: 2px; }
+  .m .who { font-size: 11px; color: var(--muted); }
+  .m .bub { padding: 8px 12px; border-radius: 12px; background: var(--raise); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .m.cust { align-self: flex-start; }
+  .m.sys, .m.admin { align-self: flex-end; align-items: flex-end; }
+  .m.sys .bub { background: #17324f; border: 1px solid #23507f; }
+  .m.admin .bub { background: #1b4a3a; border: 1px solid #25705a; }
+  .closed-bar { align-self: stretch; text-align: center; background: #4a2327; color: #ffd5d7; border-radius: 8px; padding: 7px; font-weight: 600; }
+  .composer { flex: none; border-top: 1px solid var(--line); background: var(--panel); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+  .quick button { background: var(--raise); border: 1px solid var(--line); border-radius: 99px; padding: 3px 11px; font-size: 12px; }
+  .quick button:hover { border-color: var(--brand); }
+  .send { display: flex; gap: 8px; }
+  .send input { flex: 1; }
+  .noconv { margin: auto; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+  /* right panel */
+  .blk { flex: none; margin: 10px 12px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  #colPanel .blk:last-child { margin-bottom: 14px; }
+  .blk h3 { margin: 0; padding: 9px 12px; font-size: 14px; font-weight: 600; background: var(--raise); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .blk h3 small { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .blk .body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .kv { display: grid; grid-template-columns: 88px minmax(0, 1fr); font-size: 13px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 0; }
+  .kv dt, .kv dd { margin: 0; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+  .kv dt { background: var(--raise); color: var(--fg2); font-weight: 600; }
+  .kv dd { overflow-wrap: anywhere; }
+  .kv dt:last-of-type, .kv dd:last-of-type { border-bottom: 0; }
+  .tag { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .tag.ok { background: #16402f; color: #7fe3b4; }
+  .tag.bad { background: #4a2327; color: #ffb4b7; }
+  .tag.dep { background: #17335a; color: #9cc7ff; }
+  .stmt { display: flex; flex-direction: column; gap: 6px; }
+  .stmt label { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .stmt label input { padding: 0; }
+  .stmt label span.t { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .ai { display: flex; gap: 10px; align-items: center; color: var(--fg2); font-size: 13px; }
+  .spin { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--brand); border-radius: 99px; animation: sp .9s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .msg-ok { color: var(--ok); font-size: 13px; }
+  .msg-bad { color: var(--danger); font-size: 13px; }
+
+  .btn.warn { background: #f0a030; color: #1d1400; }
+  .tag.warn { background: #4a3a12; color: #ffd77a; }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { flex: 1; background: transparent; border: 0; padding: 7px 6px; font-weight: 600; color: var(--muted); }
+  .seg button[aria-selected="true"] { background: var(--raise); color: var(--fg); }
+  .hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .hist li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 13px; }
+  .hist .t { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .6); display: grid; place-items: center; padding: 16px; z-index: 40; }
+  .accl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .accl li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .accl li > div { flex: 1; min-width: 0; font-size: 13px; }
+  .accl .bn { color: var(--fg2); font-size: 12px; }
+  .accl .tags { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .dlg { width: min(100%, 520px); max-height: 85vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 48px rgba(0, 0, 0, .6); }
+  .dlg header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
+  .dlg .dbody { padding: 14px 16px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+  .crline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; }
+  .rad { display: flex; gap: 20px; border: 0; padding: 0; margin: 0; flex-wrap: wrap; align-items: center; }
+  .rad legend { float: left; margin-right: 14px; padding: 0; font-size: 13px; color: var(--fg2); }
+  .rad label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .rad input { padding: 0; accent-color: var(--btn); width: 16px; height: 16px; }
+  .party { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .coacc { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); cursor: pointer; font: inherit; }
+  .coacc:hover, .coacc:focus-visible { border-color: var(--fg2); }
+  .coacc.on { border-color: #22a06b; box-shadow: 0 0 0 1px #22a06b; }
+  .coform { display: flex; flex-direction: column; gap: 8px; }
+  .coacc > span:not(.bk) { display: flex; flex-direction: column; font-size: 13px; }
+  .coacc .bn { font-size: 12px; color: var(--fg2); }
+  .party.col { flex-direction: column; align-items: stretch; gap: 8px; }
+  .party .prow { display: flex; align-items: center; gap: 12px; }
+  .party .role { width: 44px; flex: none; font-size: 12px; color: var(--muted); }
+  .party b { font-weight: 600; font-size: 13px; }
+  .party .bn { font-size: 12px; color: var(--fg2); }
+  .bk { width: 40px; height: 40px; flex: none; border-radius: 10px; display: grid; place-items: center; font-size: 10px; font-weight: 700; letter-spacing: .02em; }
+  .pwbox { display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .psec { display: flex; flex-direction: column; gap: 6px; }
+  .ph { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+  .pend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .pend li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 13px; }
+  .pend .st { color: var(--fg2); }
+  .pend .t { color: var(--muted); font-size: 12px; }
+  .slipimg { width: 150px; background: #f4f6fa; color: #1a1d22; border-radius: 8px; padding: 8px 10px; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
+  .slipimg b { font-size: 12px; }
+  .slipimg i { display: block; height: 4px; background: #cfd6e4; border-radius: 2px; }
+  .slipimg .amt { font-family: var(--mono); font-size: 15px; font-weight: 600; }
+  .big { font-family: var(--mono); font-size: 26px; font-weight: 600; }
+  .verdict { padding: 8px 10px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+  .v-ok { background: #16402f; color: #7fe3b4; }
+  .v-bad { background: #4a2327; color: #ffb4b7; }
+  .chk { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .chk li { display: flex; gap: 8px; font-size: 13px; }
+  .chk li > span { flex: none; width: 16px; font-weight: 700; }
+  .chk .d { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+  .mini { overflow-x: auto; }
+  .mini table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  .mini th, .mini td { padding: 6px 8px; border: 1px solid var(--line); text-align: left; vertical-align: middle; }
+  .mini th { background: var(--raise); color: var(--fg2); font-weight: 600; }
+
+  /* announce page */
+  .page { flex: 1; min-height: 0; overflow: auto; padding: 18px 20px 40px; display: flex; flex-direction: column; gap: 14px; }
+  .page h2 { margin: 0; font-size: 22px; }
+  .tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  .tbl table { border-collapse: collapse; width: 100%; min-width: 860px; }
+  .tbl th, .tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  .tbl th { color: var(--muted); font-size: 12px; font-weight: 600; background: var(--raise); }
+  .tbl tr:last-child td { border-bottom: 0; }
+  .tbl textarea { width: 100%; min-height: 64px; resize: vertical; }
+  .tbl input[type="number"] { width: 70px; }
+  .tbl .acts { display: flex; flex-direction: column; gap: 6px; }
+  .tbl tr.add td { background: #131b2e; }
+  .tbl tr.dim td { opacity: .6; }
+  .back { align-self: flex-start; }
+  .setall { margin: 8px 10px 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--fg); font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
+  .setall:hover, .setall:focus-visible { border-color: var(--fg2); }
+  .setpage { flex: 1; min-height: 0; display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+  .setpage[hidden] { display: none; }
+  .snav { overflow: auto; padding: 14px 10px; border-right: 1px solid var(--line); background: var(--side); display: flex; flex-direction: column; gap: 4px; }
+  .snav .stitle { font-size: 16px; padding: 6px 8px 0; }
+  .snav .hint { padding: 0 8px 8px; text-align: left; }
+  .stab { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--fg2); font: inherit; font-size: 14px; cursor: pointer; }
+  .stab:hover, .stab:focus-visible { background: var(--surface); color: var(--fg); }
+  .stab[aria-current="page"] { background: #1c2f55; color: #8fb8ff; font-weight: 600; }
+  .sbody { overflow: auto; padding: 18px 22px 48px; display: flex; flex-direction: column; gap: 14px; max-width: 880px; width: 100%; }
+  .sbody h2 { margin: 0; font-size: 21px; }
+  .sbody h3 { margin: 0 0 4px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .sdesc { margin: 0; color: var(--fg2); font-size: 14px; line-height: 1.5; }
+  .scard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .scard .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .scard .row > input { flex: 1; min-width: 0; }
+  .lbl { font-size: 13px; font-weight: 600; color: var(--fg2); display: flex; align-items: center; gap: 8px; }
+  .packs { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+  .pack { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; cursor: pointer; }
+  .pack small, .lrow small { color: var(--fg2); font-size: 12px; display: block; }
+  .pack.on, .tile.on { border-color: #22a06b; box-shadow: 0 0 0 1px #22a06b; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; }
+  .tile { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg2); font: inherit; font-size: 13px; cursor: pointer; }
+  .tilew { position: relative; display: block; }
+  .tilew .tile { width: 100%; }
+  .fav { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: rgba(0,0,0,.45); color: var(--fg2); font-size: 14px; line-height: 1; cursor: pointer; }
+  .fav.on { color: #f6d55c; }
+  .fav:hover, .fav:focus-visible { color: #f6d55c; }
+  .favs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .favs .tilew .tile { aspect-ratio: auto; padding: 14px 6px 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .irow { display: flex; gap: 8px; align-items: flex-start; }
+  .irow textarea, .irow input { flex: 1; min-width: 0; }
+  .irow .itype { font-size: 12px; color: var(--fg2); padding-top: 8px; min-width: 62px; }
+  .chk { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .prev { border-top: 1px dashed var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .bub { align-self: flex-start; max-width: 80%; background: #1c2f55; border-radius: 12px; padding: 7px 12px; font-size: 13px; white-space: pre-wrap; }
+  .stbl { width: 100%; border-collapse: collapse; }
+  .stbl th, .stbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; font-size: 13px; }
+  .stbl th { color: var(--muted); background: var(--raise); }
+  .okbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-weight: 600; }
+  .steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--fg2); }
+  @media (max-width: 760px) { .setpage { grid-template-columns: 1fr; overflow: auto; } .snav { border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; } .snav .stitle, .snav .hint { width: 100%; } .stab { width: auto; } .sbody { overflow: visible; padding: 14px 16px 40px; } }
+
+  #toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--raise); border: 1px solid var(--line); color: var(--fg); padding: 9px 16px; border-radius: 10px; z-index: 50; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); max-width: calc(100% - 32px); }
+
+  @media (max-width: 1180px) {
+    .shell { grid-template-columns: 200px minmax(0, 1fr); }
+    .console { grid-template-columns: 280px minmax(0, 1fr); }
+    #colPanel { display: none; }
+    body[data-view="panel"] .console { grid-template-columns: minmax(0, 1fr); }
+    body[data-view="panel"] #colList, body[data-view="panel"] #colChat { display: none; }
+    body[data-view="panel"] #colPanel { display: flex; border: 0; }
+    .viewtabs { display: flex; }
+  }
+  @media (max-width: 760px) {
+    .shell { display: block; }
+    .side, .main { height: 100%; }
+    .side { border: 0; }
+    .console { display: block; }
+    .col { height: 100%; display: none; border: 0 !important; }
+    body[data-view="list"] #colList, body[data-view="chat"] #colChat, body[data-view="panel"] #colPanel { display: flex; }
+    body[data-view="side"] .main { display: none; }
+    body:not([data-view="side"]) .side { display: none; }
+    .meta { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+</style>
+
+<div id="login" class="login">
+  <form class="login-card" id="loginForm">
+    <h1>OneChat</h1>
+    <p class="sub">เข้าสู่ระบบ</p>
+    <label class="field" for="lu">Username<input id="lu" type="text" placeholder="username" autocomplete="off"></label>
+    <label class="field" for="lp">Password<input id="lp" type="password" placeholder="password" autocomplete="off"></label>
+    <button class="btn" type="submit">เข้าสู่ระบบ</button>
+    <p class="hint">หน้าตัวอย่างสำหรับ Mock ใส่อะไรก็ได้ แล้วกดเข้าสู่ระบบ</p>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <div class="viewtabs" role="tablist" aria-label="มุมมอง">
+    <button role="tab" data-view="side" aria-selected="false">Merchant</button>
+    <button role="tab" data-view="list" aria-selected="true">การสนทนา</button>
+    <button role="tab" data-view="chat" aria-selected="false">แชท</button>
+    <button role="tab" data-view="panel" aria-selected="false">ลูกค้า</button>
+  </div>
+  <div class="shell">
+    <aside class="side" id="colSide" aria-label="Merchant"></aside>
+    <div class="main">
+      <header class="top">
+        <h1><span class="dotg" aria-hidden="true"></span>แชท</h1>
+        <span class="grow"></span>
+        <span class="meta">พื้นที่คงเหลือ <b>63.38%</b></span>
+        <button class="burger" id="burger" type="button" aria-label="เมนู" aria-haspopup="true" aria-expanded="false">
+          <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1h18M1 7h18M1 13h18"/></svg>
+        </button>
+        <div class="menu" id="menu" hidden></div>
+      </header>
+      <div id="consoleWrap" class="console">
+        <section class="col" id="colList" aria-label="การสนทนา"></section>
+        <section class="col" id="colChat" aria-label="แชทลูกค้า"></section>
+        <section class="col" id="colPanel" aria-label="ข้อมูลลูกค้า"></section>
+      </div>
+      <div id="announceWrap" class="page" hidden></div>
+      <div id="settingsWrap" class="setpage" hidden></div>
+    </div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="modal" class="overlay" hidden></div>
+
+<script>
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var nowT = function () { return new Date().toTimeString().slice(0, 5); };
+  var ME = 'admin01';
+
+  var merchants = [
+    { id: 'sbo55v1', name: '55GOAL V1 (VIP)', chats: 3482 },
+    { id: 'sbo55wn', name: '55GOAL WN', chats: 25422 },
+    { id: '99qv1', name: '99QV1 (VIP)', chats: 5982 },
+    { id: '99queen', name: '99QUEEN.COM', chats: 4863 },
+    { id: '99cenv1', name: '99CENTER ใหม่', chats: 14912 },
+    { id: 'london789', name: 'LONDON789', chats: 59216 },
+    { id: 'lsm99dna', name: 'DNA', chats: 18107 },
+    { id: '99king', name: '99KING.COM', chats: 2371 }
+  ];
+  var merch = function (id) { return merchants.filter(function (m) { return m.id === id; })[0]; };
+  var lineNo = { sbo55v1: 11, sbo55wn: 12, '99qv1': 13, '99queen': 14, '99cenv1': 26, london789: 31, lsm99dna: 32, '99king': 33 };
+
+  var BANKS = [
+    { code: 'KBANK', name: 'กสิกรไทย', bg: '#1a9f4a', fg: '#ffffff' },
+    { code: 'SCB', name: 'ไทยพาณิชย์', bg: '#4e2a84', fg: '#ffffff' },
+    { code: 'KTB', name: 'กรุงไทย', bg: '#1ba1e2', fg: '#ffffff' },
+    { code: 'BBL', name: 'กรุงเทพ', bg: '#1e4598', fg: '#ffffff' },
+    { code: 'BAY', name: 'กรุงศรีอยุธยา', bg: '#fec43b', fg: '#1a1d22' },
+    { code: 'TTB', name: 'ทหารไทยธนชาต', bg: '#f26a21', fg: '#ffffff' }
+  ];
+  function mkUser(n) { var b = BANKS[n % BANKS.length]; return { username: 'demo' + n, fullname: 'ลูกค้าตัวอย่าง ' + n, bank: b.name, bankCode: b.code, number: '000-0-0000' + n + '-0', mobile: '0XX-XXX-000' + n }; }
+  var cases = [
+    { id: 'c1', name: 'ลูกค้า A', type: 'deposit', merchant: '99cenv1', status: 'waiting', admin: null, secs: 128, ago: '2 นาที', lineOk: true, wd: 0, user: mkUser(1),
+      msgs: [{ who: 'cust', text: 'สวัสดีค่ะ', t: '13:45' }, { who: 'cust', text: 'ขอแจ้งฝากหน่อยค่ะ ยูส demo1 ฝาก 253 บาทค่ะ', t: '13:46' }, { who: 'cust', text: 'ต้องโอนเข้าบัญชีไหนคะ', t: '13:46' }] },
+    { id: 'c2', name: 'ลูกค้า B', type: 'withdraw', merchant: 'london789', status: 'open', admin: 'admin02', secs: 35, ago: '5 นาที', lineOk: true, wd: 2, user: mkUser(2),
+      msgs: [{ who: 'cust', text: 'ขอถอนเงินหน่อยครับ', t: '13:47' }, { who: 'cust', text: 'ถอน200', t: '13:48' }, { who: 'cust', text: 'ถอนแล้วยังไม่เข้าเลยครับ', t: '13:49' }] },
+    { id: 'c3', name: 'ลูกค้า C', type: 'general', merchant: 'lsm99dna', status: 'open', admin: 'admin03', secs: 12, ago: '9 นาที', lineOk: false, wd: 0, user: mkUser(3),
+      msgs: [{ who: 'cust', text: 'สอบถามโปรโมชั่นหน่อยครับ', t: '13:50' }, { who: 'cust', text: 'ทักไปหลายรอบแล้วไม่เห็นตอบเลยครับ', t: '13:51' }, { who: 'sys', text: 'ไลน์หลุด กรุณากด Verify ที่แผงขวา', t: '13:51' }] },
+    { id: 'c4', name: 'ลูกค้า D', type: 'deposit', merchant: 'sbo55v1', status: 'closed', admin: 'admin02', secs: 210, ago: '36 นาที', lineOk: true, wd: 0, user: mkUser(4),
+      msgs: [{ who: 'cust', text: 'ฝาก 100 ค่ะ', t: '13:10' }, { who: 'admin', by: 'admin02', text: 'กรุณาโอนเข้าบัญชี กสิกรไทย 000-0-00001-0 แล้วส่งสลิปในแชทนี้ค่ะ', t: '13:11' }, { who: 'cust', text: 'โอนแล้วค่ะ', t: '13:13' }, { who: 'cust', text: '', t: '13:13', action: 'slip', amt: 100, checked: true }, { who: 'sys', text: 'เติมเงิน 100.00 บาท ให้ demo4 เรียบร้อย', t: '13:14' }, { who: 'cust', text: 'ได้รับแล้วค่ะ ขอบคุณค่ะ', t: '13:15' }], closedBy: 'admin02', closedAt: '13:19' },
+    { id: 'c5', name: 'ลูกค้า E', type: 'withdraw', merchant: '99queen', status: 'waiting', admin: null, secs: 64, ago: '1 นาที', lineOk: true, wd: 0, user: mkUser(5),
+      msgs: [{ who: 'cust', text: 'ขอถอน 500 ค่ะ', t: '13:52' }, { who: 'cust', text: 'รอนานแล้วนะคะ ยังไม่เข้าเลย', t: '13:53' }] },
+    { id: 'c6', name: 'ลูกค้า F', type: 'general', merchant: '99king', status: 'waiting', admin: null, secs: 20, ago: '20 วินาที', lineOk: true, wd: 0, user: mkUser(6),
+      msgs: [{ who: 'cust', text: 'สมัครสมาชิกยังไงคะ', t: '13:55' }, { who: 'cust', text: 'มีโปรสมาชิกใหม่ไหมคะ', t: '13:55' }] },
+    { id: 'c7', name: 'ลูกค้า G', type: 'deposit', merchant: 'lsm99dna', status: 'open', admin: 'admin01', secs: 80, ago: '14 นาที', lineOk: true, wd: 0, user: mkUser(7),
+      msgs: [{ who: 'cust', text: 'สวัสดีครับ', t: '13:36' }, { who: 'admin', by: 'admin01', text: 'สวัสดีค่ะ ต้องการแจ้งฝากใช่ไหมคะ', t: '13:37' }, { who: 'cust', text: 'ใช่ครับ ฝาก 100', t: '13:38' }, { who: 'admin', by: 'admin01', text: 'กรุณาโอนเข้าบัญชี กสิกรไทย 000-0-00001-0 แล้วส่งสลิปในแชทนี้ค่ะ', t: '13:39' }, { who: 'cust', text: 'โอนแล้วนะครับ', t: '13:40' },{ who: 'cust', text: '', t: '13:41', action: 'slip', amt: 100 }] },
+    { id: 'c8', name: 'ลูกค้า H', type: 'general', merchant: 'london789', status: 'closed', admin: 'admin03', secs: 95, ago: '11 ชม.', lineOk: true, wd: 0, user: mkUser(8),
+      msgs: [{ who: 'cust', text: 'สอบถามโปรโมชั่นฝากครั้งแรกหน่อยค่ะ', t: '12:25' }, { who: 'admin', by: 'admin03', text: 'ฝากครั้งแรกรับโบนัสตามเงื่อนไขโปรโมชั่นค่ะ', t: '12:27' }, { who: 'cust', text: 'ขอบคุณค่ะ', t: '12:30' }], closedBy: 'admin03', closedAt: '12:41' }
+  ];
+  cases[0].claim = 253; cases[1].claim = 200; cases[4].claim = 500; cases[6].claim = 100;
+  cases[6].slip = { state: 'pending', amt: 100, variant: 'real' };
+  function mkSlipCase(id, n, name, type, merchant, status, admin, secs, ago, claim, amt, variant, lines) {
+    var c = { id: id, name: name, type: type, merchant: merchant, status: status, admin: admin, secs: secs, ago: ago, lineOk: true, wd: 0, user: mkUser(n), claim: claim, msgs: [] };
+    lines.forEach(function (l, i) { c.msgs.push({ who: l[0], by: l[2], text: l[1], t: '14:' + (10 + i) }); });
+    c.msgs.push({ who: 'cust', text: '', t: '14:30', action: 'slip', amt: amt, variant: variant });
+    c.slip = { state: 'pending', amt: amt, variant: variant };
+    return c;
+  }
+  var ACC = 'กรุณาโอนเข้าบัญชี กสิกรไทย 000-0-00001-0 แล้วส่งสลิปในแชทนี้ค่ะ';
+  cases.push(
+    mkSlipCase('c9', 9, 'ลูกค้า I', 'deposit', '99cenv1', 'open', 'admin01', 70, '3 นาที', 500, 450, 'fake', [['cust', 'ฝาก 500 ค่ะ'], ['admin', ACC, 'admin01'], ['cust', 'โอนแล้วค่ะ']]),
+    mkSlipCase('c10', 10, 'ลูกค้า J', 'deposit', 'sbo55wn', 'open', 'admin02', 55, '4 นาที', 300, 300, 'real', [['cust', 'ฝาก 300 ครับ'], ['admin', ACC, 'admin02'], ['cust', 'โอนจากบัญชีแฟนครับ']]),
+    mkSlipCase('c11', 11, 'ลูกค้า K', 'deposit', '99qv1', 'open', 'admin03', 90, '6 นาที', 1000, 1000, 'real', [['cust', 'ฝาก 1000 นะคะ'], ['admin', ACC, 'admin03'], ['cust', 'โอนผ่านแอปอีกธนาคารค่ะ']]),
+    mkSlipCase('c12', 12, 'ลูกค้า L', 'deposit', '99queen', 'open', 'admin01', 40, '7 นาที', 200, 200, 'fake', [['cust', 'ขอฝาก 200 ครับ'], ['cust', 'โอนเข้าบัญชีที่เคยใช้ครับ']]),
+    mkSlipCase('c13', 13, 'ลูกค้า M', 'deposit', 'london789', 'open', 'admin02', 30, '8 นาที', 150, 150, 'real', [['cust', 'ฝาก 150 ค่ะ'], ['admin', ACC, 'admin02'], ['cust', 'โอนแล้วค่ะ']]),
+    mkSlipCase('c14', 14, 'ลูกค้า N', 'withdraw', 'lsm99dna', 'open', 'admin03', 20, '10 นาที', 400, 400, 'real', [['cust', 'ถอน 400 ครับ'], ['cust', 'ส่งสลิปให้ตรวจสอบครับ']]),
+    mkSlipCase('c15', 15, 'ลูกค้า O', 'withdraw', 'sbo55v1', 'open', 'admin01', 25, '12 นาที', 800, 800, 'fake', [['cust', 'ขอถอน 800 ค่ะ'], ['cust', 'ส่งสลิปให้แล้วนะคะ']]),
+    mkSlipCase('c16', 16, 'ลูกค้า P', 'deposit', '99king', 'waiting', null, 15, '30 วินาที', 120, 120, 'fake', [['cust', 'ฝาก 120 ค่ะ'], ['cust', 'โอนแล้วนะคะ']])
+  );
+  var byId = function (id) { return cases.filter(function (c) { return c.id === id; })[0]; };
+  byId('c2').extraWd = [{ amt: 500, time: '12:10', st: 'รอทำรายการ' }];
+  byId('c5').extraWd = [{ amt: 300, time: '11:20', st: 'รอทำรายการ' }];
+  byId('c9').extraDep = [{ amt: 200, time: '13:05', st: 'รอเติมเงิน' }];
+  byId('c12').extraDep = [{ amt: 350, time: '12:40', st: 'รอตรวจสลิป' }, { amt: 100, time: '11:55', st: 'รอเติมเงิน' }];
+  byId('c15').extraWd = [{ amt: 300, time: '11:40', st: 'รอทำรายการ' }];
+  cases.forEach(function (c) {
+    var n = parseInt(c.user.username.replace('demo', ''), 10);
+    c.histDep = makeHist(n, 'dep'); c.histWd = makeHist(n, 'wd');
+    c.credit = n % 3 === 0 ? 0 : Math.round(n * 125.5 * 100) / 100;
+    if (n % 4 === 0 || n % 4 === 1) c.turn = { need: 500 + n * 100, done: n * 37 };
+    if (n % 4 === 0 || n % 4 === 2) c.promo = ['โปรสมาชิกใหม่ 100%', 'โปรฝากทุกวัน 10%', 'โปรคืนยอดเสีย'][n % 3];
+  });
+  var announces = [
+    { id: 1, sort: 1, type: 'ส่วนเสริม', name: 'รับเรื่องแจ้งฝาก', text: 'รับเรื่องแจ้งฝากเรียบร้อยค่ะ รบกวนรอแอดมินตรวจสอบยอดสักครู่นะคะ', status: 'ยกเลิก' },
+    { id: 2, sort: 1, type: 'ส่วนเสริม', name: 'แจ้งกรุงไทย', text: '[ข้อความตัวอย่าง] กรุณาโอนเข้าบัญชีกรุงไทย แล้วส่งสลิปในแชทนี้ค่ะ', status: 'ใช้งาน' },
+    { id: 3, sort: 1, type: 'ส่วนเสริม', name: 'แจ้งไทยพาณิชย์', text: '[ข้อความตัวอย่าง] กรุณาโอนเข้าบัญชีไทยพาณิชย์ แล้วส่งสลิปในแชทนี้ค่ะ', status: 'ใช้งาน' },
+    { id: 4, sort: 1, type: 'ส่วนเสริม', name: 'แจ้งกสิกร', text: '[ข้อความตัวอย่าง] กรุณาโอนเข้าบัญชีกสิกร แล้วส่งสลิปในแชทนี้ค่ะ', status: 'ใช้งาน' }
+  ];
+  var nextAnn = 5;
+  var COACC = [{ bank: 'KBANK', name: 'บริษัทตัวอย่าง จำกัด', no: '000-0-00001-0' }, { bank: 'SCB', name: 'บริษัทตัวอย่าง จำกัด', no: '000-0-00002-0' }, { bank: 'KTB', name: 'บริษัทตัวอย่าง จำกัด', no: '000-0-00003-0' }];
+  var accounts =['ธนาคารตัวอย่าง A  000-0-00001-0', 'ธนาคารตัวอย่าง B  000-0-00002-0'];
+
+  var st = { tab: 'all', sel: [], cur: 'c2', view: 'list', page: 'console', menu: false, ai: {}, regMsg: null, lookup: null, hist: 'all', histModal: false, credit: { type: 'add', amt: '', note: '', pass: '', err: null, msg: null }, reg: { name: '', phone: '', bank: '', no: '', pass: '', ref: '' }, pw: { open: false, a: '', b: '', err: null, msg: null } };
+  var cur = function () { return cases.filter(function (c) { return c.id === st.cur; })[0]; };
+  var tabOf = function (c) { return c.type === 'general' ? 'line' : 'payment'; };
+  var cls = function (c) { return c.status === 'closed' ? 'st-white' : c.type === 'deposit' ? 'st-yellow' : c.type === 'withdraw' ? 'st-orange' : 'st-red'; };
+  var typeLabel = { deposit: 'ฝาก', withdraw: 'ถอน', general: 'เรื่องทั่วไป' };
+  var isNarrow = function () { return window.innerWidth <= 760; };
+
+  var toastT;
+  function toast(t) { var el = $('#toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { el.hidden = true; }, 2600); }
+  function scrollMsgs() { var el = $('.msgs'); if (el) el.scrollTop = el.scrollHeight; }
+  function push(c, who, text, extra) { var m = { who: who, text: text, t: nowT() }; if (extra) for (var k in extra) m[k] = extra[k]; c.msgs.push(m); c.ago = 'เมื่อสักครู่'; renderList(); if (c.id === st.cur) { renderChat(); scrollMsgs(); } }
+  function accept(c) { if (c.status === 'waiting') { c.status = 'open'; c.admin = ME; push(c, 'sys', 'แอดมิน ' + ME + ' รับเคสแล้ว'); } }
+
+  /* ---------- sidebar (Merchant) ---------- */
+  function renderSide() {
+    $('#colSide').innerHTML = '<div class="brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>OneChat</div>' +
+      '<div class="selbar"><button type="button" data-sel="all">เลือกทั้งหมด</button><i></i><button type="button" data-sel="none">ล้างทั้งหมด</button></div>' +
+      '<div class="chs">' + merchants.map(function (m) {
+        return '<div class="ch"><label><input type="checkbox" data-mchk="' + m.id + '"' + (st.sel.indexOf(m.id) >= 0 ? ' checked' : '') + '><span class="n">' + esc(m.name) + '</span><small title="จำนวนแชทไลน์ทั้งหมดที่เคยทักเข้ามา">' + m.chats.toLocaleString() + '</small></label>' +
+          '<button class="gear" type="button" data-gear="' + esc(m.name) + '" aria-label="ตั้งค่า ' + esc(m.name) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>';
+      }).join('') + '</div>' +
+      '<div class="me"><span class="grow">' + esc(ME) + '</span><button type="button" data-go="logout" aria-label="ออกจากระบบ"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button></div>';
+  }
+
+  /* ---------- list ---------- */
+  function visible() { return cases.filter(function (c) { return !st.sel.length || st.sel.indexOf(c.merchant) >= 0; }); }
+  function renderList() {
+    var base = visible();
+    var cnt = { all: base.length, line: base.filter(function (c) { return tabOf(c) === 'line'; }).length, payment: base.filter(function (c) { return tabOf(c) === 'payment'; }).length };
+    var shown = base.filter(function (c) { return st.tab === 'all' || tabOf(c) === st.tab; });
+    var h = '<div class="lh"><b>การสนทนา</b><button type="button" data-refresh aria-label="รีเฟรช"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg></button></div>' +
+      '<div class="tabs" role="tablist">' + ['all', 'line', 'payment'].map(function (t) {
+        return '<button role="tab" data-tab="' + t + '" aria-selected="' + (st.tab === t) + '">' + { all: 'All', line: 'Line', payment: 'Payment' }[t] + '<span class="count">' + cnt[t] + '</span></button>';
+      }).join('') + '</div>';
+    h += '<div class="cases">' + (shown.length ? shown.map(function (c) {
+      var last = c.msgs.length ? (c.msgs[c.msgs.length - 1].text || '[สลิปโอนเงิน]') : '';
+      var adm = c.status === 'waiting' ? 'รอแอดมินรับเคส' : c.admin;
+      return '<button class="case ' + cls(c) + '" data-id="' + c.id + '"' + (c.id === st.cur ? ' aria-current="true"' : '') + '><span class="av">' + esc(c.name.slice(-1)) + '</span><span class="cb">' +
+        '<span class="r1"><b>' + esc(c.name) + '</b><span class="ago">' + esc(c.ago) + '</span></span>' +
+        '<span class="r2"><span class="chip">' + esc(merch(c.merchant).name) + '</span><span class="chip adm">' + esc(adm) + ' <span class="num" data-secs="' + c.id + '">(' + c.secs + ')</span></span><span class="chip">' + esc(typeLabel[c.type]) + '</span></span>' +
+        '<span class="r3">' + esc(last) + '</span></span></button>';
+    }).join('') : '<div class="empty">ไม่มีแชทในตัวกรองนี้</div>') + '</div>';
+    h += '<div class="legend"><span style="--cb:#f6d55c"><i></i>ฝาก</span><span style="--cb:#f4a259"><i></i>ถอน</span><span style="--cb:#ee6c6c"><i></i>ทั่วไป</span><span style="--cb:#e6eaf3"><i></i>ปิดเคส</span></div>';
+    $('#colList').innerHTML = h;
+  }
+
+  /* ---------- chat ---------- */
+  function renderChat() {
+    var c = cur(); var el = $('#colChat'); var m = merch(c.merchant);
+    var done = c.status === 'closed';
+    var h = '<div class="chead"><div class="l1"><span class="oa">LINE <b>' + esc(m.name) + '</b> (@' + esc(m.id) + ')</span><span class="status ' + cls(c) + '">' + (done ? 'ปิดเคสแล้ว' : esc(typeLabel[c.type])) + '</span><span style="flex:1"></span>' +
+      (!done ? '<button class="btn sm danger" data-act="close">ปิด [F4]</button>' : '') + '</div>' +
+      '<div class="edit"><input id="eName" value="' + esc(c.name) + '" aria-label="ชื่อลูกค้า"><input id="eUser" value="' + esc(c.user.username) + '" aria-label="ไอดีลูกค้า"><button class="btn sm" data-act="saveName">Save</button></div></div>' +
+      '<div class="note"><span>Note</span><input id="noteIn" placeholder="พิมพ์ข้อความที่ต้องการ แล้วกด Enter เพื่อบันทึก" aria-label="Note"></div>' +
+      '<div class="msgs">' + c.msgs.map(function (x, i) {
+        if (x.action === 'slip') return '<div class="m cust"><span class="who">' + esc(c.name) + ' · ' + x.t + '</span><div class="bub" style="padding:6px"><div class="slipimg"><b>สลิปโอนเงิน</b><i></i><i style="width:70%"></i><span class="amt">' + Number(x.amt).toFixed(2) + '</span></div></div>' + (x.checked ? '<span class="tag ok" style="align-self:flex-start">ตรวจสอบสลิปแล้ว</span>' : '<button class="btn sm" type="button" data-act="slipcheck" data-i="' + i + '" style="align-self:flex-start"' + (done ? ' disabled' : '') + '>ตรวจสอบสลิป</button>') + '</div>';
+        return '<div class="m ' + x.who + '"><span class="who">' + ({ cust: esc(c.name), sys: 'system', admin: esc(x.by || ME) }[x.who]) + ' · ' + x.t + '</span><div class="bub">' + esc(x.text) + '</div></div>';
+      }).join('') + (done ? '<div class="closed-bar">ปิดเคส โดย ' + esc(c.closedBy) + ' - ' + esc(c.closedAt) + '</div>' : '') + '</div>';
+    var quick = announces.filter(function (a) { return a.status === 'ใช้งาน' && a.text; });
+    var keep = $('#msgIn') ? $('#msgIn').value : '';
+    h += '<div class="composer"><div class="quick"><span>คีย์ลัด</span><button type="button" data-act="askacc"' + (done ? ' disabled' : '') + '>ขอเลขบัญชีลูกค้า</button>' + (quick.length ? quick.map(function (a) { return '<button type="button" data-quick="' + a.id + '"' + (done ? ' disabled' : '') + '>' + esc(a.name) + '</button>'; }).join('') : '<span>ยังไม่มีข้อความ เพิ่มได้ที่เมนู จัดการข้อความอัตโนมัติ</span>') + '</div>' +
+      '<div class="send"><input id="msgIn" placeholder="พิมพ์ข้อความถึงลูกค้า" aria-label="ข้อความ"' + (done ? ' disabled' : '') + '><button class="btn ghost" data-act="slip" type="button" title="Mock: จำลองลูกค้าส่งสลิป"' + (done ? ' disabled' : '') + '>จำลองสลิป</button><button class="btn" data-act="send"' + (done ? ' disabled' : '') + '>ส่ง</button></div></div>';
+    el.innerHTML = h;
+    if ($('#msgIn')) $('#msgIn').value = keep;
+  }
+
+  function minusMin(t, m) {
+    var p = String(t || nowT()).split(':'); var mins = (+p[0]) * 60 + (+p[1]) - m; if (mins < 0) mins += 1440;
+    return ('0' + Math.floor(mins / 60)).slice(-2) + ':' + ('0' + (mins % 60)).slice(-2);
+  }
+  function slipData(c, amt, v, t) {
+    return { state: 'ready', amt: amt, date: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }), time: minusMin(t, 2) + ' น.', fake: v === 'fake', fromName: c.user.fullname, fromBank: c.user.bankCode, fromNo: c.user.number, toName: 'บริษัทตัวอย่าง จำกัด', toBank: 'KBANK', toNo: '000-0-00001-0' };
+  }
+  function bankOf(code) { return BANKS.filter(function (x) { return x.code === code; })[0] || BANKS[0]; }
+  function bankLogo(code) { var b = bankOf(code); return '<span class="bk" style="background:' + b.bg + ';color:' + b.fg + '" aria-hidden="true">' + esc(b.code) + '</span>'; }
+  function slipBlock(c) {
+    var s = c.slip;
+    var badge = s.state === 'ready' ? (s.fake ? '<span class="tag bad">ปลอม</span>' : '<span class="tag ok">จริง</span>') : s.state === 'reading' ? '<span class="tag bad">กำลังอ่าน</span>' : '<span class="tag" style="background:var(--surface)">รอตรวจ</span>';
+    var h = '<div class="blk"><h3>ตรวจสอบสลิป' + badge + '</h3><div class="body">';
+    if (s.state === 'pending') return h + '<div class="hint" style="text-align:left">ลูกค้าส่งสลิปมา ' + s.amt.toFixed(2) + ' บาท กดปุ่ม "ตรวจสอบสลิป" ใต้รูปสลิปในแชทเพื่อตรวจว่าสลิปจริงหรือปลอม</div></div></div>';
+    if (s.state === 'reading') return h + '<div class="ai"><span class="spin"></span>AI ตรวจสลิป… (ระบบจริงประมาณ 120 วินาที ตัวอย่างใช้ 4 วินาที)</div></div></div>';
+    h += '<div class="verdict ' + (s.fake ? 'v-bad' : 'v-ok') + '">' + (s.fake ? '✗ สลิปปลอม' : '✓ สลิปจริง') + '</div>' +
+      '<div class="party col"><div class="prow"><span class="role">ผู้โอน</span>' + bankLogo(s.fromBank) + '<div><b>' + esc(s.fromName) + '</b><div class="bn">' + esc(bankOf(s.fromBank).name) + '</div><div class="num">' + esc(s.fromNo) + '</div></div></div>' +
+      '<dl class="kv"><dt>ยอดโอน</dt><dd class="num"><b>' + s.amt.toFixed(2) + ' บาท</b></dd><dt>วันที่โอน</dt><dd>' + esc(s.date) + '</dd><dt>เวลาที่โอน</dt><dd class="num">' + esc(s.time) + '</dd></dl></div>' +
+      '<div class="party"><span class="role">ผู้รับ</span>' + bankLogo(s.toBank) + '<div><b>' + esc(s.toName) + '</b><div class="bn">' + esc(bankOf(s.toBank).name) + '</div><div class="num">' + esc(s.toNo) + '</div></div></div>';
+    return h + '<button class="btn ok" type="button" data-act="slipcredit">ไปหน้า Auto fast</button></div></div>';
+  }
+
+  function pendingDep(c) {
+    var rows = [];
+    if (c.type === 'deposit' && c.status !== 'closed' && c.claim) {
+      var s = c.slip;
+      var st2 = !s ? 'รอลูกค้าโอนและส่งสลิป' : s.state === 'pending' ? 'รอตรวจสลิป' : s.state === 'reading' ? 'กำลังตรวจสลิป' : (s.fake ? 'สลิปปลอม รอตรวจสอบ' : 'สลิปจริง รอเติมเงิน');
+      rows.push({ amt: c.claim, time: c.msgs.length ? c.msgs[c.msgs.length - 1].t : '', st: st2 });
+    }
+    return rows.concat(c.extraDep || []);
+  }
+  function pendingWd(c) {
+    var rows = [];
+    if (c.type === 'withdraw' && c.status !== 'closed' && c.claim) rows.push({ amt: c.claim, time: c.msgs.length ? c.msgs[c.msgs.length - 1].t : '', st: c.status === 'waiting' ? 'รอทำรายการ' : 'รอดำเนินการ' });
+    return rows.concat(c.extraWd || []);
+  }
+  function pendBlock(c) {
+    var sum = function (a) { return a.reduce(function (s, r) { return s + r.amt; }, 0); };
+    var list = function (a) { return a.length ? '<ul class="pend">' + a.map(function (r) { return '<li><span class="num">' + r.amt.toFixed(2) + '</span><span class="st">' + esc(r.st) + '</span><span class="t">' + esc(r.time) + '</span></li>'; }).join('') + '</ul>' : '<div class="hint" style="text-align:left">ไม่มียอดค้าง</div>'; };
+    var sec = function (title, a) { return '<div class="psec"><div class="ph">' + title + '<span class="tag ' + (a.length ? 'warn' : 'ok') + '">' + (a.length ? a.length + ' รายการ · ' + sum(a).toFixed(2) + ' บาท' : 'ไม่มี') + '</span></div>' + list(a) + '</div>'; };
+    return '<div class="blk"><h3>สถานะยอดค้าง <small>' + esc(c.name) + '</small></h3><div class="body">' + sec('ค้างฝาก', pendingDep(c)) + sec('ค้างถอน', pendingWd(c)) + '</div></div>';
+  }
+
+  var money = function (v) { return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  function turnHtml(c) {
+    return c.turn ? '<span class="tag warn">ติดเทิร์น</span> <span class="num" style="font-size:12px;color:var(--fg2)">' + money(c.turn.done) + ' / ' + money(c.turn.need) + '</span>' : '<span class="tag ok">ไม่ติดเทิร์น</span>';
+  }
+  function promoHtml(c) {
+    return c.promo ? '<span class="tag warn">ติดโปร</span> <span style="font-size:12px;color:var(--fg2)">' + esc(c.promo) + '</span>' : '<span class="tag ok">ไม่ติดโปร</span>';
+  }
+  function pwUI() {
+    if (!st.pw.open) return '<button class="btn sm ghost" type="button" data-act="pwopen">เปลี่ยนรหัสผ่าน</button>' + (st.pw.msg ? '<div class="msg-ok">' + esc(st.pw.msg) + '</div>' : '');
+    return '<div class="pwbox"><label class="field" for="pwNew">รหัสผ่านใหม่<input id="pwNew" type="password" value="' + esc(st.pw.a) + '" autocomplete="new-password"></label>' +
+      '<label class="field" for="pwConf">ยืนยันรหัสผ่านใหม่<input id="pwConf" type="password" value="' + esc(st.pw.b || '') + '" autocomplete="new-password"></label>' +
+      (st.pw.err ? '<div class="msg-bad">' + esc(st.pw.err) + '</div>' : '') +
+      '<div class="row"><button class="btn sm" type="button" data-act="pwsave">บันทึกรหัสผ่านใหม่</button><button class="btn sm ghost" type="button" data-act="pwcancel">ยกเลิก</button></div></div>';
+  }
+
+  function makeHist(n, kind) {
+    if (n === 6 || (n === 3 && kind === 'wd')) return [];
+    var amts = [100, 200, 253, 300, 500, 1000, 150, 400, 800];
+    var cnt = 3 + ((n + (kind === 'wd' ? 2 : 0)) % 7);
+    var pad = function (v) { return ('0' + v).slice(-2); };
+    var out = [];
+    for (var i = 0; i < cnt; i++) {
+      out.push({
+        amt: amts[(n * 3 + i * 2 + (kind === 'wd' ? 1 : 0)) % amts.length],
+        time: (5 - Math.floor(i / 2)) + ' ต.ค. 2569 ' + pad(9 + ((n + i * 3) % 12)) + ':' + pad((n * 7 + i * 13) % 60),
+        ok: kind === 'dep' ? (i % 4 !== 3) : (i % 3 !== 2),
+        ref: (kind === 'dep' ? 'D' : 'W') + (100000 + n * 1111 + i * 37)
+      });
+    }
+    return out;
+  }
+  function histKey(r) { var m = /^(\d+) .* (\d+):(\d+)$/.exec(r.time); return m ? (+m[1]) * 10000 + (+m[2]) * 100 + (+m[3]) : 0; }
+  function histAll(c) {
+    var all = c.histDep.map(function (r) { return { r: r, k: 'dep' }; }).concat(c.histWd.map(function (r) { return { r: r, k: 'wd' }; }));
+    return all.sort(function (a, b) { return histKey(b.r) - histKey(a.r); });
+  }
+  function histRows(items) {
+    return items.map(function (x) {
+      var r = x.r, dep = x.k === 'dep';
+      return '<li><span class="num">' + r.amt.toFixed(2) + '</span><span class="t">' + esc(r.time) + ' · ' + esc(r.ref) + '</span><span class="tag ' + (dep ? 'dep' : 'warn') + '">' + (dep ? 'ฝาก' : 'ถอน') + '</span><span class="tag ' + (r.ok ? 'ok' : 'bad') + '">' + (r.ok ? 'สำเร็จ' : (dep ? 'ยกเลิก' : 'ไม่สำเร็จ')) + '</span></li>';
+    }).join('');
+  }
+  function histSums(items) {
+    var d = 0, w = 0; items.forEach(function (x) { if (x.r.ok) { if (x.k === 'dep') d += x.r.amt; else w += x.r.amt; } });
+    return 'ฝากสำเร็จ ' + d.toFixed(2) + ' · ถอนสำเร็จ ' + w.toFixed(2) + ' บาท';
+  }
+  function histBlock(c) {
+    var items = histAll(c);
+    return '<div class="blk"><h3>ประวัติฝาก/ถอน <small>' + esc(c.name) + '</small></h3><div class="body">' +
+      (items.length ? '<div class="hint" style="text-align:left">ล่าสุด ' + Math.min(5, items.length) + ' จาก ' + items.length + ' รายการ · ' + histSums(items) + '</div><ul class="hist">' + histRows(items.slice(0, 5)) + '</ul><button class="btn sm ghost" type="button" data-act="histall">ดูทั้งหมด / แยกฝาก-ถอน (' + items.length + ' รายการ)</button>' : '<div class="hint" style="text-align:left">ยังไม่มีประวัติฝาก/ถอน</div>') + '</div></div>';
+  }
+  function accountsOf(c) {
+    var n = parseInt(c.user.username.replace(/\D/g, ''), 10) || 1, cnt = 1 + (n % 5), out = [{ bank: c.user.bankCode, no: c.user.number, main: true, on: true }];
+    for (var k = 1; k < cnt; k++) out.push({ bank: BANKS[(n + k) % BANKS.length].code, no: '000-' + k + '-0000' + n + '-' + k, main: false, on: k % 3 !== 0 });
+    return out;
+  }
+  function renderAccModal() {
+    var m = $('#modal'), c = cur(), L = accountsOf(c);
+    m.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="mTitle"><header><b id="mTitle">บัญชีธนาคารลูกค้า · ' + esc(c.user.username) + ' (' + L.length + ' บัญชี)</b><button class="btn sm ghost" type="button" data-act="accclose" id="mClose">ปิด</button></header><div class="dbody">' +
+      '<div class="hint" style="text-align:left">' + esc(c.user.fullname) + ' · ลูกค้าหนึ่งคนผูกได้หลายบัญชี</div><ul class="accl">' +
+      L.map(function (a) { return '<li>' + bankLogo(a.bank) + '<div><b>' + esc(bankOf(a.bank).name) + '</b><div class="num">' + esc(a.no) + '</div><div class="bn">' + esc(c.user.fullname) + '</div></div><span class="tags">' + (a.main ? '<span class="tag ok">บัญชีหลัก</span>' : '') + '<span class="tag ' + (a.on ? 'dep' : 'bad') + '">' + (a.on ? 'ใช้งาน' : 'ไม่ใช้งาน') + '</span></span></li>'; }).join('') + '</ul></div></div>';
+    m.hidden = false;
+  }
+  function renderHistModal() {
+    var m = $('#modal');
+    if (st.accModal) { renderAccModal(); return; }
+    if (!st.histModal) { m.hidden = true; m.innerHTML = ''; return; }
+    var c = cur(); var all = histAll(c); var f = st.hist;
+    var items = f === 'all' ? all : all.filter(function (x) { return x.k === f; });
+    var cd = c.histDep.length, cw = c.histWd.length;
+    var tabs = [['all', 'ทั้งหมด (' + all.length + ')'], ['dep', 'ฝาก (' + cd + ')'], ['wd', 'ถอน (' + cw + ')']].map(function (t) { return '<button type="button" role="tab" data-hist="' + t[0] + '" aria-selected="' + (f === t[0]) + '">' + t[1] + '</button>'; }).join('');
+    m.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="mTitle"><header><b id="mTitle">ประวัติฝาก/ถอน · ' + esc(c.name) + '</b><button class="btn sm ghost" type="button" data-act="histclose" id="mClose">ปิด</button></header><div class="dbody">' +
+      '<div class="seg" role="tablist" aria-label="ประวัติ">' + tabs + '</div>' +
+      (items.length ? '<div class="hint" style="text-align:left">' + items.length + ' รายการ · ' + histSums(items) + '</div><ul class="hist">' + histRows(items) + '</ul>' : '<div class="hint" style="text-align:left">ยังไม่มีประวัติ</div>') + '</div></div>';
+    m.hidden = false;
+  }
+
+  function creditBlock(c) {
+    var k = st.credit;
+    return '<div class="blk"><h3>จัดการเครดิต</h3><div class="body">' +
+      '<div class="crline"><b>ชื่อผู้ใช้</b><span>' + esc(c.user.username) + '</span></div>' +
+      '<div class="crline"><span style="color:var(--fg2)">เครดิตคงเหลือ:</span><b class="num">' + c.credit.toFixed(2) + '</b></div>' +
+      '<label class="field" for="crAmt">จำนวนเงิน<input id="crAmt" type="number" min="0" step="0.01" placeholder="0.00" value="' + esc(k.amt) + '"></label>' +
+      '<fieldset class="rad"><legend>ประเภท</legend><label><input type="radio" name="crType" value="add"' + (k.type === 'add' ? ' checked' : '') + '>เติมเครดิต</label><label><input type="radio" name="crType" value="sub"' + (k.type === 'sub' ? ' checked' : '') + '>ถอนเครดิต</label></fieldset>' +
+      '<label class="field" for="crNote">หมายเหตุ<input id="crNote" type="text" value="' + esc(k.note) + '" autocomplete="off"></label>' +
+      '<label class="field" for="crPass">รหัสผ่านแอดมิน<input id="crPass" type="password" value="' + esc(k.pass) + '" autocomplete="new-password"></label>' +
+      (k.err ? '<div class="msg-bad">' + esc(k.err) + '</div>' : k.msg ? '<div class="msg-ok">' + esc(k.msg) + '</div>' : '') +
+      '<button class="btn ok" type="button" data-act="crsave">บันทึก</button></div></div>';
+  }
+
+  function coBlock() {
+    return '<div class="blk"><h3>บัญชีบริษัท</h3><div class="body"><div class="hint" style="text-align:left">กดเลือกบัญชี ระบบจะส่งเลขบัญชีให้ลูกค้าในแชท</div>' +
+      COACC.map(function (a, i) { return '<button type="button" class="coacc' + (st.coSel === i ? ' on' : '') + '" data-act="coacc" data-i="' + i + '">' + bankLogo(a.bank) + '<span><b>' + esc(bankOf(a.bank).name) + '</b><span class="num">' + esc(a.no) + '</span><span class="bn">' + esc(a.name) + '</span></span></button>'; }).join('') +
+      '<button class="btn ghost" type="button" data-act="coadd">+ เพิ่มบัญชี</button></div></div>';
+  }
+
+  /* ---------- right panel ---------- */
+  function renderPanel() {
+    var c = cur(); var u = c.user; var sl = c.slip; var h = '';
+    var lm = merch(c.merchant);
+    h += '<div class="gs"><input id="gSearch" type="search" placeholder="ค้นหาลูกค้า (ชื่อ / ไอดี / เบอร์)" aria-label="ค้นหาลูกค้า" autocomplete="off"><div class="gsres" id="gsRes" hidden></div></div>';
+    h +='<div class="blk"><h3>ตรวจสอบสถานะไลน์<button class="btn sm warn" data-act="lineupdate" type="button">⟳ Update</button></h3><div class="body">' +
+      (c.lineOk ? '' : '<div class="msg-bad">ไลน์หลุด: ' + esc(lm.name) + ' (@' + esc(lm.id) + ') กดปุ่ม Verify เพื่อเชื่อมต่อใหม่</div>') +
+      '<div class="mini"><table><thead><tr><th>#</th><th>Lineat</th><th>Status</th><th>Verify</th></tr></thead><tbody><tr><td class="num">' + lineNo[lm.id] + '</td><td>' + esc(lm.name) + ' @' + esc(lm.id) + '</td><td>' + (c.lineOk ? '<span class="tag ok">เชื่อมต่อ</span>' : '<span class="tag bad">หลุดการเชื่อมต่อ</span>') + '</td><td>' + (c.lineOk ? '<span class="hint">-</span>' : '<button class="btn sm warn" data-act="verify" type="button">⚠ Verify</button>') + '</td></tr></tbody></table></div></div></div>';
+
+    h += '<div class="blk"><h3>ตรวจสอบ</h3><div class="body">' +
+      '<div class="row"><input id="chkIn" placeholder="Search users" value="' + esc(st.lookup || u.username) + '" aria-label="ค้นหาลูกค้า"><button class="btn sm" data-act="lookup" style="flex:none">ตรวจสอบ</button></div>' +
+      '<dl class="kv"><dt>Username</dt><dd>' + esc(u.username) + ' <span class="tag ok">Active</span></dd><dt>Fullname</dt><dd>' + esc(u.fullname) + '</dd><dt>Bank</dt><dd>' + esc(u.bank) + '</dd><dt>Number</dt><dd class="num">' + esc(u.number) + '</dd><dt>Mobile</dt><dd class="num">' + esc(u.mobile) + '</dd><dt>เทิร์น</dt><dd>' + turnHtml(c) + '</dd><dt>โปรโมชั่น</dt><dd>' + promoHtml(c) + '</dd></dl><button class="btn ghost" type="button" data-act="accview">ดูบัญชีธนาคารลูกค้า (' + accountsOf(c).length + ' บัญชี)</button>' + pwUI() + '</div></div>';
+
+    if (sl) h += slipBlock(c);
+    h += pendBlock(c);
+    h += histBlock(c);
+    h += creditBlock(c);
+
+    h += '<div class="blk"><h3>สมัครสมาชิก Player</h3><div class="body">' +
+      '<label class="field" for="regName">ชื่อ<input id="regName" value="' + esc(st.reg.name) + '" autocomplete="off"></label>' +
+      '<label class="field" for="regPhone">เบอร์<input id="regPhone" value="' + esc(st.reg.phone) + '" autocomplete="off" inputmode="tel"></label>' +
+      '<label class="field" for="regBank">เลือกธนาคาร<select id="regBank"><option value="">เลือกธนาคาร</option>' + BANKS.map(function (b) { return '<option value="' + b.code + '"' + (st.reg.bank === b.code ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select></label>' +
+      '<div class="field"><label for="regNo">เลขที่บัญชี</label><div class="row"><input id="regNo" value="' + esc(st.reg.no) + '" autocomplete="off" inputmode="numeric"><button class="btn sm" data-act="register" type="button" style="flex:none">Check เลข</button></div></div>' +
+      '<label class="field" for="regPass">รหัสผ่าน<input id="regPass" type="password" value="' + esc(st.reg.pass || '') + '" autocomplete="new-password"></label>' +
+      '<label class="field" for="regRef">รหัสแนะนำ<input id="regRef" value="' + esc(st.reg.ref) + '" autocomplete="off"></label>' +
+      '<div class="row"><button class="btn ok" data-act="regsubmit" type="button">สมัครสมาชิก</button><button class="btn ghost" data-act="regclear" type="button">ล้างฟอร์ม</button></div>' +
+      '<button class="btn ghost" data-act="askacc" type="button">ขอเลขบัญชีลูกค้า</button>' +
+      (st.regMsg ? '<div class="' + (st.regMsg.ok ? 'msg-ok' : 'msg-bad') + '">' + esc(st.regMsg.text) + '</div>' : '<div class="hint" style="text-align:left">ลองเลือก ' + esc(u.bank) + ' และกรอกเลข ' + esc(u.number) + ' เพื่อดูกรณีเลขบัญชีซ้ำ</div>') + '</div></div>';
+
+    var keep =$('#colPanel').scrollTop;
+    $('#colPanel').innerHTML = h; $('#colPanel').scrollTop = keep;
+  }
+
+  /* ---------- announce page ---------- */
+  var types = ['แสดงทุกรายการ', 'ส่วนเสริม'];
+  var opt = function (list, v) { return list.map(function (x) { return '<option' + (x === v ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join(''); };
+  function renderAnnounce() {
+    var h = '<button class="btn ghost sm back" data-nav="home">← กลับหน้าแชท</button><h2>Announce List</h2><div class="tbl"><table><thead><tr><th>#</th><th>Sort</th><th>Type</th><th>Name</th><th style="min-width:260px">Announce</th><th>สถานะ</th><th>บันทึก</th></tr></thead><tbody>' +
+      '<tr class="add"><td>ADD</td><td><input id="aSort" type="number" value="1" aria-label="Sort"></td><td><select id="aType" aria-label="Type">' + opt(types, 'แสดงทุกรายการ') + '</select></td><td><input id="aName" placeholder="NAME" aria-label="Name"></td><td><textarea id="aText" placeholder="ข้อความ" aria-label="Announce"></textarea></td><td><select id="aStatus" aria-label="สถานะ">' + opt(['ใช้งาน', 'ยกเลิก'], 'ใช้งาน') + '</select></td><td><button class="btn sm" data-ann="add">Add</button></td></tr>' +
+      announces.map(function (a) {
+        return '<tr class="' + (a.status === 'ยกเลิก' ? 'dim' : '') + '"><td class="num">' + a.id + '</td><td><input type="number" id="s' + a.id + '" value="' + a.sort + '" aria-label="Sort ' + a.id + '"></td><td><select id="t' + a.id + '" aria-label="Type ' + a.id + '">' + opt(types, a.type) + '</select></td><td><input id="n' + a.id + '" value="' + esc(a.name) + '" aria-label="Name ' + a.id + '"></td><td><textarea id="x' + a.id + '" aria-label="Announce ' + a.id + '">' + esc(a.text) + '</textarea></td><td><select id="u' + a.id + '" aria-label="สถานะ ' + a.id + '">' + opt(['ใช้งาน', 'ยกเลิก'], a.status) + '</select></td><td><div class="acts"><button class="btn sm ok" data-ann="save" data-id="' + a.id + '">Save</button><button class="btn sm danger" data-ann="del" data-id="' + a.id + '">Delete</button></div></td></tr>';
+      }).join('') + '</tbody></table></div><p class="hint" style="text-align:left">ข้อความที่ "ใช้งาน" จะเป็นคีย์ลัดใต้ช่องพิมพ์ในหน้าแชท</p>';
+    $('#announceWrap').innerHTML = h;
+  }
+
+  /* ---------- settings (Channel settings zone) ---------- */
+  var SET_TABS = [['stk', '🎟️', 'ชุดสติ๊กเกอร์'], ['qr', '⚡', 'คีย์ลัด'], ['bc', '📢', 'Broadcast (ยิงทั้งหมด)'], ['am', '🤖', 'ข้อความอัตโนมัติ'], ['ba', '🏦', 'บัญชี'], ['tg', '✈️', 'โพสต์ Telegram'], ['gd', '📘', 'คู่มือการใช้งาน']];
+  var PACKS = [[446, 40], [789, 40], [1070, 40], [6136, 24], [6325, 24], [6359, 24]];
+  var S = { tab: 'stk', ch: '', fav: [], f: {}, pack: null, picked: [], ed: {}, msg: {}, stk: [{ name: 'ชุดตัวอย่าง 1', n: 3 }, { name: 'ชุดตัวอย่าง 2', n: 4 }],
+    qr: [{ name: 'สวัสดี', items: [{ t: 'text', v: 'สวัสดีค่ะ ยินดีให้บริการ' }] }], qrDraft: [], bc: [{ t: 'text', v: '' }], bcAsk: false,
+    am: [{ name: 'ทักทาย', kw: 'สวัสดี', mode: 'มีคำนี้', reply: 'สวัสดีค่ะ ยินดีให้บริการ', on: true }], ba: [], tgBtns: [], tgPosts: [], skShow: false, mgrOpen: false,
+    flex: [{ n: 'การ์ดโปรโมชั่น (ตัวอย่าง)', v: '' }, { n: 'การ์ดแจ้งยอด (ตัวอย่าง)', v: 'การ์ด OA ตัวอย่าง A' }] };
+  var TYPE_LBL = { text: 'ข้อความ', sticker: 'สติ๊กเกอร์', image: 'รูปภาพ' };
+  function fv(k) { return esc(S.f[k] || ''); }
+  function smsg(k) { var m = S.msg[k]; return m ? '<div class="' + (m.ok ? 'msg-ok' : 'msg-bad') + '">' + esc(m.t) + '</div>' : ''; }
+  function sset(k, ok, t) { S.msg[k] = { ok: ok, t: t }; }
+  function itemRows(arr, key) {
+    return arr.map(function (x, i) {
+      return '<div class="irow"><span class="tag">' + (i + 1) + '</span><span class="itype">' + TYPE_LBL[x.t] + '</span>' + (x.t === 'text' ? '<textarea data-si="' + key + '" data-i="' + i + '" placeholder="ข้อความ" aria-label="ข้อความ ' + (i + 1) + '">' + esc(x.v) + '</textarea>' : '<input data-si="' + key + '" data-i="' + i + '" value="' + esc(x.v) + '" placeholder="' + (x.t === 'sticker' ? 'สติ๊กเกอร์ (ชุด / ID)' : 'ชื่อไฟล์รูป (ตัวอย่าง)') + '" aria-label="' + TYPE_LBL[x.t] + ' ' + (i + 1) + '">') + '<button type="button" class="btn sm ghost" data-s="rm-' + key + '" data-i="' + i + '" aria-label="ลบรายการ ' + (i + 1) + '">✕</button></div>';
+    }).join('');
+  }
+  function addBtns(key, max, n) {
+    return '<div class="row"><button type="button" class="btn sm ghost" data-s="add-' + key + '" data-t="text"' + (n >= max ? ' disabled' : '') + '>＋ ข้อความ</button><button type="button" class="btn sm ghost" data-s="add-' + key + '" data-t="sticker"' + (n >= max ? ' disabled' : '') + '>＋ สติ๊กเกอร์</button><button type="button" class="btn sm ghost" data-s="add-' + key + '" data-t="image"' + (n >= max ? ' disabled' : '') + '>＋ รูปภาพ</button><span class="hint" style="margin-left:auto">' + n + '/' + max + '</span></div>';
+  }
+  function sHead(icon, title, desc) { return '<h2>' + icon + ' ' + esc(title) + '</h2><p class="sdesc">' + desc + '</p>'; }
+  function setBody() {
+    var t = S.tab, h = '';
+    if (t === 'flex') {
+      h = sHead('🧩', 'Flex Card → OA Manager', 'เลือกการ์ดจาก OA Manager ให้ตรงกับ Flex Card ของ SmartLIFF เพื่อส่งผ่าน chat.line.biz (ไม่เสียโควต้า)') +
+        '<div class="scard"><table class="stbl"><thead><tr><th>Flex Card (SmartLIFF)</th><th>การ์ดใน OA Manager</th></tr></thead><tbody>' + S.flex.map(function (x, i) { return '<tr><td>' + esc(x.n) + '</td><td><select data-sflex="' + i + '" aria-label="การ์ดของ ' + esc(x.n) + '"><option value="">— ยังไม่เลือก —</option>' + ['การ์ด OA ตัวอย่าง A', 'การ์ด OA ตัวอย่าง B'].map(function (o) { return '<option' + (x.v === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></td></tr>'; }).join('') + '</tbody></table></div>';
+    } else if (t === 'mgr') {
+      h = sHead('🔑', 'Manager Session', 'บันทึก session ของ manager.line.biz เพื่อให้ระบบสร้าง OA Manager Card อัตโนมัติได้') +
+        '<div class="scard"><div class="okbar">✓ มี session อัตโนมัติจากผู้ช่วย <span class="hint">อัปเดตล่าสุด: 7/10/2569 14:01:18</span></div><div class="msg-ok">✓ พร้อมสำหรับ OA Manager Card</div>' +
+        '<p class="sdesc">ระบบดึง session นี้มาจากผู้ช่วย (Assistant) ที่ผูกกับช่องนี้โดยอัตโนมัติ — แค่เพิ่มผู้ช่วย หรือกด Verify ผู้ช่วย ระบบก็จะเก็บ session ให้เอง ไม่ต้อง copy cookie เอง</p>' +
+        '<button type="button" class="btn ghost sm" data-s="mgr-toggle">กรอกเอง (ขั้นสูง) ' + (S.mgrOpen ? '▴' : '▾') + '</button>' + (S.mgrOpen ? '<label class="field" for="mgrCk">Session / Cookie (ตัวอย่าง ไม่ต้องกรอกจริง)<textarea id="mgrCk" data-sf="mgrCk" placeholder="วาง cookie ที่นี่">' + fv('mgrCk') + '</textarea></label><button type="button" class="btn" data-s="mgr-save">บันทึก session</button>' : '') +
+        '<button type="button" class="btn ok" data-s="mgr-test">ทดสอบสร้างการ์ด</button>' + smsg('mgr') + '</div>';
+    } else if (t === 'stk') {
+      var pk = PACKS.filter(function (p) { return p[0] === S.pack; })[0];
+      h = sHead('🎟️', 'ชุดสติ๊กเกอร์', 'จัดเก็บชุดสติ๊กเกอร์ LINE ไว้ส่งให้ลูกค้าจากหน้าแชทได้อย่างรวดเร็ว') +
+        '<div class="scard"><h3>' + (S.ed.stk != null ? '✎ แก้ไขชุด' : '＋ สร้างชุดใหม่') + '</h3><label class="field" for="stkName">ชื่อชุด<input id="stkName" data-sf="stkName" value="' + fv('stkName') + '" autocomplete="off"></label>' +
+        '<div class="lbl">⭐ สติ๊กเกอร์โปรด <span class="tag">' + S.fav.length + '</span></div>' + (S.fav.length ? '<div class="favs">' + S.fav.map(function (k) { var pr = k.split('-'); return '<span class="tilew fi"><button type="button" class="tile' + (S.picked.indexOf(k) >= 0 ? ' on' : '') + '" data-s="stk-pick" data-k="' + k + '" aria-pressed="' + (S.picked.indexOf(k) >= 0) + '" aria-label="สติ๊กเกอร์โปรด ชุด ' + pr[0] + ' ลำดับ ' + (+pr[1] + 1) + '">ชุด ' + pr[0] + ' #' + (+pr[1] + 1) + '</button><button type="button" class="fav on" data-s="stk-fav" data-k="' + k + '" aria-pressed="true" aria-label="เอาออกจากรายการโปรด">★</button></span>'; }).join('') + '</div>' : '<div class="hint" style="text-align:left">ยังไม่มีรายการโปรด — เลือกชุดจากคลังแล้วกดดาว ☆ ที่สติ๊กเกอร์</div>') +
+        '<div class="lbl">เลือกจากคลัง LINE</div><div class="packs">' + PACKS.map(function (p) { return '<button type="button" class="pack' + (S.pack === p[0] ? ' on' : '') + '" data-s="stk-pack" data-i="' + p[0] + '"><b>ชุด ' + p[0] + '</b><small>' + p[1] + ' รูป</small></button>'; }).join('') + '</div>' +
+        (pk ? '<div class="tiles">' + Array.apply(null, Array(pk[1])).map(function (_, i) { var k = pk[0] + '-' + i; var fv2 = S.fav.indexOf(k) >= 0; return '<span class="tilew"><button type="button" class="tile' + (S.picked.indexOf(k) >= 0 ? ' on' : '') + '" data-s="stk-pick" data-k="' + k + '" aria-label="สติ๊กเกอร์ ' + (i + 1) + '" aria-pressed="' + (S.picked.indexOf(k) >= 0) + '">' + (i + 1) + '</button><button type="button" class="fav' + (fv2 ? ' on' : '') + '" data-s="stk-fav" data-k="' + k + '" aria-pressed="' + fv2 + '" aria-label="' + (fv2 ? 'เอาออกจากรายการโปรด' : 'เพิ่มเป็นรายการโปรด') + ' สติ๊กเกอร์ ' + (i + 1) + '">' + (fv2 ? '★' : '☆') + '</button></span>'; }).join('') + '</div>' : '') +
+        '<div class="lbl">เพิ่มด้วย ID (สำหรับสติ๊กเกอร์นอกคลัง)</div><div class="row"><input data-sf="stkId" value="' + fv('stkId') + '" inputmode="numeric" placeholder="Sticker ID" aria-label="Sticker ID"><button type="button" class="btn sm" data-s="stk-addid" style="flex:none">＋ เพิ่ม</button></div>' +
+        '<div class="lbl">สติ๊กเกอร์ในชุด <span class="tag">เลือกแล้ว ' + S.picked.length + '</span></div>' + (S.picked.length ? '<div class="chips">' + S.picked.map(function (k) { return '<span class="tag">' + esc(k) + '</span>'; }).join('') + '</div>' : '<div class="hint" style="text-align:left">ยังไม่มีสติ๊กเกอร์ในชุดนี้ — เลือกจากคลังด้านบน</div>') +
+        '<div class="row"><button type="button" class="btn ok" data-s="stk-save">บันทึกชุดสติ๊กเกอร์</button>' + (S.ed.stk != null ? '<button type="button" class="btn ghost" data-s="stk-cancel">ยกเลิกแก้ไข</button>' : '') + '</div>' + smsg('stk') + '</div>' +
+        '<div class="scard"><h3>ชุดทั้งหมด <span class="tag">' + S.stk.length + '</span></h3>' + (S.stk.length ? S.stk.map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) { return (b.x.fav ? 1 : 0) - (a.x.fav ? 1 : 0); }).map(function (o) { var x = o.x, i = o.i; return '<div class="lrow"><div><b>' + (x.fav ? '⭐ ' : '') + esc(x.name) + '</b><small>' + x.n + ' รูป</small></div><div class="row"><button type="button" class="btn sm ghost" data-s="stkset-fav" data-i="' + i + '" aria-pressed="' + !!x.fav + '">' + (x.fav ? '★ โปรด' : '☆ โปรด') + '</button><button type="button" class="btn sm ghost" data-s="stk-edit" data-i="' + i + '">แก้ไข</button><button type="button" class="btn sm danger" data-s="stk-del" data-i="' + i + '">ลบ</button></div></div>'; }).join('') : '<div class="hint">ยังไม่มีชุด</div>') + '</div>';
+    } else if (t === 'qr') {
+      h = sHead('⚡', 'คีย์ลัด', 'สร้างคำตอบสำเร็จรูปเป็นชุดรายการ — ข้อความ (แทรกอิโมจิได้) สติ๊กเกอร์ และรูปภาพ ส่งเรียงตามลำดับในคลิกเดียว') +
+        '<div class="scard"><h3>' + (S.ed.qr != null ? '✎ แก้ไขคีย์ลัด' : '＋ สร้างคีย์ลัดใหม่') + '</h3><label class="field" for="qrName">ชื่อคีย์ลัด<input id="qrName" data-sf="qrName" value="' + fv('qrName') + '" autocomplete="off"></label><div class="lbl">รายการ (ลากปุ่ม ⠿ เพื่อจัดลำดับ)</div>' +
+        (S.qrDraft.length ? itemRows(S.qrDraft, 'qr') : '<div class="hint" style="text-align:left">ยังไม่มีรายการ — กดปุ่มด้านล่างเพื่อเพิ่ม</div>') + addBtns('qr', 10, S.qrDraft.length) +
+        '<div class="row"><button type="button" class="btn ok" data-s="qr-save">บันทึกคีย์ลัด</button>' + (S.ed.qr != null ? '<button type="button" class="btn ghost" data-s="qr-cancel">ยกเลิกแก้ไข</button>' : '') + '</div>' + smsg('qr') +
+        '<div class="prev"><div class="lbl">👁️ ตัวอย่างในแชท</div>' + (S.qrDraft.length ? S.qrDraft.map(function (x) { return '<div class="bub">' + (x.t === 'text' ? esc(x.v || '…') : '[' + TYPE_LBL[x.t] + '] ' + esc(x.v)) + '</div>'; }).join('') + '<small class="hint">ลูกค้าจะได้รับเรียงตามลำดับนี้</small>' : '<div class="hint" style="text-align:left">เพิ่มรายการเพื่อดูตัวอย่างการส่ง</div>') + '</div></div>' +
+        '<div class="scard"><h3>คีย์ลัดทั้งหมด <span class="tag">' + S.qr.length + '</span></h3>' + S.qr.map(function (x, i) { return '<div class="lrow"><div><b>' + esc(x.name) + '</b><small>' + x.items.length + ' รายการ</small></div><div class="row"><button type="button" class="btn sm ghost" data-s="qr-edit" data-i="' + i + '">แก้ไข</button><button type="button" class="btn sm danger" data-s="qr-del" data-i="' + i + '">ลบ</button></div></div>'; }).join('') + '</div>';
+    } else if (t === 'bc') {
+      h = sHead('📢', 'Broadcast — ยิงข้อความหาผู้ติดตามทั้งหมด', 'ข้อความจะถูกส่งหา <b>ทุกห้องแชทของ OA นี้</b> ตามลำดับ part ด้านล่าง (ลากสลับลำดับได้) — ตรวจให้ชัดก่อนส่ง เพราะยกเลิกคนที่ส่งไปแล้วไม่ได้') +
+        '<div class="scard">' + itemRows(S.bc, 'bc') + addBtns('bc', 10, S.bc.length) +
+        (S.bcAsk ? '<div class="msg-bad">ยืนยันส่ง ' + S.bc.length + ' part ถึงทุกห้องแชทของช่องนี้? (ตัวอย่าง ไม่ได้ส่งจริง)</div><div class="row"><button type="button" class="btn danger" data-s="bc-yes">ยืนยันส่ง</button><button type="button" class="btn ghost" data-s="bc-no">ยกเลิก</button></div>' : '<button type="button" class="btn ok" data-s="bc-send">🚀 ส่ง Broadcast</button>') + smsg('bc') + '</div>';
+    } else if (t === 'am') {
+      h = sHead('🤖', 'ข้อความอัตโนมัติ', 'เมื่อลูกค้าพิมพ์ข้อความที่มีคำค้นที่ตั้งไว้ ระบบจะตอบกลับอัตโนมัติด้วยข้อความที่กำหนด — กฎเหล่านี้ใช้กับไลน์เอเย่น (LINE OA) ของช่องนี้เท่านั้น') +
+        '<div class="scard"><h3>' + (S.ed.am != null ? '✎ แก้ไขกฎ' : 'สร้างกฎใหม่') + '</h3><label class="field" for="amName">ชื่อกฎ<input id="amName" data-sf="amName" value="' + fv('amName') + '" autocomplete="off"></label>' +
+        '<label class="field" for="amKw">คำค้น (หนึ่งคำต่อบรรทัด หรือคั่นด้วยจุลภาค)<textarea id="amKw" data-sf="amKw">' + fv('amKw') + '</textarea></label>' +
+        '<label class="field" for="amMode">ประเภทการจับคู่<select id="amMode" data-sf="amMode">' + ['มีคำนี้', 'ตรงทั้งข้อความ'].map(function (o) { return '<option' + ((S.f.amMode || 'มีคำนี้') === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></label><div class="hint" style="text-align:left">' + ((S.f.amMode || 'มีคำนี้') === 'มีคำนี้' ? 'ข้อความลูกค้ามีคำค้นอยู่ที่ใดก็ได้' : 'ข้อความลูกค้าต้องตรงกับคำค้นทั้งข้อความ') + '</div>' +
+        '<label class="field" for="amReply">ข้อความตอบกลับ<textarea id="amReply" data-sf="amReply">' + fv('amReply') + '</textarea></label>' +
+        '<label class="chk"><input type="checkbox" id="amOn" data-sfc="amOn"' + (S.f.amOn === false ? '' : ' checked') + '> เปิดใช้งานกฎนี้</label>' +
+        '<div class="row"><button type="button" class="btn ok" data-s="am-save">บันทึกกฎ</button>' + (S.ed.am != null ? '<button type="button" class="btn ghost" data-s="am-cancel">ยกเลิกแก้ไข</button>' : '') + '</div>' + smsg('am') + '</div>' +
+        '<div class="scard"><h3>กฎทั้งหมด (' + S.am.length + ')</h3>' + S.am.map(function (x, i) { return '<div class="lrow"><div><b>' + esc(x.name) + '</b> <span class="tag">' + esc(x.mode) + '</span><small>คำค้น: ' + esc(x.kw.replace(/\n/g, ', ')) + '</small><small>ตอบ: ' + esc(x.reply) + '</small></div><div class="row"><button type="button" class="btn sm ' + (x.on ? 'ok' : 'ghost') + '" data-s="am-tog" data-i="' + i + '" aria-pressed="' + x.on + '">' + (x.on ? 'เปิด' : 'ปิด') + '</button><button type="button" class="btn sm ghost" data-s="am-edit" data-i="' + i + '">แก้ไข</button><button type="button" class="btn sm danger" data-s="am-del" data-i="' + i + '">ลบ</button></div></div>'; }).join('') + '</div>';
+    } else if (t === 'ba') {
+      h = sHead('🏦', 'บัญชี', 'จัดการบัญชีธนาคารของบริษัทไว้ส่งหรือแทรกให้ลูกค้าจากหน้าแชทได้ในคลิกเดียว') +
+        '<div class="scard"><h3>' + (S.ed.ba != null ? '✎ แก้ไขบัญชี' : 'เพิ่มบัญชีใหม่') + '</h3><label class="field" for="baBank">ธนาคาร<select id="baBank" data-sf="baBank"><option value="">เลือกธนาคาร</option>' + BANKS.map(function (b) { return '<option value="' + b.code + '"' + (S.f.baBank === b.code ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="field" for="baNo">เลขบัญชี<input id="baNo" data-sf="baNo" value="' + fv('baNo') + '" inputmode="numeric" autocomplete="off"></label><label class="field" for="baName">ชื่อบัญชี<input id="baName" data-sf="baName" value="' + fv('baName') + '" autocomplete="off"></label>' +
+        '<div class="row"><button type="button" class="btn ok" data-s="ba-save">บันทึกบัญชี</button>' + (S.ed.ba != null ? '<button type="button" class="btn ghost" data-s="ba-cancel">ยกเลิกแก้ไข</button>' : '') + '</div>' + smsg('ba') + '</div>' +
+        '<div class="scard"><h3>บัญชีทั้งหมด (' + S.ba.length + ')</h3>' + (S.ba.length ? S.ba.map(function (x, i) { return '<div class="lrow"><div class="row">' + bankLogo(x.bank) + '<div><b>' + esc(bankOf(x.bank).name) + '</b><small class="num">' + esc(x.no) + '</small><small>' + esc(x.name) + '</small></div></div><div class="row"><button type="button" class="btn sm ghost" data-s="ba-edit" data-i="' + i + '">แก้ไข</button><button type="button" class="btn sm danger" data-s="ba-del" data-i="' + i + '">ลบ</button></div></div>'; }).join('') : '<div class="hint">ยังไม่มีบัญชี</div>') + '</div>';
+    } else if (t === 'tg') {
+      h = sHead('✈️', 'โพสต์ไป Telegram', 'เขียนโพสต์ (รูป + ข้อความ + ปุ่มเมนู) เพื่อส่งไปยังช่อง Telegram ของเอเย่น') +
+        '<div class="scard"><div class="lbl">รูปภาพ</div><button type="button" class="btn ghost sm" data-s="tg-img">แนบรูปภาพ…</button><label class="field" for="tgText">ข้อความ<textarea id="tgText" data-sf="tgText">' + fv('tgText') + '</textarea></label><div class="lbl">ปุ่มเมนู (ลิงก์)</div>' +
+        (S.tgBtns.length ? S.tgBtns.map(function (b, i) { return '<div class="irow"><input data-sb="l" data-i="' + i + '" value="' + esc(b.l) + '" placeholder="ชื่อปุ่ม" aria-label="ชื่อปุ่ม ' + (i + 1) + '"><input data-sb="u" data-i="' + i + '" value="' + esc(b.u) + '" placeholder="https://" aria-label="ลิงก์ปุ่ม ' + (i + 1) + '"><button type="button" class="btn sm ghost" data-s="tg-rm" data-i="' + i + '" aria-label="ลบปุ่ม ' + (i + 1) + '">✕</button></div>'; }).join('') : '<div class="hint" style="text-align:left">ยังไม่มีปุ่มเมนู</div>') +
+        '<button type="button" class="btn ghost sm" data-s="tg-add"' + (S.tgBtns.length >= 8 ? ' disabled' : '') + '>+ เพิ่มปุ่มเมนู</button> <span class="hint">สูงสุด 8 ปุ่ม (' + S.tgBtns.length + '/8)</span>' +
+        '<button type="button" class="btn ok" data-s="tg-post">📤 โพสต์ไป Telegram</button>' + smsg('tg') + '</div>' +
+        '<div class="scard"><h3>ข้อมูลที่โพสต์ (' + S.tgPosts.length + ')</h3>' + (S.tgPosts.length ? S.tgPosts.map(function (p) { return '<div class="lrow"><div><b>' + esc(p.text) + '</b><small>' + p.btns + ' ปุ่ม · ' + esc(p.time) + ' (ตัวอย่าง ไม่ได้โพสต์จริง)</small></div></div>'; }).join('') : '<div class="hint">ยังไม่มีโพสต์</div>') + '</div>';
+    } else if (t === 'sk') {
+      h = sHead('🔐', 'Secret Key', 'ค่าตัวอย่างเพื่อแสดงหน้าตาเท่านั้น — ไม่ใช่คีย์จริงของระบบ') +
+        '<div class="scard"><div class="lbl">Secret Key (ตัวอย่าง)</div><div class="row"><input readonly value="' + (S.skShow ? 'sk_demo_0000000000000000' : 'sk_demo_••••••••••••••••') + '" aria-label="Secret Key"><button type="button" class="btn sm ghost" data-s="sk-show" style="flex:none">' + (S.skShow ? 'ซ่อน' : 'แสดง') + '</button><button type="button" class="btn sm ghost" data-s="sk-copy" style="flex:none">คัดลอก</button></div><button type="button" class="btn danger sm" data-s="sk-new">สร้างคีย์ใหม่</button>' + smsg('sk') + '</div>';
+    } else if (t === 'pw') {
+      h = sHead('🔑', 'เปลี่ยนรหัสผ่าน', 'เปลี่ยนรหัสผ่านของบัญชีผู้ใช้งาน (operator) ที่กำลังล็อกอินอยู่') +
+        '<div class="scard"><label class="field" for="pwCur">รหัสผ่านปัจจุบัน<input id="pwCur" type="password" data-sf="pwCur" value="' + fv('pwCur') + '" autocomplete="off"></label><label class="field" for="pwN1">รหัสผ่านใหม่<input id="pwN1" type="password" data-sf="pwN1" value="' + fv('pwN1') + '" autocomplete="new-password"></label><label class="field" for="pwN2">ยืนยันรหัสผ่านใหม่<input id="pwN2" type="password" data-sf="pwN2" value="' + fv('pwN2') + '" autocomplete="new-password"></label>' +
+        '<button type="button" class="btn ok" data-s="pw-save">บันทึกรหัสผ่านใหม่</button>' + smsg('pw') + '<div class="hint" style="text-align:left">แนะนำ: ความยาว 8 ตัวขึ้นไป ผสมตัวพิมพ์เล็ก-ใหญ่ ตัวเลข และอักขระพิเศษ</div></div>';
+    } else {
+      var G = [['💬', 'การรับแชทและตอบลูกค้า', ['เลือกไลน์เอเย่นที่ต้องการดูแชทจากแถบซ้าย (หรือดูรวมทุกเอเย่น)', 'คลิกห้องแชทของลูกค้าเพื่อเปิดบทสนทนา', 'พิมพ์ข้อความ แนบรูป หรือส่งสติ๊กเกอร์ได้จากแถบพิมพ์ด้านล่าง', 'ใช้คีย์ลัดข้อความสำเร็จรูปใต้ช่องพิมพ์', 'เมื่อคุยจบ กดปิดเคส (F4) — ระบบจะบันทึกว่าใครรับและปิดเมื่อไร']], ['🧾', 'ตรวจสอบข้อมูลสมาชิก', ['ค้นหาลูกค้าด้วยชื่อ / username / เบอร์โทรที่ช่องค้นหาในแผงขวา', 'ดูเทิร์น โปรโมชั่น ประวัติฝาก/ถอน และสถานะยอดค้างของลูกค้า', 'เปลี่ยนรหัสผ่านของลูกค้าได้จากแผงขวา']], ['🤖', 'ข้อความอัตโนมัติ (Keyword)', ['ไปที่ ตั้งค่า → ข้อความอัตโนมัติ', 'เพิ่มคำค้น (Keyword) และข้อความตอบกลับ', 'เปิด/ปิดการใช้งานแต่ละรายการได้ตามต้องการ']], ['✈️', 'โพสต์ไป Telegram', ['ไปที่ ตั้งค่า → โพสต์ Telegram', 'แนบรูป ใส่ข้อความ และเพิ่มปุ่มเมนูได้สูงสุด 8 ปุ่ม', 'กดโพสต์ แล้วตรวจประวัติที่โพสต์ไปแล้วด้านล่าง']], ['🎟️', 'จัดการชุดสติ๊กเกอร์', ['ไปที่ ตั้งค่า → ชุดสติ๊กเกอร์', 'เลือกสติ๊กเกอร์ที่ต้องการใช้ ระบบจะแสดงจำนวนที่เลือก', 'กดบันทึกชุดสติ๊กเกอร์']]];
+      h = sHead('📘', 'คู่มือการใช้งาน', 'ขั้นตอนการใช้งาน OneChat สำหรับทีมแอดมิน — กด "คัดลอกลิงก์" ที่แต่ละหัวข้อเพื่อแชร์ให้เพื่อนร่วมทีม') + G.map(function (g) { return '<div class="scard"><h3>' + g[0] + ' ' + esc(g[1]) + ' <button type="button" class="btn sm ghost" data-s="gd-copy" style="margin-left:auto">คัดลอกลิงก์</button></h3><ol class="steps">' + g[2].map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></div>'; }).join('');
+    }
+    return h;
+  }
+  function renderSettings() {
+    var keepS = $('#settingsWrap .sbody') ? $('#settingsWrap .sbody').scrollTop : 0;
+    $('#settingsWrap').innerHTML = '<aside class="snav"><button class="btn ghost sm back" data-nav="home" type="button">← กลับไปแชท</button><b class="stitle">Settings</b><small class="hint">' + (S.ch ? 'ช่อง: ' + esc(S.ch) : 'ตั้งค่ารวม') + '</small>' +
+      SET_TABS.map(function (x) { return '<button type="button" class="stab" data-stab="' + x[0] + '"' + (S.tab === x[0] ? ' aria-current="page"' : '') + '><span aria-hidden="true">' + x[1] + '</span>' + esc(x[2]) + '</button>'; }).join('') + '</aside><section class="sbody">' + setBody() + '</section>';
+    $('#settingsWrap .sbody').scrollTop = keepS;
+  }
+  function openSettings(tab, ch, all) { if (tab) S.tab = tab; S.ch = ch || ''; S.all = !!all; S.msg = {}; showPage('settings'); }
+  function settingsAct(el) {
+    var a = el.getAttribute('data-s'), i = +el.getAttribute('data-i'), f = S.f;
+    var r = true;
+    if (a === 'stk-pack') S.pack = +el.getAttribute('data-i');
+    else if (a === 'stk-pick') { var k = el.getAttribute('data-k'), p = S.picked.indexOf(k); if (p >= 0) S.picked.splice(p, 1); else S.picked.push(k); }
+    else if (a === 'stk-fav') { var fk = el.getAttribute('data-k'), fp = S.fav.indexOf(fk); if (fp >= 0) S.fav.splice(fp, 1); else S.fav.push(fk); }
+    else if (a === 'stkset-fav') S.stk[i].fav = !S.stk[i].fav;
+    else if (a === 'stk-addid') { var v = (f.stkId || '').trim(); if (!/^\d+$/.test(v)) sset('stk', false, 'กรอก Sticker ID เป็นตัวเลข'); else { S.picked.push('id-' + v); f.stkId = ''; S.msg.stk = null; } }
+    else if (a === 'stk-save') { var nm = (f.stkName || '').trim(); if (!nm) sset('stk', false, 'กรอกชื่อชุด'); else if (!S.picked.length) sset('stk', false, 'เลือกสติ๊กเกอร์อย่างน้อย 1 รูป'); else { var o = { name: nm, n: S.picked.length }; if (S.ed.stk != null) S.stk[S.ed.stk] = o; else S.stk.push(o); S.ed.stk = null; f.stkName = ''; S.picked = []; S.pack = null; sset('stk', true, 'บันทึกชุดสติ๊กเกอร์แล้ว'); } }
+    else if (a === 'stk-edit') { S.ed.stk = i; f.stkName = S.stk[i].name; S.picked = []; for (var j = 0; j < S.stk[i].n; j++) S.picked.push('id-' + (j + 1)); S.msg.stk = null; }
+    else if (a === 'stk-cancel') { S.ed.stk = null; f.stkName = ''; S.picked = []; S.msg.stk = null; }
+    else if (a === 'stk-del') { S.stk.splice(i, 1); S.ed.stk = null; }
+    else if (a === 'add-qr' || a === 'add-bc') { var arr = a === 'add-qr' ? S.qrDraft : S.bc; if (arr.length < 10) arr.push({ t: el.getAttribute('data-t'), v: '' }); }
+    else if (a === 'rm-qr') S.qrDraft.splice(i, 1);
+    else if (a === 'rm-bc') { S.bc.splice(i, 1); if (!S.bc.length) S.bc.push({ t: 'text', v: '' }); S.bcAsk = false; }
+    else if (a === 'qr-save') { var qn = (f.qrName || '').trim(); var its = S.qrDraft.filter(function (x) { return x.v.trim(); }); if (!qn) sset('qr', false, 'กรอกชื่อคีย์ลัด'); else if (!its.length) sset('qr', false, 'เพิ่มรายการที่มีเนื้อหาอย่างน้อย 1 รายการ'); else { var q = { name: qn, items: its.map(function (x) { return { t: x.t, v: x.v }; }) }; if (S.ed.qr != null) S.qr[S.ed.qr] = q; else S.qr.push(q); S.ed.qr = null; f.qrName = ''; S.qrDraft = []; sset('qr', true, 'บันทึกคีย์ลัดแล้ว'); } }
+    else if (a === 'qr-edit') { S.ed.qr = i; f.qrName = S.qr[i].name; S.qrDraft = S.qr[i].items.map(function (x) { return { t: x.t, v: x.v }; }); S.msg.qr = null; }
+    else if (a === 'qr-cancel') { S.ed.qr = null; f.qrName = ''; S.qrDraft = []; S.msg.qr = null; }
+    else if (a === 'qr-del') { S.qr.splice(i, 1); S.ed.qr = null; }
+    else if (a === 'bc-send') { if (!S.bc.some(function (x) { return x.v.trim(); })) sset('bc', false, 'เพิ่มเนื้อหาอย่างน้อย 1 part ก่อนส่ง'); else { S.bcAsk = true; S.msg.bc = null; } }
+    else if (a === 'bc-no') S.bcAsk = false;
+    else if (a === 'bc-yes') { S.bcAsk = false; sset('bc', true, 'ส่ง Broadcast ตัวอย่างแล้ว (ไม่ได้ส่งจริง)'); }
+    else if (a === 'am-save') { var an = (f.amName || '').trim(), ak = (f.amKw || '').trim(), ar = (f.amReply || '').trim(); if (!an || !ak || !ar) sset('am', false, 'กรอกชื่อกฎ คำค้น และข้อความตอบกลับให้ครบ'); else { var rule = { name: an, kw: ak, mode: f.amMode || 'มีคำนี้', reply: ar, on: f.amOn !== false }; if (S.ed.am != null) S.am[S.ed.am] = rule; else S.am.push(rule); S.ed.am = null; f.amName = f.amKw = f.amReply = ''; f.amMode = null; f.amOn = true; sset('am', true, 'บันทึกกฎแล้ว'); } }
+    else if (a === 'am-edit') { var x = S.am[i]; S.ed.am = i; f.amName = x.name; f.amKw = x.kw; f.amMode = x.mode; f.amReply = x.reply; f.amOn = x.on; S.msg.am = null; }
+    else if (a === 'am-cancel') { S.ed.am = null; f.amName = f.amKw = f.amReply = ''; f.amMode = null; f.amOn = true; S.msg.am = null; }
+    else if (a === 'am-tog') S.am[i].on = !S.am[i].on;
+    else if (a === 'am-del') { S.am.splice(i, 1); S.ed.am = null; }
+    else if (a === 'ba-save') { var bn = (f.baNo || '').replace(/[\s-]/g, ''), bm = (f.baName || '').trim(); if (!f.baBank || !bn || !bm) sset('ba', false, 'เลือกธนาคาร กรอกเลขบัญชีและชื่อบัญชีให้ครบ'); else if (!/^\d{10,12}$/.test(bn)) sset('ba', false, 'เลขบัญชีต้องเป็นตัวเลข 10-12 หลัก'); else { var acc = { bank: f.baBank, no: f.baNo.trim(), name: bm }; if (S.ed.ba != null) S.ba[S.ed.ba] = acc; else S.ba.push(acc); S.ed.ba = null; f.baBank = ''; f.baNo = ''; f.baName = ''; sset('ba', true, 'บันทึกบัญชีแล้ว'); } }
+    else if (a === 'ba-edit') { var y = S.ba[i]; S.ed.ba = i; f.baBank = y.bank; f.baNo = y.no; f.baName = y.name; S.msg.ba = null; }
+    else if (a === 'ba-cancel') { S.ed.ba = null; f.baBank = ''; f.baNo = ''; f.baName = ''; S.msg.ba = null; }
+    else if (a === 'ba-del') { S.ba.splice(i, 1); S.ed.ba = null; }
+    else if (a === 'tg-add') { if (S.tgBtns.length < 8) S.tgBtns.push({ l: '', u: '' }); }
+    else if (a === 'tg-rm') S.tgBtns.splice(i, 1);
+    else if (a === 'tg-img') { sset('tg', true, 'แนบรูปภาพ: ปุ่มตัวอย่าง ไม่ได้อัปโหลดจริง'); }
+    else if (a === 'tg-post') { var tt = (f.tgText || '').trim(); if (!tt) sset('tg', false, 'กรอกข้อความก่อนโพสต์'); else { S.tgPosts.unshift({ text: tt, btns: S.tgBtns.length, time: '7 ต.ค. 2569 ' + nowT() }); f.tgText = ''; S.tgBtns = []; sset('tg', true, 'โพสต์ตัวอย่างแล้ว (ไม่ได้โพสต์จริง)'); } }
+    else if (a === 'sk-show') S.skShow = !S.skShow;
+    else if (a === 'sk-copy') sset('sk', true, 'คัดลอกคีย์ตัวอย่างแล้ว');
+    else if (a === 'sk-new') sset('sk', true, 'สร้างคีย์ใหม่: ปุ่มตัวอย่าง ไม่ได้เปลี่ยนคีย์จริง');
+    else if (a === 'mgr-toggle') S.mgrOpen = !S.mgrOpen;
+    else if (a === 'mgr-save') sset('mgr', true, 'บันทึก session ตัวอย่างแล้ว');
+    else if (a === 'mgr-test') sset('mgr', true, 'ทดสอบสร้างการ์ดตัวอย่างสำเร็จ');
+    else if (a === 'pw-save') { if (!f.pwCur) sset('pw', false, 'กรอกรหัสผ่านปัจจุบัน'); else if ((f.pwN1 || '').length < 8) sset('pw', false, 'รหัสผ่านใหม่ต้องยาว 8 ตัวขึ้นไป'); else if (f.pwN1 === f.pwCur) sset('pw', false, 'รหัสผ่านใหม่ต้องไม่ซ้ำรหัสเดิม'); else if (f.pwN1 !== f.pwN2) sset('pw', false, 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน'); else { f.pwCur = f.pwN1 = f.pwN2 = ''; sset('pw', true, 'บันทึกรหัสผ่านใหม่แล้ว (ตัวอย่าง)'); } }
+    else if (a === 'gd-copy') { toast('คัดลอกลิงก์แล้ว (ตัวอย่าง)'); r = false; }
+    else r = false;
+    if (r) renderSettings();
+  }
+  document.addEventListener('click', function (e) {
+    var s = e.target.closest && e.target.closest('[data-stab],[data-s]');
+    if (!s) return;
+    if (s.hasAttribute('data-stab')) { S.tab = s.getAttribute('data-stab'); S.msg = {}; renderSettings(); return; }
+    settingsAct(s);
+  });
+  document.addEventListener('input', function (e) {
+    var g = e.target; if (!g.getAttribute || !g.closest || !g.closest('#settingsWrap')) return;
+    if (g.hasAttribute('data-sf')) S.f[g.getAttribute('data-sf')] = g.value;
+    else if (g.hasAttribute('data-si')) { var ar = g.getAttribute('data-si') === 'qr' ? S.qrDraft : S.bc; ar[+g.getAttribute('data-i')].v = g.value; if (g.getAttribute('data-si') === 'qr') { var pv = $('#settingsWrap .prev'); if (pv) { /* keep typing focus: preview updates on next render */ } } }
+    else if (g.hasAttribute('data-sb')) S.tgBtns[+g.getAttribute('data-i')][g.getAttribute('data-sb')] = g.value;
+  });
+  document.addEventListener('change', function (e) {
+    var g = e.target; if (!g.getAttribute || !g.closest || !g.closest('#settingsWrap')) return;
+    if (g.hasAttribute('data-sfc')) S.f[g.getAttribute('data-sfc')] = g.checked;
+    else if (g.hasAttribute('data-sflex')) S.flex[+g.getAttribute('data-sflex')].v = g.value;
+    else if (g.id === 'amMode' || g.id === 'baBank') { S.f[g.getAttribute('data-sf')] = g.value; if (g.id === 'amMode') renderSettings(); }
+  });
+
+  /* ---------- menu ---------- */
+  var groups = [
+    [['หน้าหลัก', '#35c07a', 'home']],
+    [['จัดการข้อความอัตโนมัติ', '#f0a030', 'announce'], ['Telegram post', '#4d8ff0', 'tg']],
+    [['จัดการไลน์', '#2cc4d6', 'x']],
+    [['จัดการแอดมิน', '#9b59d0', 'x'], ['คู่มือการใช้งาน', '#35c07a', 'gd'], ['จัดการสติ๊กเกอร์', '#f6d55c', 'stk']],
+    [['อัพเดต', '#ee6c6c', 'x'], ['เคลียร์ภาพ', '#35c07a', 'x']],
+    [['เปลี่ยนรหัสผ่าน', '#a0764a', 'x'], ['ออกจากระบบ', '#ee6c6c', 'logout']]
+  ];
+  var SETMAP = { tg: 'tg', gd: 'gd', stk: 'stk' };
+  function renderMenu() { $('#menu').innerHTML = groups.map(function (g) { return g.map(function (i) { return '<button type="button" data-go="' + i[2] + '" data-label="' + esc(i[0]) + '"><span class="dot" style="background:' + i[1] + '"></span>' + esc(i[0]) + '</button>'; }).join(''); }).join('<hr>'); }
+  function setMenu(v) { st.menu = v; $('#menu').hidden = !v; $('#burger').setAttribute('aria-expanded', String(v)); }
+  function showPage(p) { st.page = p; $('#consoleWrap').style.display = p === 'console' ? 'grid' : 'none'; $('#announceWrap').hidden = p !== 'announce'; $('#settingsWrap').hidden = p !== 'settings'; if (p === 'announce') renderAnnounce(); if (p === 'settings') renderSettings(); }
+  function setView(v) { st.view = v; document.body.setAttribute('data-view', v); document.querySelectorAll('.viewtabs button').forEach(function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-view') === v)); }); }
+
+  /* ---------- actions ---------- */
+  function closeCase(c) { if (c.status === 'closed') return; c.status = 'closed'; if (!c.admin) c.admin = ME; c.closedBy = ME; c.closedAt = nowT(); renderList(); renderChat(); scrollMsgs(); toast('ปิดเคสแล้ว การ์ดเปลี่ยนเป็นสีขาว'); }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-tab],[data-id],[data-act],[data-quick],[data-go],[data-ann],[data-nav],[data-view],[data-sel],[data-gear],[data-refresh],[data-hist]'); var c = cur();
+    if (e.target.id === 'modal') { st.accModal = false; st.histModal = false; renderHistModal(); return; }
+    if (!t) { if (st.menu && !e.target.closest('#menu') && !e.target.closest('#burger')) setMenu(false); return; }
+    if (t.hasAttribute('data-view') && t.closest('.viewtabs')) { setView(t.getAttribute('data-view')); return; }
+    if (t.hasAttribute('data-tab')) { st.tab = t.getAttribute('data-tab'); renderList(); return; }
+    if (t.hasAttribute('data-refresh')) { toast('รีเฟรชรายการแล้ว'); return; }
+    if (t.hasAttribute('data-hist')) { st.hist = t.getAttribute('data-hist'); renderPanel(); renderHistModal(); return; }
+    if (t.hasAttribute('data-gear')) { openSettings('stk', t.getAttribute('data-gear')); return; }
+    if (t.hasAttribute('data-sel')) { st.sel = t.getAttribute('data-sel') === 'all' ? merchants.map(function (m) { return m.id; }) : []; renderSide(); renderList(); return; }
+    if (t.hasAttribute('data-id')) { st.cur = t.getAttribute('data-id'); st.regMsg = null; st.lookup = null; st.pw = { open: false, a: '', b: '', err: null, msg: null }; st.credit = { type: 'add', amt: '', note: '', pass: '', err: null, msg: null }; renderList(); renderChat(); renderPanel(); scrollMsgs(); if (window.innerWidth <= 1180) setView('chat'); return; }
+    if (t.hasAttribute('data-quick')) { var a = announces.filter(function (x) { return String(x.id) === t.getAttribute('data-quick'); })[0]; if (a && c.status !== 'closed') { accept(c); push(c, 'admin', a.text); } return; }
+    if (t.hasAttribute('data-nav')) { showPage('console'); return; }
+    if (t.hasAttribute('data-go')) {
+      var g = t.getAttribute('data-go'); setMenu(false);
+      if (g === 'home') showPage('console'); else if (g === 'announce') showPage('announce'); else if (SETMAP[g]) openSettings(SETMAP[g]); else if (g === 'logout') { $('#app').hidden = true; $('#login').hidden = false; showPage('console'); } else toast('ตัวอย่าง: เมนู "' + t.getAttribute('data-label') + '" ยังไม่มีหน้า');
+      return;
+    }
+    if (t.hasAttribute('data-ann')) {
+      var k = t.getAttribute('data-ann');
+      if (k === 'add') {
+        var nm = $('#aName').value.trim(); if (!nm) { toast('กรอก Name ก่อน'); return; }
+        announces.push({ id: nextAnn++, sort: +$('#aSort').value || 1, type: $('#aType').value, name: nm, text: $('#aText').value, status: $('#aStatus').value }); renderAnnounce(); renderChat(); toast('เพิ่มข้อความแล้ว');
+      } else {
+        var aid = +t.getAttribute('data-id'); var a2 = announces.filter(function (x) { return x.id === aid; })[0];
+        if (k === 'save') { a2.sort = +$('#s' + aid).value || 1; a2.type = $('#t' + aid).value; a2.name = $('#n' + aid).value; a2.text = $('#x' + aid).value; a2.status = $('#u' + aid).value; renderAnnounce(); renderChat(); toast('บันทึกแล้ว'); }
+        if (k === 'del') { announces = announces.filter(function (x) { return x.id !== aid; }); renderAnnounce(); renderChat(); toast('ลบแล้ว'); }
+      }
+      return;
+    }
+    var act = t.getAttribute('data-act');
+    if (act === 'close') closeCase(c);
+    if (act === 'saveName') { c.name = $('#eName').value || c.name; c.user.username = $('#eUser').value || c.user.username; renderList(); renderChat(); renderPanel(); toast('บันทึกชื่อและไอดีแล้ว'); }
+    if (act === 'send') { var v = $('#msgIn').value.trim(); if (v) { accept(c); $('#msgIn').value = ''; push(c, 'admin', v); } }
+    if (act === 'coacc' && c.status !== 'closed') {
+      var ca = COACC[+t.getAttribute('data-i')]; st.coSel = +t.getAttribute('data-i');
+      accept(c); push(c, 'admin', 'โอนเข้าบัญชี ' + bankOf(ca.bank).name + ' ชื่อบัญชี ' + ca.name + ' เลขที่ ' + ca.no);
+      renderPanel(); toast('ส่งเลขบัญชีบริษัทให้ลูกค้าแล้ว');
+    }
+    if (act === 'coadd') toast('เพิ่มบัญชี: ทำในหลังบ้าน (ปุ่มตัวอย่าง)');
+    if (act === 'verify') { c.lineOk = true; push(c, 'sys', 'Verify สำเร็จ'); renderPanel(); toast('Verify แล้ว'); }
+    if (act === 'lineupdate') { toast('อัปเดตสถานะไลน์แล้ว'); }
+    if (act === 'lookup') { st.lookup = $('#chkIn').value; toast('ตรวจสอบแล้ว (ข้อมูลตัวอย่าง)'); renderPanel(); }
+    if (act === 'slip') {
+      c.vi = (c.vi == null ? 0 : c.vi + 1);
+      var sv = c.vi % 2 === 0 ? 'real' : 'fake';
+      var base = c.claim || 100; c.claim = base;
+      var samt = base;
+      accept(c); push(c, 'cust', '', { action: 'slip', amt: samt, variant: sv }); c.slip = { state: 'pending', amt: samt, variant: sv }; renderPanel();
+    }
+    if (act === 'slipcheck') {
+      var sm = c.msgs[+t.getAttribute('data-i')]; sm.checked = true; c.slip = { state: 'reading', amt: sm.amt, variant: sm.variant }; renderChat(); scrollMsgs(); renderPanel();
+      setTimeout(function () { if (c.slip && c.slip.state === 'reading') { c.slip = slipData(c, sm.amt, sm.variant, sm.t); if (c.id === st.cur) renderPanel(); } }, 4000);
+    }
+    if (act === 'slipcredit') toast('ไปหน้า Auto fast (ปุ่มตัวอย่าง ยังไม่มีลิงก์จริง)');
+    if (act === 'crsave') {
+      var cr = st.credit, camt = parseFloat(cr.amt); cr.msg = null; cr.err = null;
+      if (!(camt > 0)) cr.err = 'กรอกจำนวนเงินมากกว่า 0';
+      else if (cr.type === 'sub' && camt > c.credit) cr.err = 'เครดิตคงเหลือไม่พอสำหรับถอนเครดิต';
+      else if (!cr.pass) cr.err = 'กรอกรหัสผ่านแอดมินก่อนบันทึก';
+      else {
+        var cadd = cr.type === 'add';
+        c.credit = Math.round((c.credit + (cadd ? camt : -camt)) * 100) / 100;
+        (cadd ? c.histDep : c.histWd).unshift({ amt: camt, time: '5 ต.ค. 2569 ' + nowT(), ok: true, ref: 'CR' + String(Date.now()).slice(-6) });
+        push(c, 'sys', (cadd ? 'เติมเครดิต ' : 'ถอนเครดิต ') + camt.toFixed(2) + ' บาท ' + (cadd ? 'ให้ ' : 'ของ ') + c.user.username + (cr.note ? ' (' + cr.note + ')' : '') + ' เรียบร้อย');
+        st.credit = { type: cr.type, amt: '', note: '', pass: '', err: null, msg: (cadd ? 'เติมเครดิต ' : 'ถอนเครดิต ') + camt.toFixed(2) + ' บาท แล้ว' };
+        toast('บันทึกเครดิตแล้ว');
+      }
+      renderPanel();
+    }
+    if (act === 'histall') { st.hist = 'all'; st.histModal = true; renderHistModal(); var mc2 = $('#mClose'); if (mc2) mc2.focus(); }
+    if (act === 'accview') { st.accModal = true; renderHistModal(); var mc3 = $('#mClose'); if (mc3) mc3.focus(); }
+    if (act === 'accclose') { st.accModal = false; renderHistModal(); }
+    if (act === 'histclose') { st.histModal = false; renderHistModal(); }
+    if (act === 'pwopen') { st.pw = { open: true, a: '', b: '', err: null, msg: null }; renderPanel(); }
+    if (act === 'pwcancel') { st.pw = { open: false, a: '', b: '', err: null, msg: null }; renderPanel(); }
+    if (act === 'pwsave') {
+      if (!st.pw.a) st.pw.err = 'กรอกรหัสผ่านใหม่ก่อน';
+      else if (st.pw.a.length < 6) st.pw.err = 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร';
+      else if (st.pw.a !== st.pw.b) st.pw.err = 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน';
+      else { st.pw = { open: false, a: '', b: '', err: null, msg: 'เปลี่ยนรหัสผ่านของ ' + c.user.username + ' แล้ว' }; push(c, 'sys', 'เปลี่ยนรหัสผ่านของ ' + c.user.username + ' เรียบร้อย'); toast('เปลี่ยนรหัสผ่านแล้ว'); }
+      renderPanel();
+    }
+    if (act === 'register') {
+      var no = st.reg.no.trim();
+      if (!st.reg.bank) st.regMsg = { ok: false, text: 'เลือกธนาคารก่อน' };
+      else if (!no) st.regMsg = { ok: false, text: 'กรอกเลขที่บัญชีก่อน' };
+      else if (cases.some(function (x) { return x.user.number === no && x.user.bankCode === st.reg.bank; })) st.regMsg = { ok: false, text: 'เลขบัญชีซ้ำ สมัครสมาชิกไม่ได้' };
+      else st.regMsg = { ok: true, text: 'เลขบัญชีไม่ซ้ำ สมัครสมาชิกได้ (' + bankOf(st.reg.bank).name + ')' };
+      renderPanel();
+    }
+    if (act === 'askacc' && c.status !== 'closed') { accept(c); push(c, 'admin', 'รบกวนแจ้งชื่อ-นามสกุล ธนาคาร และเลขที่บัญชีของคุณลูกค้า เพื่อสมัครสมาชิกค่ะ'); }
+    if (act === 'regsubmit') {
+      var rg = st.reg, rno = rg.no.trim(), miss = [];
+      if (!rg.name.trim()) miss.push('ชื่อ');
+      if (!rg.phone.trim()) miss.push('เบอร์');
+      if (!rg.bank) miss.push('ธนาคาร');
+      if (!rno) miss.push('เลขที่บัญชี');
+      if (!rg.pass) miss.push('รหัสผ่าน');
+      if (miss.length) st.regMsg = { ok: false, text: 'กรอกให้ครบ: ' + miss.join(', ') };
+      else if (rg.pass.length < 6) st.regMsg = { ok: false, text: 'รหัสผ่านต้องยาว 6 ตัวขึ้นไป' };
+      else if (cases.some(function (x) { return x.user.number === rno && x.user.bankCode === rg.bank; })) st.regMsg = { ok: false, text: 'เลขบัญชีซ้ำ สมัครสมาชิกไม่ได้' };
+      else {
+        var rname = rg.name.trim();
+        st.regMsg = { ok: true, text: 'สมัครสมาชิกให้ ' + rname + ' สำเร็จ' };
+        st.reg = { name: '', phone: '', bank: '', no: '', pass: '', ref: '' };
+        push(c, 'sys', 'สมัครสมาชิก Player ให้ ' + rname + ' เรียบร้อย');
+        toast('สมัครสมาชิกแล้ว');
+      }
+      renderPanel();
+    }
+    if (act === 'regclear') { st.reg = { name: '', phone: '', bank: '', no: '', pass: '', ref: '' }; st.regMsg = null; renderPanel(); }
+  });
+  document.addEventListener('change', function (e) {
+    var tg = e.target; if (!tg.getAttribute) return;
+    if (tg.id === 'regGame') { st.reg.game = tg.value; return; }
+    if (tg.id === 'regBank') { st.reg.bank = tg.value; return; }
+    if (tg.name === 'crType') { st.credit.type = tg.value; return; }
+    var mc = tg.getAttribute('data-mchk');
+    if (mc) { var i = st.sel.indexOf(mc); if (tg.checked && i < 0) st.sel.push(mc); if (!tg.checked && i >= 0) st.sel.splice(i, 1); renderList(); return; }
+  });
+  function gsRender() {
+    var box = $('#gsRes'), q = $('#gSearch').value.trim().toLowerCase();
+    if (!q) { box.hidden = true; return; }
+    var r = cases.filter(function (c) { return [c.name, c.user.username, c.user.fullname, c.user.mobile].join(' ').toLowerCase().indexOf(q) >= 0; }).slice(0, 8);
+    box.innerHTML = r.length ? r.map(function (c) { return '<button type="button" data-pick="' + c.id + '"><b>' + esc(c.name) + '</b> · ' + esc(c.user.username) + '<small>' + esc(c.user.fullname) + ' · ' + esc(c.user.mobile) + ' · ' + esc(merch(c.merchant).name) + '</small></button>'; }).join('') : '<div class="none">ไม่พบลูกค้า</div>';
+    box.hidden = false;
+  }
+  document.addEventListener('click', function (e) {
+    var p = e.target.closest && e.target.closest('[data-pick]');
+    if (p) {
+      var pc = cases.filter(function (x) { return x.id === p.getAttribute('data-pick'); })[0];
+      if (pc) {
+        if (st.sel.length && st.sel.indexOf(pc.merchant) < 0) st.sel = [];
+        st.tab = 'all'; st.cur = pc.id; st.regMsg = null; st.lookup = null;
+        showPage('console'); $('#gsRes').hidden = true; $('#gSearch').value = '';
+        renderSide(); renderList(); renderChat(); renderPanel(); scrollMsgs(); if (isNarrow()) setView('chat');
+      }
+      return;
+    }
+    if (!(e.target.closest && e.target.closest('.gs'))) $('#gsRes').hidden = true;
+  });
+  document.addEventListener('input', function (e) {
+    var id = e.target && e.target.id;
+    if (id === 'gSearch') gsRender();
+    if (id === 'regName') st.reg.name = e.target.value;
+    if (id === 'regNo') st.reg.no = e.target.value;
+    if (id === 'regPhone') st.reg.phone = e.target.value;
+    if (id === 'regRef') st.reg.ref = e.target.value;
+    if (id === 'regPass') st.reg.pass = e.target.value;
+    if (id === 'crAmt') st.credit.amt = e.target.value;
+    if (id === 'crNote') st.credit.note = e.target.value;
+    if (id === 'crPass') st.credit.pass = e.target.value;
+    if (id === 'pwConf') st.pw.b = e.target.value;
+    if (id === 'pwNew') st.pw.a = e.target.value;
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && (st.histModal || st.accModal)) { st.accModal = false; st.histModal = false; renderHistModal(); return; }
+    if (e.key === 'Escape' && st.menu) setMenu(false);
+    if (e.key === 'F4' && st.page === 'console' && !$('#app').hidden) { e.preventDefault(); closeCase(cur()); }
+    if (e.key === 'Enter' && e.target && e.target.id === 'msgIn') { e.preventDefault(); var b = document.querySelector('[data-act="send"]'); if (b) b.click(); }
+    if (e.key === 'Enter' && e.target && e.target.id === 'noteIn') { e.preventDefault(); if (e.target.value.trim()) { toast('บันทึก Note แล้ว'); e.target.value = ''; } }
+  });
+  $('#burger').addEventListener('click', function () { setMenu(!st.menu); });
+  $('#loginForm').addEventListener('submit', function (e) { e.preventDefault(); $('#login').hidden = true; $('#app').hidden = false; renderAll(); });
+
+  setInterval(function () {
+    cases.forEach(function (c) { if (c.status === 'waiting') { c.secs++; var el = document.querySelector('[data-secs="' + c.id + '"]'); if (el) el.textContent = '(' + c.secs + ')'; } });
+  }, 1000);
+
+  function renderAll() { renderMenu(); renderSide(); renderList(); renderChat(); renderPanel(); setView(isNarrow() ? 'list' : st.view); scrollMsgs(); }
+})();
+</script>
+
+</body></html>

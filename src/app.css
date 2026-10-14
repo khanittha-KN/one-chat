@@ -1,0 +1,776 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   OneChat — ธีม SmartLiff shadcn (shadcn-theme-kit/theme.css) + ชุดสี WeChat (WeUI)
+   · ส่วนที่ต่างจาก theme.css มีแค่ "บล็อกสี" (:root และโหมดมืด) — ตั้งแต่ @theme inline ลงไปคัดลอกมาตรง ๆ
+   · โหมดมืดใช้ได้ทั้ง <html data-theme="dark"> และ <html class="dark"> (mode-watcher ใส่ .dark ให้)
+   · ⚑ = ค่าที่ปรับจากสี CI ของ WeChat ให้ผ่านความต่างสี WCAG 2.2 AA
+       #07C160 บนพื้นขาวได้แค่ 2.38:1 ⇒ โหมดสว่างใช้เฉดเดียวกันที่เข้มขึ้น #047B3D (5.38:1) กับตัวอักษร/ปุ่ม/วงโฟกัส
+       #07C160 คงไว้ตรงตัวที่ --brand-accent (จุดสถานะ ของตกแต่ง) และเป็น --brand จริงในโหมดมืด (7.45:1 บน #15181E)
+       #808080 (ข้อความรอง) ได้ 3.69–3.95:1 ⇒ สว่าง #5C6370 · มืด #9DA5B4 (ทั้งคู่เป็นเทาโทนเย็น)
+        โหมดมืดใช้เทาโทนเย็นอมน้ำเงิน (เจ้าของงานสั่ง 12 ต.ค. 2026) แทนเทากลาง #191919 / #1F1F1F / #2F2F2F / #3A3A3A
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn-svelte/tailwind.css";
+
+@custom-variant dark (&:is([data-theme="dark"] *, .dark *));
+
+/* ── ฟอนต์: LINE Seed Sans TH (OFL) · ไฟล์อยู่ที่ static/fonts/ ── */
+@font-face {
+    font-family: "LINE Seed Sans TH";
+    src: url("/fonts/LINESeedSansTH_W_Th.woff2") format("woff2");
+    font-weight: 300;
+    font-display: swap;
+}
+@font-face {
+    font-family: "LINE Seed Sans TH";
+    src: url("/fonts/LINESeedSansTH_W_Rg.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+}
+@font-face {
+    font-family: "LINE Seed Sans TH";
+    src: url("/fonts/LINESeedSansTH_W_Bd.woff2") format("woff2");
+    font-weight: 700;
+    font-display: swap;
+}
+@font-face {
+    font-family: "LINE Seed Sans TH";
+    src: url("/fonts/LINESeedSansTH_W_XBd.woff2") format("woff2");
+    font-weight: 800;
+    font-display: swap;
+}
+@font-face {
+    font-family: "LINE Seed Sans TH";
+    src: url("/fonts/LINESeedSansTH_W_He.woff2") format("woff2");
+    font-weight: 900;
+    font-display: swap;
+}
+
+/* ── สี: WeChat (WeUI) — โหมดสว่าง ── */
+:root {
+    --radius: 0.625rem;
+    --background: #f4f6f9; /* พื้นหลังหลัก */
+    --foreground: #171a20; /* ข้อความหลัก = ดำ 90% บนขาว */
+    --card: #ffffff; /* พื้นหลังกล่อง */
+    --card-foreground: #171a20;
+    --popover: #ffffff;
+    --popover-foreground: #171a20;
+    --primary: #047b3d; /* ⚑ เฉดเข้มของ #07C160 — ตัวขาวบนปุ่มได้ 5.38:1 */
+    --primary-foreground: #ffffff;
+    --secondary: #e9ecf1;
+    --secondary-foreground: #171a20;
+    --muted: #e9ecf1;
+    --muted-foreground: #5c6370; /* ⚑ แทน #808080 — บน #E9ECF1 ได้ 5.10:1 */
+    --accent: #e9ecf1;
+    --accent-foreground: #171a20;
+    --destructive: oklch(0.48 0.2 27.325);
+    --border: #e2e6ec;
+    --input: #858d9a; /* ⚑ ขอบช่องกรอก 3.35:1 บนการ์ดขาว (WCAG 1.4.11) */
+    --ring: var(--brand);
+    --chart-1: #95ec69;
+    --chart-2: #3eb575;
+    --chart-3: #07c160;
+    --chart-4: #047b3d;
+    --chart-5: #035a2c;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #171a20;
+    --sidebar-primary: #047b3d;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #e9ecf1;
+    --sidebar-accent-foreground: #171a20;
+    --sidebar-border: #e2e6ec;
+    --sidebar-ring: var(--brand);
+
+    --brand: #047b3d; /* ⚑ ตัวอักษร ลิงก์ ของที่เลือก วงโฟกัส */
+    --brand-foreground: #ffffff;
+    --brand-accent: #07c160; /* สี CI ตรงตัว — ใช้กับของตกแต่งที่ไม่ใช่ตัวอักษร */
+    --success: oklch(0.465 0.15 152);
+    --warning: oklch(0.5 0.13 52);
+    --info: oklch(0.48 0.134 242.749);
+    /* โหมดสว่าง (เจ้าของงานสั่ง 12 ต.ค. 2026): ห้องแชทเป็นการ์ดขาวใบเดียว · แถบบน เมนูข้าง รายการแชท แผงลูกค้า
+       ลดจากขาวเป็นเทาอ่อน #F4F6F9 · พื้นรอบห้องแชทเทาลงอีกขั้น #E9ECF1 (ตัวเทา #5C6370 บนพื้นนี้ 5.1:1)
+       เทาทั้งหมดเป็นโทนเย็นอมน้ำเงินตามโหมดมืด (เจ้าของงานสั่ง 12 ต.ค. 2026) */
+    --surface-page: #e9ecf1;
+    --surface-chrome: var(--background);
+
+    /* สีประเภทเคสของ OneChat (ตามต้นฉบับ: ฝาก เหลือง · ถอน ส้ม · ทั่วไป แดง · ปิดเคส ขาว)
+       แถบซ้าย · พื้นแถว · ตัวอักษรบนพื้นนั้น (≥5.8:1 · ตัวเทา muted บนพื้นได้ ≥5.3:1)
+       โทนเย็น: เหลืองอมเขียวมะนาว · ส้มลดความอุ่น · แดงอมชมพู (rose) · ขาวขอบเทาอมน้ำเงิน */
+    --case-yellow: #d6b30a;
+    --case-yellow-bg: #f8f5dc;
+    --case-yellow-fg: #685700;
+    --case-orange: #f2994a;
+    --case-orange-bg: #faefe8;
+    --case-orange-fg: #874616;
+    --case-red: #ef4f68;
+    --case-red-bg: #fcecf0;
+    --case-red-fg: #b01f45;
+    --case-white: #c3cad5;
+    --case-white-bg: #ffffff;
+    --case-white-fg: #48505e;
+}
+
+/* ── สี: WeChat (WeUI) — โหมดมืด (ไม่ใช้ดำสนิท · กล่องสว่างกว่าพื้น) ── */
+:is([data-theme="dark"], .dark) {
+    --background: #15181e;
+    --foreground: #e2e6ed;
+    --card: #282d36;
+    --card-foreground: #e2e6ed;
+    --popover: #282d36;
+    --popover-foreground: #e2e6ed;
+    --primary: #07c160; /* ตัว #15181e บนปุ่มได้ 7.45:1 */
+    --primary-foreground: #15181e;
+    --secondary: #333944;
+    --secondary-foreground: #e2e6ed;
+    --muted: #333944;
+    --muted-foreground: #9da5b4; /* ⚑ แทน #808080 — บน #333944 ได้ 4.68:1 */
+    --accent: #333944;
+    --accent-foreground: #e2e6ed;
+    --destructive: oklch(0.8 0.14 22.216);
+    --border: rgb(255 255 255 / 10%);
+    --input: rgb(255 255 255 / 45%);
+    --ring: var(--brand);
+    --sidebar: #1a1e25;
+    --sidebar-foreground: #e2e6ed;
+    --sidebar-primary: #07c160;
+    --sidebar-primary-foreground: #15181e;
+    --sidebar-accent: #333944;
+    --sidebar-accent-foreground: #e2e6ed;
+    --sidebar-border: rgb(255 255 255 / 10%);
+    --sidebar-ring: var(--brand);
+
+    --brand: #07c160;
+    --brand-foreground: #15181e;
+    --brand-accent: #07c160;
+    --success: oklch(0.76 0.15 152);
+    --warning: oklch(0.78 0.14 70);
+    --info: oklch(0.766 0.16 232.661);
+    /* โหมดมืดโทนเย็น: แถบ/เมนู #1a1e25 · พื้นหน้า #15181e · การ์ดห้องแชท #282d36 */
+    --surface-page: var(--background);
+    --surface-chrome: var(--sidebar);
+    /* ปุ่มทึบในโหมดมืด: เฉดเข้ม + ตัวขาว (ตัวขาวบนพื้น ≥5:1) แทนพื้นพาสเทลตัวดำ */
+    --success-solid: #047b3d;
+    --destructive-solid: #c62828;
+    --warning-solid: #b45309;
+    --info-solid: #0369a1;
+
+    /* สีประเภทเคส — โหมดมืดตามค่าเดิมของต้นฉบับ (ตัวอักษร ≥6.3:1) */
+    --case-yellow: #e9d95e;
+    --case-yellow-bg: #34352b;
+    --case-yellow-fg: #e9d95e;
+    --case-orange: #f0a25e;
+    --case-orange-bg: #3a302d;
+    --case-orange-fg: #f0a25e;
+    --case-red: #ee6c86;
+    --case-red-bg: #3b2633;
+    --case-red-fg: #ff8fa6;
+    --case-white: #e2e6ed;
+    --case-white-bg: #282d36;
+    --case-white-fg: #e2e6ed;
+}
+
+@theme inline {
+    --font-sans: "LINE Seed Sans TH", system-ui, sans-serif;
+    --font-heading: "LINE Seed Sans TH", system-ui, sans-serif;
+
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-surface-page: var(--surface-page);
+    --color-surface-chrome: var(--surface-chrome);
+
+    /* ได้คลาส text-brand · bg-brand · text-success · bg-success/10 · text-warning · text-info … */
+    --color-brand: var(--brand);
+    --color-brand-foreground: var(--brand-foreground);
+    --color-brand-accent: var(--brand-accent);
+    --color-case-yellow: var(--case-yellow);
+    --color-case-yellow-bg: var(--case-yellow-bg);
+    --color-case-yellow-fg: var(--case-yellow-fg);
+    --color-case-orange: var(--case-orange);
+    --color-case-orange-bg: var(--case-orange-bg);
+    --color-case-orange-fg: var(--case-orange-fg);
+    --color-case-red: var(--case-red);
+    --color-case-red-bg: var(--case-red-bg);
+    --color-case-red-fg: var(--case-red-fg);
+    --color-case-white: var(--case-white);
+    --color-case-white-bg: var(--case-white-bg);
+    --color-case-white-fg: var(--case-white-fg);
+    --color-success: var(--success);
+    --color-warning: var(--warning);
+    --color-info: var(--info);
+}
+
+/* ความกว้างอ้างอิงของ container query */
+@theme {
+    --container-table-full: 40rem; /* @table-full/… การ์ดกว้างพอวางตารางครบทุกคอลัมน์ */
+    --container-page: 80rem; /* max-w-(--container-page) เนื้อหาหน้ากว้างสุด แล้วอยู่กลาง */
+}
+
+/* ความสูงบรรทัดสำหรับภาษาไทย — ค่าของ Tailwind เตี้ยเกินสำหรับสระบน/ล่าง */
+@theme {
+    --text-xs--line-height: 1.5;
+    --text-sm--line-height: 1.6;
+    --text-base--line-height: 1.6;
+    --text-lg--line-height: 1.5;
+    --text-2xl--line-height: 1.3;
+    --text-3xl--line-height: 1.25;
+}
+
+@layer base {
+    :root {
+        --header-height: 4rem;
+        --below-header: calc(100svh - var(--header-height));
+        /* ผังของ OneChat (DESIGN-SYSTEM §8 · ขนาดโครงหน้าเป็นชื่อ ไม่ใช่ค่าตายตัวในคลาส) */
+        --grid-console-md: 17rem minmax(0, 1fr); /* รายการแชท + ห้องแชท */
+        --grid-console-xl: 18rem minmax(0, 1fr) 20rem; /* + แผงลูกค้า · ห้องแชทได้ที่ที่เหลือทั้งหมด */
+        --grid-settings: 15rem minmax(0, 1fr); /* เมนูตั้งค่า + เนื้อหา */
+        --grid-kv: 5.5rem minmax(0, 1fr); /* ตารางชื่อ–ค่าในการ์ด */
+        --grid-packs: repeat(auto-fill, minmax(min(7rem, 100%), 1fr)); /* ชุดสติ๊กเกอร์ในคลัง */
+        --grid-tiles: repeat(auto-fill, minmax(3.5rem, 1fr)); /* สติ๊กเกอร์ในชุด */
+        --grid-favs: repeat(auto-fill, minmax(6rem, 1fr)); /* สติ๊กเกอร์โปรด */
+        --save-bar-pad-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+    * {
+        @apply border-border outline-ring;
+    }
+    html {
+        @apply font-sans;
+        scroll-padding-top: var(--header-height); /* แถบบนห้ามบังของที่โฟกัส (WCAG 2.4.11) */
+    }
+    body {
+        @apply bg-background text-foreground;
+        accent-color: var(--brand);
+        caret-color: var(--brand);
+        scrollbar-color: color-mix(in oklab, var(--foreground) 25%, transparent) transparent;
+    }
+    ::selection {
+        background-color: color-mix(in oklab, var(--brand) 22%, transparent);
+    }
+}
+
+/* ═══ ทับหน้าตาของ Vega — อยู่นอก @layer เพื่อชนะคลาส Tailwind โดยไม่ต้องแก้ไฟล์ใน ui/ ═══ */
+
+/* 1 วงโฟกัสเข้มขึ้น: ring-ring/50 ได้ 1.55:1 ⇒ 70% ได้ 4.0:1 ขึ้นไป */
+[data-slot]:focus-visible:not([aria-invalid="true"]) {
+    --tw-ring-color: color-mix(in oklab, var(--ring) 70%, transparent);
+}
+
+/* 2 ToggleGroup = หน้าตาเดียวกับ Tabs: รางเทา · ใบที่เลือกพื้นขาวมีเงา · ใบอื่นตัวจาง */
+[data-slot="toggle-group"] {
+    gap: 0;
+    border-radius: var(--radius);
+    background-color: var(--muted);
+    padding: 3px;
+    box-shadow: none;
+}
+[data-slot="toggle-group-item"] {
+    height: 1.875rem;
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius) * 0.8);
+    background-color: transparent;
+    color: color-mix(in oklab, var(--foreground) 60%, transparent);
+    box-shadow: none;
+}
+[data-slot="toggle-group-item"][data-size="sm"] {
+    height: 1.625rem;
+}
+[data-slot="toggle-group-item"]:hover,
+[data-slot="toggle-group-item"][data-state="on"] {
+    color: var(--foreground);
+}
+[data-slot="toggle-group-item"][data-state="on"] {
+    background-color: var(--background);
+    box-shadow:
+        0 1px 3px 0 rgb(0 0 0 / 0.1),
+        0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+:is([data-theme="dark"], .dark) [data-slot="toggle-group-item"],
+:is([data-theme="dark"], .dark)
+    [data-slot="tabs-list"][data-variant="default"]
+    [data-slot="tabs-trigger"]:not([data-state="active"]) {
+    color: color-mix(in oklab, var(--foreground) 50%, transparent);
+}
+:is([data-theme="dark"], .dark) [data-slot="toggle-group-item"]:hover,
+:is([data-theme="dark"], .dark) [data-slot="toggle-group-item"][data-state="on"],
+:is([data-theme="dark"], .dark)
+    [data-slot="tabs-list"][data-variant="default"]
+    [data-slot="tabs-trigger"]:hover {
+    color: var(--foreground);
+}
+:is([data-theme="dark"], .dark) [data-slot="toggle-group-item"][data-state="on"] {
+    border-color: var(--input);
+    background-color: color-mix(in oklab, var(--input) 30%, transparent);
+}
+
+/* 2b ชิปตัวเลือก — <ToggleGroup data-look="chips"> สำหรับค่าในฟอร์ม · ทรงแคปซูล · ใบที่เลือกขอบและตัวสี brand */
+[data-slot="toggle-group"][data-look="chips"] {
+    gap: 0.5rem;
+    border-radius: 0;
+    background-color: transparent;
+    padding: 0;
+}
+[data-look="chips"] [data-slot="toggle-group-item"],
+:is([data-theme="dark"], .dark) [data-look="chips"] [data-slot="toggle-group-item"] {
+    height: 2.25rem;
+    min-width: 2.75rem;
+    padding-inline: 0.875rem;
+    border-color: var(--input);
+    border-radius: 9999px;
+    color: var(--foreground);
+}
+@media (hover: hover) {
+    [data-look="chips"] [data-slot="toggle-group-item"]:hover {
+        background-color: var(--muted);
+    }
+}
+[data-look="chips"] [data-slot="toggle-group-item"][data-state="on"],
+:is([data-theme="dark"], .dark) [data-look="chips"] [data-slot="toggle-group-item"][data-state="on"] {
+    border-color: var(--brand);
+    background-color: color-mix(in oklab, var(--brand) 10%, transparent);
+    color: var(--brand);
+    box-shadow: none;
+}
+
+/* 3 เมนูข้างที่เลือก: ตัวหนา (พื้นเทาของ Vega ต่างจากพื้นเมนูแค่ 1.02:1) */
+[data-slot="sidebar-menu-button"][data-active="true"] {
+    font-weight: 700;
+}
+
+/* 4 progress ใช้ brand (primary โหมดมืดบนราง muted ได้แค่ 1.4:1) */
+[data-slot="progress-indicator"] {
+    background-color: var(--brand);
+}
+
+/* 5 หัวข้อตัวหนา — LINE Seed ไม่มีน้ำหนัก 500 ⇒ font-medium ออกมาเท่าเนื้อความ */
+[data-slot="card-title"],
+[data-slot="item-title"],
+[data-slot="dialog-title"],
+[data-slot="alert-dialog-title"],
+[data-slot="sheet-title"],
+[data-slot="alert-title"],
+[data-slot="empty-title"],
+[data-slot="field-legend"] {
+    font-weight: 700;
+}
+
+/* 6 ไม่มี letter-spacing กับข้อความไทย */
+[data-slot] {
+    letter-spacing: 0;
+}
+
+/* 7 ลิงก์ในคำอธิบายตอนชี้ใช้ brand */
+[data-slot="item-description"] a:hover,
+[data-slot="empty-description"] a:hover,
+[data-slot="field-description"] a:hover {
+    color: var(--brand);
+}
+
+/* 8 component ที่ render เป็น <a> ไม่รับสีลิงก์จาก CSS อื่น */
+@layer components {
+    [data-slot] a,
+    a[data-slot] {
+        color: inherit;
+    }
+    :where([data-slot], [data-slot] *):focus-visible {
+        outline-color: var(--ring);
+    }
+}
+
+/* 10 สีของ component — data-tone="primary | success | warning | info | destructive"
+   ใช้กับ Badge · Button · AlertDialog.Action · Alert · Progress · Sidebar.MenuBadge
+   · ค่าตั้งต้น = พื้นอ่อน 10% ตัวสี (ชี้ 20% · มืด 20%/30%) · Alert ย้อมแค่ไอคอนกับหัวข้อ */
+[data-tone="primary"] {
+    --tone: var(--brand);
+}
+[data-tone="success"] {
+    --tone: var(--success);
+}
+[data-tone="warning"] {
+    --tone: var(--warning);
+}
+[data-tone="info"] {
+    --tone: var(--info);
+}
+[data-tone="destructive"] {
+    --tone: var(--destructive);
+}
+[data-slot="badge"][data-tone] {
+    border-color: transparent;
+    background-color: color-mix(in oklab, var(--tone) 10%, transparent);
+    color: var(--tone);
+}
+:is([data-theme="dark"], .dark) [data-slot="badge"][data-tone] {
+    background-color: color-mix(in oklab, var(--tone) 20%, transparent);
+}
+:is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone] {
+    border-color: transparent;
+    background-color: color-mix(in oklab, var(--tone) 10%, transparent);
+    color: var(--tone);
+}
+:is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone]:focus-visible {
+    border-color: color-mix(in oklab, var(--tone) 40%, transparent);
+}
+:is([data-theme="dark"], .dark) :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone] {
+    background-color: color-mix(in oklab, var(--tone) 20%, transparent);
+}
+@media (hover: hover) {
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone]:hover {
+        background-color: color-mix(in oklab, var(--tone) 20%, transparent);
+    }
+    :is([data-theme="dark"], .dark)
+        :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone]:hover {
+        background-color: color-mix(in oklab, var(--tone) 30%, transparent);
+    }
+}
+[data-slot="alert"][data-tone] > svg,
+[data-slot="alert"][data-tone] [data-slot="alert-title"] {
+    color: var(--tone);
+}
+[data-slot="progress"][data-tone] [data-slot="progress-indicator"] {
+    background-color: var(--tone);
+}
+[data-slot="sidebar-menu-badge"][data-tone] {
+    color: var(--tone);
+}
+[data-sonner-toast][data-type="success"] [data-icon] {
+    color: var(--success);
+}
+[data-sonner-toast][data-type="warning"] [data-icon] {
+    color: var(--warning);
+}
+[data-sonner-toast][data-type="info"] [data-icon] {
+    color: var(--info);
+}
+[data-sonner-toast][data-type="error"] [data-icon] {
+    color: var(--destructive);
+}
+
+/* 10b รูปแบบปุ่ม — data-fill="solid | outline | ghost | link" ต่อจาก data-tone (ไม่ใส่ = พื้นอ่อนของข้อ 10)
+   · solid ตัวอักษร --brand-foreground ได้ 6.0:1 ขึ้นไป · ชี้แล้วพื้น 90% */
+:is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="solid"],
+:is([data-theme="dark"], .dark)
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="solid"] {
+    background-color: var(--tone);
+    color: var(--brand-foreground);
+}
+:is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="outline"],
+:is([data-theme="dark"], .dark)
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="outline"] {
+    border-color: var(--tone);
+    background-color: transparent;
+}
+:is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone]:is(
+        [data-fill="ghost"],
+        [data-fill="link"]
+    ),
+:is([data-theme="dark"], .dark)
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone]:is(
+        [data-fill="ghost"],
+        [data-fill="link"]
+    ) {
+    background-color: transparent;
+}
+:is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="link"] {
+    text-underline-offset: 4px;
+}
+:is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="outline"]:focus-visible {
+    border-color: var(--tone);
+}
+@media (hover: hover) {
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="solid"]:hover,
+    :is([data-theme="dark"], .dark)
+        :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="solid"]:hover {
+        background-color: color-mix(in oklab, var(--tone) 90%, transparent);
+    }
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="outline"]:hover {
+        background-color: color-mix(in oklab, var(--tone) 20%, transparent);
+    }
+    :is([data-theme="dark"], .dark)
+        :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="outline"]:hover {
+        background-color: color-mix(in oklab, var(--tone) 30%, transparent);
+    }
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="ghost"]:hover {
+        background-color: color-mix(in oklab, var(--tone) 10%, transparent);
+    }
+    :is([data-theme="dark"], .dark)
+        :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="ghost"]:hover {
+        background-color: color-mix(in oklab, var(--tone) 20%, transparent);
+    }
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="link"]:hover,
+    :is([data-theme="dark"], .dark)
+        :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone][data-fill="link"]:hover {
+        background-color: transparent;
+        text-decoration-line: underline;
+    }
+}
+
+/* 10c primary โหมดมืด: พื้นลดหนึ่งขั้นให้ตัวอักษรยังได้ 4.5:1 */
+:is([data-theme="dark"], .dark)
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone="primary"]:not([data-fill]) {
+    background-color: color-mix(in oklab, var(--tone) 10%, transparent);
+}
+@media (hover: hover) {
+    :is([data-theme="dark"], .dark)
+        :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone="primary"]:is(
+            :not([data-fill]),
+            [data-fill="outline"]
+        ):hover {
+        background-color: color-mix(in oklab, var(--tone) 20%, transparent);
+    }
+}
+
+/* 10c ปุ่มทึบในโหมดมืด (เจ้าของงาน: "สีทึบ") — success · destructive · warning · info ใช้เฉดเข้ม ตัวขาว
+   primary คงเดิม (#07C160 ตัว #191919 7.4:1) */
+:is([data-theme="dark"], .dark) [data-tone="success"] {
+    --tone-solid: var(--success-solid);
+}
+:is([data-theme="dark"], .dark) [data-tone="destructive"] {
+    --tone-solid: var(--destructive-solid);
+}
+:is([data-theme="dark"], .dark) [data-tone="warning"] {
+    --tone-solid: var(--warning-solid);
+}
+:is([data-theme="dark"], .dark) [data-tone="info"] {
+    --tone-solid: var(--info-solid);
+}
+:is([data-theme="dark"], .dark)
+    :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone]:not([data-tone="primary"])[data-fill="solid"] {
+    background-color: var(--tone-solid);
+    color: #ffffff;
+}
+@media (hover: hover) {
+    :is([data-theme="dark"], .dark)
+        :is([data-slot="button"], [data-slot="alert-dialog-action"])[data-tone]:not([data-tone="primary"])[data-fill="solid"]:hover {
+        background-color: color-mix(in oklab, var(--tone-solid) 85%, white);
+    }
+}
+
+/* 11 มุมปุ่ม 10px (ขนาดปุ่มคงของ Vega) */
+:is(
+    [data-slot="button"],
+    [data-slot="alert-dialog-action"],
+    [data-slot="alert-dialog-cancel"],
+    [data-slot="pagination-link"],
+    [data-pagination-prev],
+    [data-pagination-next]
+).rounded-md {
+    border-radius: var(--radius-lg);
+}
+
+/* 12 ตารางแบบ datatable — หัวคอลัมน์ตัวเทา · ตารางใต้ Card.Content เต็มกว้างชนขอบการ์ด · แถวสูง 44px
+   · ตารางสรุปสั้นใส่ <Table data-density="compact"> ให้คงแถวเตี้ยของ Vega */
+[data-slot="table-head"] {
+    color: var(--muted-foreground);
+}
+[data-slot="card-content"] > [data-slot="table-container"] {
+    width: auto;
+    margin-inline: calc(var(--card-spacing) * -1);
+}
+[data-slot="card-content"] > [data-slot="table-container"] :is(th, td):first-child {
+    padding-inline-start: var(--card-spacing);
+}
+[data-slot="card-content"] > [data-slot="table-container"] :is(th, td):last-child {
+    padding-inline-end: var(--card-spacing);
+}
+[data-slot="card-content"] > [data-slot="table-container"] [data-slot="table-header"] > tr:first-child {
+    border-top-width: 1px;
+}
+[data-slot="card-content"]
+    > [data-slot="table-container"]:not(:last-child)
+    [data-slot="table-body"]
+    > tr:last-child {
+    border-bottom-width: 1px;
+}
+[data-slot="card-content"]
+    > [data-slot="table-container"]
+    > [data-slot="table"]:not([data-density="compact"])
+    :is([data-slot="table-head"], [data-slot="table-cell"]) {
+    height: 2.75rem;
+}
+[data-slot="card"]:not(:has(> [data-slot="card-header"]))
+    > [data-slot="card-content"]:first-child
+    > [data-slot="table-container"]:first-child {
+    margin-top: calc(var(--card-spacing) * -1);
+}
+[data-slot="card"]:not(:has(> [data-slot="card-header"]))
+    > [data-slot="card-content"]:first-child
+    > [data-slot="table-container"]:first-child
+    [data-slot="table-header"]
+    > tr:first-child {
+    border-top-width: 0;
+}
+[data-slot="card"] > [data-slot="card-content"]:last-child > [data-slot="table-container"]:last-child {
+    margin-bottom: calc(var(--card-spacing) * -1);
+}
+
+/* 13 เลขหน้าที่เลือกอยู่: พื้นทึบ brand */
+[data-slot="pagination-link"][data-active="true"],
+:is([data-theme="dark"], .dark) [data-slot="pagination-link"][data-active="true"] {
+    border-color: transparent;
+    background-color: var(--brand);
+    color: var(--brand-foreground);
+    box-shadow: none;
+}
+
+/* 14 ความแน่น: การ์ดระยะใน 20px (จอแคบ 16px) · ช่องในฟอร์มห่าง 20px · ชุดช่อง 16px */
+[data-slot="card"][data-size="default"] {
+    --card-spacing: 1.25rem;
+}
+@media (width < 40rem) {
+    [data-slot="card"][data-size="default"] {
+        --card-spacing: 1rem;
+    }
+}
+/* หน้าแชต (#consoleWrap) ใช้งานต่อเนื่องทั้งวัน — การ์ดทุกใบระยะใน 12px ให้เห็นข้อความได้มากขึ้น */
+#consoleWrap [data-slot="card"] {
+    --card-spacing: 0.75rem;
+}
+/* ฟอร์มในแผงลูกค้า (จัดการเครดิต · สมัครสมาชิก · เปลี่ยนรหัส) — ป้ายชิดช่อง 6px · ช่องห่างกัน 12px */
+#colPanel [data-slot="field-group"] {
+    gap: 0.75rem;
+}
+#colPanel [data-slot="field"] {
+    gap: 0.375rem;
+}
+#colPanel [data-slot="field-legend"] {
+    margin-bottom: 0.375rem;
+}
+[data-slot="field-group"].gap-7 {
+    gap: 1.25rem;
+}
+[data-slot="field-set"].gap-6 {
+    gap: 1rem;
+}
+/* ป้าย sr-only ใน Field กว้าง 1px จริง (ป้ายยาวไม่ดันหน้ามือถือล้น) */
+[data-slot="field"] > .sr-only {
+    width: 1px;
+}
+
+/* 15 คำอธิบายใต้หัวการ์ดอยู่คอลัมน์ซ้ายเสมอ (ไม่ถูกบีบไปช่องขวาเมื่อ Card.Action ลงบรรทัด) */
+[data-slot="card-header"] > [data-slot="card-description"] {
+    grid-column-start: 1;
+}
+
+/* 16 แท็บแบบเส้น (variant="line"): เส้นล่างยาวเต็มแถว · ชิดซ้าย · แถวเดียว เลื่อนข้างบนมือถือ */
+[data-slot="tabs-list"][data-variant="line"] {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    box-shadow: inset 0 -1px 0 var(--border);
+}
+[data-slot="tabs-list"][data-variant="line"]::-webkit-scrollbar {
+    display: none;
+}
+[data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"]::after {
+    bottom: -3px;
+}
+
+/* 17 toast ไม่ทับแถบบันทึกที่ติดก้นจอ — ตั้ง --save-bar-height ที่แถบบันทึก (ไม่มี = ตำแหน่งเดิมของ sonner) */
+[data-sonner-toaster][data-y-position="bottom"] {
+    bottom: calc(var(--save-bar-height, 0px) + var(--offset-bottom)) !important;
+}
+@media (max-width: 600px) {
+    [data-sonner-toaster][data-y-position="bottom"] {
+        bottom: calc(var(--save-bar-height, 0px) + var(--mobile-offset-bottom)) !important;
+    }
+}
+
+/* 18 ช่องที่ใช้ไม่ได้จางทั้งกล่องบนพื้นเทา (Vega จางแค่ตัวหนังสือ) */
+[data-slot="input-group"]:has([data-slot="input-group-control"]:disabled) {
+    background-color: var(--muted);
+    opacity: 0.5;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+[data-slot="input-group"]:has([data-slot="input-group-control"]:disabled)
+    [data-slot="input-group-control"]:disabled {
+    opacity: 1;
+}
+[data-slot="input"]:disabled,
+[data-slot="native-select"]:disabled,
+[data-slot="textarea"]:disabled {
+    background-color: var(--muted);
+    box-shadow: none;
+}
+
+/* 19 ดอกจันช่องที่ต้องกรอก — <span class="field-required text-destructive">*</span> ต่อท้ายป้าย */
+:is([data-slot="field-label"], [data-slot="field-title"]) > .field-required {
+    margin-inline-start: -0.25rem;
+}
+
+/* 20 Slider: ที่จับ 20px · รางหนา 8px · สี brand */
+[data-slot="slider-thumb"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-color: var(--brand);
+}
+[data-slot="slider-track"][data-orientation="horizontal"] {
+    height: 0.5rem;
+}
+[data-slot="slider-range"] {
+    background-color: var(--brand);
+}
+
+/* ลดการเคลื่อนไหว — tw-animate-css ไม่ปิดเอง
+   ⚑ OneChat: เดิม theme.css ตัดทุกแอนิเมชันเหลือ 0.01ms ⇒ ตัวหมุน "AI ตรวจสลิป" นิ่ง ผู้ใช้ไม่รู้ว่าระบบกำลังทำงาน
+   ทางเลือกที่ตั้งใจแทน: ตัดการเลื่อน/ซูม/หมุนของหน้าต่างและเมนู (เหลือแค่จางเข้า-ออก) · ตัวหมุนยังหมุนแต่ช้าลง */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        --tw-enter-scale: 1 !important;
+        --tw-exit-scale: 1 !important;
+        --tw-enter-rotate: 0 !important;
+        --tw-exit-rotate: 0 !important;
+        --tw-enter-translate-x: 0 !important;
+        --tw-enter-translate-y: 0 !important;
+        --tw-exit-translate-x: 0 !important;
+        --tw-exit-translate-y: 0 !important;
+        scroll-behavior: auto !important;
+    }
+    [data-slot="button"]:active {
+        translate: none !important;
+    }
+    .animate-spin {
+        animation-duration: 2.4s;
+    }
+}
