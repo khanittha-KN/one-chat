@@ -12,14 +12,14 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import Inbox from "@lucide/svelte/icons/inbox";
     import { merch, tabOf, msgPreview } from "./data.js";
-    import { st, visible, counts, selectCase, toast } from "./store.svelte.js";
+    import { st, visible, byRecent, counts, selectCase, toast } from "./store.svelte.js";
     import { kindOf, KINDS } from "./kinds.js";
     import CustomerAvatar from "./ui/CustomerAvatar.svelte";
 
     let { class: className = "" } = $props();
     const TABS = [["all", "All"], ["line", "Line"], ["payment", "Payment"]];
     const cnt = $derived(counts());
-    const shown = $derived(visible().filter((c) => st.tab === "all" || tabOf(c) === st.tab));
+    const shown = $derived(visible().filter((c) => st.tab === "all" || tabOf(c) === st.tab).sort(byRecent));
 </script>
 
 <Card.Root id="colList" role="region" aria-label="การสนทนา" class={"bg-surface-chrome min-h-0 gap-0 rounded-none border-r py-0 shadow-none ring-0 " + className}>
@@ -87,10 +87,10 @@
                     <Empty.Media variant="icon"><Inbox /></Empty.Media>
                     {#if st.sel.length}
                         <Empty.Title>ไม่มีแชทในตัวกรองนี้</Empty.Title>
-                        <Empty.Description>ลองติ๊ก Channel เพิ่ม หรือติ๊กแถว "Merchant" ที่แถบซ้ายเพื่อเลือกทั้งหมด</Empty.Description>
+                        <Empty.Description>ลองติ๊ก Channel เพิ่ม หรือติ๊กแถว "ทั้งหมด" ที่แถบซ้ายเพื่อเลือกทุก Channel</Empty.Description>
                     {:else}
                         <Empty.Title>ยังไม่ได้เลือก Channel</Empty.Title>
-                        <Empty.Description>ติ๊ก Channel, Agent หรือแถว "Merchant" ที่แถบซ้ายเพื่อแสดงแชท</Empty.Description>
+                        <Empty.Description>ติ๊ก Channel, Agent หรือแถว "ทั้งหมด" ที่แถบซ้ายเพื่อแสดงแชท</Empty.Description>
                     {/if}
                 </Empty.Header>
             </Empty.Root>

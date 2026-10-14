@@ -40,7 +40,6 @@
                     </Field.Field>
                 </Field.Group>
                 <Button type="submit" class="h-11 px-4"><LogIn data-icon="inline-start" />เข้าสู่ระบบ</Button>
-                <p class="text-muted-foreground text-center text-xs">หน้าตัวอย่างสำหรับ Mock ใส่อะไรก็ได้ แล้วกดเข้าสู่ระบบ</p>
             </form>
         </Card.Content>
     </Card.Root>

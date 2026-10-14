@@ -28,7 +28,8 @@
     const someSel = $derived(nSel > 0 && nSel < total);
 </script>
 
-<Sidebar.Root id="colSide" aria-label="Merchant" class="top-(--header-height) h-(--below-header) [--sidebar:var(--surface-chrome)]">
+<!-- surface-rail = สีกรมท่าแบบแถบซ้ายของ LINE ในโหมดสว่าง (เจ้าของงานสั่ง 14 ต.ค. 2026 · โทเคนอยู่ใน app.css) · โหมดมืดคงเดิม -->
+<Sidebar.Root id="colSide" aria-label="Merchant" class="surface-rail top-(--header-height) h-(--below-header)">
     <Sidebar.Header class="gap-1 px-2 pt-2 pb-1">
         <div class="flex min-w-0 items-center gap-2 px-2 text-sm font-bold" title={org.name}>
             <Building2 class="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
@@ -37,7 +38,8 @@
         <!-- checkbox รวมแบบต้นไม้ (ทั้งหมด → Agent → Channel) แทนปุ่ม เลือกทั้งหมด / ล้างทั้งหมด · ไม่เลือกเลย = ไม่แสดงแชท (เจ้าของงานสั่ง 12 ต.ค. 2026) -->
         <label class="hover:bg-sidebar-accent flex h-9 cursor-pointer items-center gap-2 rounded-md px-2">
             <Checkbox checked={allSel} indeterminate={someSel} onCheckedChange={() => selectAll(!allSel)} aria-label="เลือกทุก Channel" />
-            <span class="text-muted-foreground flex-1 text-xs font-bold">Merchant</span>
+            <!-- คำบนแถว checkbox รวม: "ทั้งหมด" (เจ้าของงานสั่ง 14 ต.ค. 2026 · เดิม "Merchant") -->
+            <span class="text-muted-foreground flex-1 text-xs font-bold">ทั้งหมด</span>
             <span class="text-muted-foreground text-xs tabular-nums">{nSel ? nSel + "/" + total : "ยังไม่ได้เลือก"}</span>
         </label>
     </Sidebar.Header>

@@ -1,5 +1,5 @@
 <!-- จัดการเครดิต — field (DESIGN-SYSTEM §10.3) · เติม/ถอนเป็น segmented เต็มกว้าง (§10.4 "สลับทาง") ·
-     ปุ่มบันทึก: เติม = เขียวทึบ · ถอน = แดงทึบ (ทึบเท่ากันทั้งคู่ — เจ้าของงานสั่ง) -->
+     ปุ่มบันทึก: เติม = ปุ่มหลัก (เขียว LINE) · ถอน = แดงทึบ (ทึบเท่ากันทั้งคู่ — เจ้าของงานสั่ง) -->
 <script>
     import Save from "@lucide/svelte/icons/save";
     import CircleCheck from "@lucide/svelte/icons/circle-check";
@@ -59,7 +59,7 @@
             <p class="text-success flex items-center gap-1.5 text-sm" role="status"><CircleCheck class="size-4" aria-hidden="true" />{st.credit.msg}</p>
         {/if}
         {#if add}
-            <Button data-tone="success" data-fill="solid" onclick={() => saveCredit(c)}><Save data-icon="inline-start" />บันทึก</Button>
+            <Button onclick={() => saveCredit(c)}><Save data-icon="inline-start" />บันทึก</Button>
         {:else}
             <Button data-tone="destructive" data-fill="solid" onclick={() => saveCredit(c)}><Save data-icon="inline-start" />บันทึก</Button>
         {/if}

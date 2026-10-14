@@ -7,13 +7,16 @@ import {
 
 const blankCredit = (type = "add") => ({ type, amt: "", note: "", pass: "", err: null, msg: null });
 const blankReg = () => ({ name: "", phone: "", bank: "", no: "", pass: "", ref: "" });
+// เปลี่ยนรหัสผ่านให้ลูกค้า — a = รหัสผ่านใหม่ · b = ยืนยันอีกครั้ง (เจ้าของงาน 14 ต.ค. 2026 · ไม่ต้องรู้รหัสเก่า)
 const blankPw = () => ({ open: false, a: "", b: "", err: null, msg: null });
+const blankImg = () => ({ t: "image", v: "", src: "" }); // รูปแนบโพสต์ Telegram (ui/ImageField)
 
 export const db = $state({ cases: seedCases(), announces: seedAnnounces(), nextAnn: 5, annVersion: 0 });
 
 export const st = $state({
     loggedIn: false,
-    tab: "all", sel: chatChannels().map((m) => m.id), collapsed: {}, cur: "c2", view: "list", page: "console", menu: false,
+    // cur = แชทที่เปิดอยู่ · เริ่มที่ยังไม่เปิดแชทไหน (เจ้าของงาน 14 ต.ค. 2026 · แบบ LINE — เปิดให้เองลูกค้าจะเห็นว่าอ่านแล้วแต่ยังไม่ตอบ)
+    tab: "all", sel: chatChannels().map((m) => m.id), collapsed: {}, cur: null, view: "list", page: "console", menu: false,
     regMsg: null, lookup: null, hist: "all", histModal: false, accModal: false, coSel: null,
     credit: blankCredit(), reg: blankReg(), pw: blankPw(),
     scrollTick: 0, // เพิ่มค่าเมื่อต้องเลื่อนห้องแชทลงล่างสุด (= scrollMsgs ของต้นฉบับ)
@@ -23,12 +26,12 @@ export const S = $state({
     tab: "stk", ch: "", all: false, fav: [], f: {}, pack: null, picked: [], ed: {}, msg: {}, sheet: null,
     // items = สติ๊กเกอร์ในชุด (ต้นฉบับเก็บแค่จำนวน n ⇒ เพิ่ม items ให้หน้าแชตส่งได้จริง)
     stk: [
-        { name: "ชุดตัวอย่าง 1", n: 3, items: ["446-0", "446-1", "446-2"] },
-        { name: "ชุดตัวอย่าง 2", n: 4, items: ["789-0", "789-1", "789-2", "789-3"] },
+        { name: "ทักทายลูกค้า", n: 3, items: ["446-0", "446-1", "446-2"] },
+        { name: "ตอบรับ", n: 4, items: ["789-0", "789-1", "789-2", "789-3"] },
     ],
     qr: [{ name: "สวัสดี", items: [{ t: "text", v: "สวัสดีค่ะ ยินดีให้บริการ" }] }], qrDraft: [], bc: [{ t: "text", v: "" }], bcAsk: false,
-    am: [{ name: "ทักทาย", kw: "สวัสดี", mode: "มีคำนี้", reply: "สวัสดีค่ะ ยินดีให้บริการ", on: true }], ba: [], tgBtns: [], tgPosts: [], skShow: false, mgrOpen: false,
-    flex: [{ n: "การ์ดโปรโมชั่น (ตัวอย่าง)", v: "" }, { n: "การ์ดแจ้งยอด (ตัวอย่าง)", v: "การ์ด OA ตัวอย่าง A" }],
+    am: [{ name: "ทักทาย", kw: "สวัสดี", mode: "มีคำนี้", reply: "สวัสดีค่ะ ยินดีให้บริการ", on: true }], ba: [], tgBtns: [], tgImg: blankImg(), tgPosts: [], skShow: false, skKey: "sk_live_7Hq2Lm9XvR4tK8pZ", mgrOpen: false,
+    flex: [{ n: "การ์ดโปรโมชั่น", v: "" }, { n: "การ์ดแจ้งยอดฝาก", v: "แจ้งยอดฝากสำเร็จ" }],
 });
 
 export const cur = () => db.cases.filter((c) => c.id === st.cur)[0];
@@ -36,6 +39,8 @@ export const isNarrow = () => window.innerWidth <= 760;
 // แสดงเฉพาะแชทของ Channel ที่ติ๊ก · ไม่ติ๊กเลย = ไม่แสดง (เจ้าของงานสั่ง 12 ต.ค. 2026 — เปลี่ยนจากเดิมที่ไม่ติ๊ก = แสดงทั้งหมด)
 // เปิดระบบมาครั้งแรกติ๊กไว้ทุก Channel ที่เลือกแชตได้
 export const visible = () => db.cases.filter((c) => st.sel.indexOf(c.merchant) >= 0);
+// ลำดับรายการแชท: เคสที่ยังไม่ปิดอยู่บน เคสที่ปิดแล้วกองไว้ล่างสุด · ในแต่ละกลุ่มข้อความล่าสุดขึ้นก่อน (เจ้าของงานสั่ง 14 ต.ค. 2026)
+export const byRecent = (a, b) => (a.status === "closed") - (b.status === "closed") || b.at - a.at;
 
 /* toast ตาม DESIGN-SYSTEM §10.9 — ข้อความกลาง ๆ ใช้ toast() · เรื่องที่สำเร็จใช้ ok() (ไอคอนสีสำเร็จ) */
 export function toast(t) {
@@ -53,6 +58,7 @@ export function push(c, who, text, extra) {
     if (extra) for (const k in extra) m[k] = extra[k];
     c.msgs.push(m);
     c.ago = "เมื่อสักครู่";
+    c.at = Date.now(); // มีข้อความใหม่ ⇒ ขึ้นบนสุดของกลุ่ม
     if (c.id === st.cur) scrollMsgs();
 }
 export function accept(c) {
@@ -83,6 +89,7 @@ export function openSettings(tab, ch, all) {
 }
 export function login() {
     st.loggedIn = true;
+    st.cur = null; // ล็อกอินทุกครั้งเริ่มที่หน้าว่าง ให้แอดมินเลือกแชทเอง (รวมล็อกอินใหม่หลังออกจากระบบ)
     setView(isNarrow() ? "list" : st.view);
     scrollMsgs();
 }
@@ -90,13 +97,14 @@ export function logout() {
     st.loggedIn = false;
     showPage("console");
 }
-export function go(g, label) {
+export function go(g) {
     setMenu(false);
     if (g === "home") showPage("console");
     else if (g === "announce") showPage("announce");
     else if (SETMAP[g]) openSettings(SETMAP[g]);
     else if (g === "logout") logout();
-    else toast('ตัวอย่าง: เมนู "' + label + '" ยังไม่มีหน้า');
+    else if (g === "update") ok("อัปเดตข้อมูลแล้ว");
+    else if (g === "clear") ok("เคลียร์ภาพแล้ว");
 }
 
 /* ---------- sidebar ---------- */
@@ -182,22 +190,14 @@ export function askAcc(c) {
     accept(c);
     push(c, "admin", "รบกวนแจ้งชื่อ-นามสกุล ธนาคาร และเลขที่บัญชีของคุณลูกค้า เพื่อสมัครสมาชิกค่ะ");
 }
-export function mockSlip(c) {
-    c.vi = c.vi == null ? 0 : c.vi + 1;
-    const sv = c.vi % 2 === 0 ? "real" : "fake";
-    const base = c.claim || 100;
-    c.claim = base;
-    accept(c);
-    push(c, "cust", "", { action: "slip", amt: base, variant: sv });
-    c.slip = { state: "pending", amt: base, variant: sv };
-}
+// ปุ่ม "จำลองสลิป" (mockSlip) เอาออกแล้ว 14 ต.ค. 2026 — สลิปในต้นแบบมาจากข้อมูลตัวอย่างใน data.js เท่านั้น
 export function slipCheck(c, i) {
     const sm = c.msgs[i];
     sm.checked = true;
     c.slip = { state: "reading", amt: sm.amt, variant: sm.variant };
     scrollMsgs();
     setTimeout(() => {
-        if (c.slip && c.slip.state === "reading") c.slip = slipData(c, sm.amt, sm.variant, sm.t);
+        if (c.slip && c.slip.state === "reading") c.slip = slipData(sm);
     }, 4000);
 }
 
@@ -209,7 +209,7 @@ export function verifyLine(c) {
 }
 export function lookup(v) {
     st.lookup = v;
-    toast("ตรวจสอบแล้ว (ข้อมูลตัวอย่าง)");
+    toast("ตรวจสอบแล้ว");
 }
 export function coAcc(c, i) {
     if (c.status === "closed") return;
@@ -235,6 +235,7 @@ export function saveCredit(c) {
         ok("บันทึกเครดิตแล้ว");
     }
 }
+/* เปลี่ยนรหัสผ่านให้ลูกค้า (การ์ดตรวจสอบในแผงขวา) — รหัสใหม่ 2 ครั้ง · รหัสของ Agent / แอดมินเองอยู่ที่ Settings (action "pw-save") */
 export function pwOpen() {
     st.pw = { ...blankPw(), open: true };
 }
@@ -244,11 +245,11 @@ export function pwCancel() {
 export function pwSave(c) {
     if (!st.pw.a) st.pw.err = "กรอกรหัสผ่านใหม่ก่อน";
     else if (st.pw.a.length < 6) st.pw.err = "รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร";
-    else if (st.pw.a !== st.pw.b) st.pw.err = "ยืนยันรหัสผ่านใหม่ไม่ตรงกัน";
+    else if (st.pw.a !== st.pw.b) st.pw.err = "ยืนยันรหัสผ่านใหม่ไม่ตรงกัน — พิมพ์ให้เหมือนกันทั้ง 2 ช่อง";
     else {
         st.pw = { ...blankPw(), msg: "เปลี่ยนรหัสผ่านของ " + c.user.username + " แล้ว" };
         push(c, "sys", "เปลี่ยนรหัสผ่านของ " + c.user.username + " เรียบร้อย");
-        ok("เปลี่ยนรหัสผ่านแล้ว");
+        ok("เปลี่ยนรหัสผ่านลูกค้าแล้ว");
     }
 }
 const dupAcc = (no, bank) => db.cases.some((x) => x.user.number === no && x.user.bankCode === bank);
@@ -449,7 +450,7 @@ export function settingsAct(a, i, el = {}) {
     } else if (a === "bc-no") S.bcAsk = false;
     else if (a === "bc-yes") {
         S.bcAsk = false;
-        sset("bc", true, "ส่ง Broadcast ตัวอย่างแล้ว (ไม่ได้ส่งจริง)");
+        sset("bc", true, "ส่ง Broadcast แล้ว");
     } else if (a === "am-save") {
         const an = (f.amName || "").trim(), ak = (f.amKw || "").trim(), ar = (f.amReply || "").trim();
         if (!an || !ak || !ar) sset("am", false, "กรอกชื่อกฎ คำค้น และข้อความตอบกลับให้ครบ");
@@ -537,29 +538,36 @@ export function settingsAct(a, i, el = {}) {
     } else if (a === "tg-add") {
         if (S.tgBtns.length < 8) S.tgBtns.push({ l: "", u: "" });
     } else if (a === "tg-rm") S.tgBtns.splice(i, 1);
-    else if (a === "tg-img") sset("tg", true, "แนบรูปภาพ: ปุ่มตัวอย่าง ไม่ได้อัปโหลดจริง");
     else if (a === "tg-post") {
         const tt = (f.tgText || "").trim();
         if (!tt) sset("tg", false, "กรอกข้อความก่อนโพสต์");
         else {
-            S.tgPosts.unshift({ text: tt, btns: S.tgBtns.length, time: "7 ต.ค. 2569 " + nowT() });
+            S.tgPosts.unshift({ text: tt, btns: S.tgBtns.length, time: new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" }) + " " + nowT() });
             f.tgText = "";
             S.tgBtns = [];
+            S.tgImg = blankImg();
             S.msg.tg = null;
             S.sheet = null;
-            ok("โพสต์ตัวอย่างแล้ว (ไม่ได้โพสต์จริง)");
+            ok("โพสต์ไป Telegram แล้ว");
         }
     } else if (a === "tg-new" || a === "tg-cancel") {
         f.tgText = "";
         S.tgBtns = [];
+        S.tgImg = blankImg();
         S.msg.tg = null;
         S.sheet = a === "tg-new" ? "tg" : null;
     } else if (a === "sk-show") S.skShow = !S.skShow;
-    else if (a === "sk-copy") sset("sk", true, "คัดลอกคีย์ตัวอย่างแล้ว");
-    else if (a === "sk-new") sset("sk", true, "สร้างคีย์ใหม่: ปุ่มตัวอย่าง ไม่ได้เปลี่ยนคีย์จริง");
+    else if (a === "sk-copy") {
+        navigator.clipboard?.writeText(S.skKey).catch(() => {});
+        sset("sk", true, "คัดลอกคีย์แล้ว");
+    } else if (a === "sk-new") {
+        const AZ = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+        S.skKey = "sk_live_" + Array.from(crypto.getRandomValues(new Uint8Array(16)), (v) => AZ[v % AZ.length]).join("");
+        sset("sk", true, "สร้างคีย์ใหม่แล้ว คีย์เดิมใช้งานไม่ได้อีก");
+    }
     else if (a === "mgr-toggle") S.mgrOpen = !S.mgrOpen;
-    else if (a === "mgr-save") sset("mgr", true, "บันทึก session ตัวอย่างแล้ว");
-    else if (a === "mgr-test") sset("mgr", true, "ทดสอบสร้างการ์ดตัวอย่างสำเร็จ");
+    else if (a === "mgr-save") sset("mgr", true, "บันทึก session แล้ว");
+    else if (a === "mgr-test") sset("mgr", true, "ทดสอบสร้างการ์ดสำเร็จ");
     else if (a === "pw-save") {
         if (!f.pwCur) sset("pw", false, "กรอกรหัสผ่านปัจจุบัน");
         else if ((f.pwN1 || "").length < 8) sset("pw", false, "รหัสผ่านใหม่ต้องยาว 8 ตัวขึ้นไป");
@@ -567,9 +575,9 @@ export function settingsAct(a, i, el = {}) {
         else if (f.pwN1 !== f.pwN2) sset("pw", false, "ยืนยันรหัสผ่านใหม่ไม่ตรงกัน");
         else {
             f.pwCur = f.pwN1 = f.pwN2 = "";
-            sset("pw", true, "บันทึกรหัสผ่านใหม่แล้ว (ตัวอย่าง)");
+            sset("pw", true, "บันทึกรหัสผ่านใหม่แล้ว");
         }
-    } else if (a === "gd-copy") toast("คัดลอกลิงก์แล้ว (ตัวอย่าง)");
+    } else if (a === "gd-copy") toast("คัดลอกลิงก์แล้ว");
 }
 
 export { ME, BANKS, SET_TABS };

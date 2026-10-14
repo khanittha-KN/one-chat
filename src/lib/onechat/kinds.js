@@ -23,7 +23,7 @@ const LOOK = {
         swatch: "bg-case-red",
     },
     white: {
-        row: "bg-case-white-bg hover:bg-muted border-l-case-white",
+        row: "bg-case-white-bg hover:bg-case-white/20 border-l-case-white", // ชี้แล้วสว่างขึ้น (โหมดมืดพื้นปิดเคสอ่อนกว่า muted)
         badge: "border-case-white bg-case-white-bg text-case-white-fg",
         swatch: "bg-case-white-bg ring-1 ring-case-white",
     },

@@ -29,6 +29,8 @@
     }
 </script>
 
+<!-- ยังไม่เปิดแชทไหน (หลังล็อกอิน) ⇒ ไม่มีลูกค้าให้แสดง -->
+{#if c}
 <Dialog.Root bind:open={() => st.accModal || st.histModal, (v) => !v && close()}>
     <Dialog.Content
         showCloseButton={false}
@@ -41,7 +43,7 @@
         {#if st.accModal}
             <Dialog.Header>
                 <Dialog.Title>บัญชีธนาคารลูกค้า · {c.user.username} ({accs.length} บัญชี)</Dialog.Title>
-                <Dialog.Description>{c.user.fullname} · ลูกค้าหนึ่งคนผูกได้หลายบัญชี</Dialog.Description>
+                <Dialog.Description>{c.user.fullname}</Dialog.Description>
             </Dialog.Header>
             <Item.Group class="accl min-h-0 gap-2 overflow-y-auto">
                 {#each accs as a, i (i)}
@@ -86,3 +88,4 @@
         </Dialog.Footer>
     </Dialog.Content>
 </Dialog.Root>
+{/if}

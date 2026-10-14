@@ -6,7 +6,6 @@
     import List from "@lucide/svelte/icons/list";
     import MessagesSquare from "@lucide/svelte/icons/messages-square";
     import UserRound from "@lucide/svelte/icons/user-round";
-    import Inbox from "@lucide/svelte/icons/inbox";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Empty from "$lib/components/ui/empty/index.js";
     import { st, cur, visible, closeCase, setView } from "./store.svelte.js";
@@ -73,17 +72,28 @@
                             <ChatPane class={chatCls} />
                             <CustomerPanel class={panelCls} />
                         {:else}
-                            <Card.Root class={"m-2 min-h-0 md:m-3 " + chatCls}>
+                            <!-- ยังไม่เปิดแชท (หลังล็อกอิน · หรือแชทที่เปิดอยู่ไม่อยู่ใน Channel ที่ติ๊ก) — แบบ LINE: ไม่เปิดแชทให้เอง รอแอดมินเลือก -->
+                            <Card.Root class={"m-2 min-h-0 md:m-3 " + chatCls} role="region" aria-label="ห้องแชท">
                                 <Empty.Root class="h-full">
                                     <Empty.Header>
-                                        <Empty.Media variant="icon"><Inbox /></Empty.Media>
-                                        <Empty.Title>ยังไม่ได้เลือกแชท</Empty.Title>
-                                        <Empty.Description>{st.sel.length ? "เลือกแชทจากรายการสนทนาเพื่อเปิดห้องแชท" : "ติ๊ก Channel ที่แถบซ้ายก่อน แล้วเลือกแชทจากรายการ"}</Empty.Description>
+                                        <Empty.Media variant="icon" class="bg-brand/10 text-brand size-14 rounded-2xl"><MessagesSquare class="size-7" /></Empty.Media>
+                                        {#if st.sel.length}
+                                            <Empty.Title>เลือกแชทเพื่อเริ่มสนทนา</Empty.Title>
+                                            <Empty.Description>กดแชทจากรายการสนทนาเพื่อเปิดห้องแชท ดูข้อมูลลูกค้า และตอบกลับ</Empty.Description>
+                                        {:else}
+                                            <Empty.Title>ยังไม่ได้เลือก Channel</Empty.Title>
+                                            <Empty.Description>ติ๊ก Channel ที่แถบซ้ายก่อน แล้วเลือกแชทจากรายการสนทนา</Empty.Description>
+                                        {/if}
                                     </Empty.Header>
                                 </Empty.Root>
                             </Card.Root>
-                            <section aria-label="ข้อมูลลูกค้า" class={"bg-surface-chrome min-h-0 flex-col items-center justify-center border-l p-6 " + panelCls}>
-                                <p class="text-muted-foreground text-center text-sm">เลือกแชทเพื่อดูข้อมูลลูกค้า</p>
+                            <section aria-label="ข้อมูลลูกค้า" class={"bg-surface-chrome min-h-0 flex-col border-l " + panelCls}>
+                                <Empty.Root class="h-full">
+                                    <Empty.Header>
+                                        <Empty.Media variant="icon"><UserRound /></Empty.Media>
+                                        <Empty.Description>ข้อมูลลูกค้าจะแสดงเมื่อเปิดแชท</Empty.Description>
+                                    </Empty.Header>
+                                </Empty.Root>
                             </section>
                         {/if}
                     </div>

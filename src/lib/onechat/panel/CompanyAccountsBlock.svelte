@@ -7,7 +7,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import BankLogo from "../ui/BankLogo.svelte";
     import { COACC, bankOf } from "../data.js";
-    import { st, coAcc, toast } from "../store.svelte.js";
+    import { st, coAcc, openSettings } from "../store.svelte.js";
     let { c } = $props();
 </script>
 
@@ -32,6 +32,6 @@
                 </Item.Root>
             {/each}
         </Item.Group>
-        <Button data-tone="primary" size="sm" onclick={() => toast("เพิ่มบัญชี: ทำในหลังบ้าน (ปุ่มตัวอย่าง)")}><Plus data-icon="inline-start" />เพิ่มบัญชี</Button>
+        <Button data-tone="primary" size="sm" onclick={() => openSettings("ba")}><Plus data-icon="inline-start" />เพิ่มบัญชี</Button>
     </Card.Content>
 </Card.Root>

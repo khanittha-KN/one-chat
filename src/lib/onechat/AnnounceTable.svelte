@@ -1,5 +1,5 @@
 <!-- ตาราง datatable ในการ์ด (DESIGN-SYSTEM §10.11): หัวคอลัมน์ตัวเทา · ตารางชนขอบการ์ด · ปุ่มของแถวอยู่คอลัมน์สุดท้าย
-     แถวเพิ่มอยู่บนสุดเหมือนต้นฉบับ · ปุ่มเพิ่มแถวเป็น primary พื้นอ่อน (§10.1) · บันทึก = เขียวทึบ · ลบ = แดง (ของหาย) -->
+     แถวเพิ่มอยู่บนสุดเหมือนต้นฉบับ · ปุ่มเพิ่มแถวเป็น primary พื้นอ่อน (§10.1) · บันทึก = ปุ่มหลัก (เขียว LINE) · ลบ = แดง (ของหาย) -->
 <script>
     import Plus from "@lucide/svelte/icons/plus";
     import Save from "@lucide/svelte/icons/save";
@@ -72,7 +72,7 @@
                         </Table.Cell>
                         <Table.Cell>
                             <div class="acts flex flex-col items-stretch gap-2">
-                                <Button size="sm" data-tone="success" data-fill="solid" onclick={() => annSave(r.id, { ...r, sort: String(r.sort) })}
+                                <Button size="sm" onclick={() => annSave(r.id, { ...r, sort: String(r.sort) })}
                                     ><Save data-icon="inline-start" />Save</Button
                                 >
                                 <Button size="sm" variant="destructive" onclick={() => annDel(r.id)}><Trash data-icon="inline-start" />Delete</Button>

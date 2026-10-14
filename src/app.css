@@ -1,12 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════════════════════
-   OneChat — ธีม SmartLiff shadcn (shadcn-theme-kit/theme.css) + ชุดสี WeChat (WeUI)
-   · ส่วนที่ต่างจาก theme.css มีแค่ "บล็อกสี" (:root และโหมดมืด) — ตั้งแต่ @theme inline ลงไปคัดลอกมาตรง ๆ
-   · โหมดมืดใช้ได้ทั้ง <html data-theme="dark"> และ <html class="dark"> (mode-watcher ใส่ .dark ให้)
-   · ⚑ = ค่าที่ปรับจากสี CI ของ WeChat ให้ผ่านความต่างสี WCAG 2.2 AA
-       #07C160 บนพื้นขาวได้แค่ 2.38:1 ⇒ โหมดสว่างใช้เฉดเดียวกันที่เข้มขึ้น #047B3D (5.38:1) กับตัวอักษร/ปุ่ม/วงโฟกัส
-       #07C160 คงไว้ตรงตัวที่ --brand-accent (จุดสถานะ ของตกแต่ง) และเป็น --brand จริงในโหมดมืด (7.45:1 บน #15181E)
-       #808080 (ข้อความรอง) ได้ 3.69–3.95:1 ⇒ สว่าง #5C6370 · มืด #9DA5B4 (ทั้งคู่เป็นเทาโทนเย็น)
-        โหมดมืดใช้เทาโทนเย็นอมน้ำเงิน (เจ้าของงานสั่ง 12 ต.ค. 2026) แทนเทากลาง #191919 / #1F1F1F / #2F2F2F / #3A3A3A
+   OneChat — ธีม SmartLiff shadcn (shadcn-theme-kit/theme.css) + ชุดสี LINE (line-shadcn-theme.css · 14 ต.ค. 2026)
+   · ชุดสีประยุกต์จาก LINE จับคู่กับชื่อโทเคนของ shadcn — ไม่ใช่ธีมหรือชุดส่วนประกอบทางการของ LINE
+   · ส่วนที่ต่างจาก theme.css มีแค่ "บล็อกสี" (:root และโหมดมืด) + ฟอนต์ มุมโค้ง เงา ใน @theme inline
+   · โหมดมืดใช้ได้ทั้ง <html data-theme="dark"> (ตัวสลับโหมดของแอป) และ <html class="dark"> (บล็อก .dark ของไฟล์ธีม LINE)
+   · โทเคนของ shadcn ใช้ค่าตามไฟล์ธีม LINE ตรงตัว รวมปุ่มหลัก #06C755 ตัว #FFFFFF (เจ้าของงานเลือก · ⚠ 2.26:1) ยกเว้น
+     ⚑ --destructive: #FF334B ไม่ผ่าน WCAG 2.2 AA ⇒ แดงเฉดเดียวกัน (เจ้าของงานสั่ง 14 ต.ค. 2026): สว่าง #BD0016 · มืด #FF9CA7
+     ผลวัดทั้งหมดอยู่ใน README › ชุดสี LINE → token
+   · โทเคนที่โปรเจกต์เพิ่มเอง (--brand · --success · --warning · --info · --surface-* · --case-*) ปรับให้เข้ากับชุด LINE
+     --brand = สีตัวอักษร/ลิงก์/ของที่เลือก ต้องอ่านออก ⇒ สว่าง #04803A (เขียว LINE เข้มขึ้น 5.06:1) · มืด #06C755 (7.71:1)
    ═══════════════════════════════════════════════════════════════════════════════════════════ */
 
 @import "tailwindcss";
@@ -47,52 +48,92 @@
     font-display: swap;
 }
 
-/* ── สี: WeChat (WeUI) — โหมดสว่าง ── */
+/* ── สี: LINE — โหมดสว่าง (ค่าของ shadcn ตามไฟล์ line-shadcn-theme.css ตรงตัว) ── */
 :root {
-    --radius: 0.625rem;
-    --background: #f4f6f9; /* พื้นหลังหลัก */
-    --foreground: #171a20; /* ข้อความหลัก = ดำ 90% บนขาว */
-    --card: #ffffff; /* พื้นหลังกล่อง */
-    --card-foreground: #171a20;
+    --radius: 0.45rem;
+    --background: #ffffff;
+    --foreground: #111111;
+    --card: #ffffff;
+    --card-foreground: #111111;
     --popover: #ffffff;
-    --popover-foreground: #171a20;
-    --primary: #047b3d; /* ⚑ เฉดเข้มของ #07C160 — ตัวขาวบนปุ่มได้ 5.38:1 */
-    --primary-foreground: #ffffff;
-    --secondary: #e9ecf1;
-    --secondary-foreground: #171a20;
-    --muted: #e9ecf1;
-    --muted-foreground: #5c6370; /* ⚑ แทน #808080 — บน #E9ECF1 ได้ 5.10:1 */
-    --accent: #e9ecf1;
-    --accent-foreground: #171a20;
-    --destructive: oklch(0.48 0.2 27.325);
-    --border: #e2e6ec;
-    --input: #858d9a; /* ⚑ ขอบช่องกรอก 3.35:1 บนการ์ดขาว (WCAG 1.4.11) */
-    --ring: var(--brand);
-    --chart-1: #95ec69;
-    --chart-2: #3eb575;
-    --chart-3: #07c160;
-    --chart-4: #047b3d;
-    --chart-5: #035a2c;
-    --sidebar: #ffffff;
-    --sidebar-foreground: #171a20;
-    --sidebar-primary: #047b3d;
+    --popover-foreground: #111111;
+    --primary: #06c755; /* เขียว LINE — พื้นปุ่มหลัก */
+    --primary-foreground: #ffffff; /* ตัวขาวตามไฟล์ธีม (เจ้าของงานเลือก 14 ต.ค. 2026 · ⚠ 2.26:1 — ลอง #111111 แล้วให้กลับเป็นขาว) */
+    --secondary: #f5f5f5;
+    --secondary-foreground: #111111;
+    --muted: #f5f5f5;
+    --muted-foreground: #616161;
+    --accent: #efefef;
+    --accent-foreground: #111111;
+    --destructive: #bd0016; /* ⚑ แดง LINE (#FF334B) เฉดเข้มให้ผ่าน AA: ตัวอักษร 6.61 · ปุ่มลบพื้นอ่อน 5.50 (ชี้ 4.51) · ตัวขาวบนปุ่มทึบ 6.61 */
+    --destructive-foreground: #ffffff;
+    --border: #dfdfdf;
+    --input: #949494; /* ขอบช่องกรอก 3.03:1 บนขาว */
+    --ring: #2f59cc; /* วงโฟกัสสีน้ำเงิน (ที่ 70% ได้ 3.3:1) */
+    --chart-1: #06c755;
+    --chart-2: #4270ed;
+    --chart-3: #464f69;
+    --chart-4: #ff334b;
+    --chart-5: #949494;
+    --sidebar: #fcfcfc;
+    --sidebar-foreground: #111111;
+    --sidebar-primary: #06c755;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #e9ecf1;
-    --sidebar-accent-foreground: #171a20;
-    --sidebar-border: #e2e6ec;
-    --sidebar-ring: var(--brand);
+    --sidebar-accent: #efefef;
+    --sidebar-accent-foreground: #111111;
+    --sidebar-border: #dfdfdf;
+    --sidebar-ring: #2f59cc;
 
-    --brand: #047b3d; /* ⚑ ตัวอักษร ลิงก์ ของที่เลือก วงโฟกัส */
+    /* เงา (ไฟล์ธีม LINE: ไม่มีเงา opacity 0 ⇒ หน้าตาแบน) — โหมดมืดใช้ค่าเดียวกัน · ประกอบเป็น --shadow-* ข้างล่าง */
+    --shadow-color: #000000;
+    --shadow-opacity: 0;
+    --shadow-blur: 0px;
+    --shadow-spread: 0px;
+    --shadow-offset-x: 0px;
+    --shadow-offset-y: 0px;
+    --shadow-tone: color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 100%), transparent);
+    --shadow-tone-soft: color-mix(in srgb, var(--shadow-color) calc(var(--shadow-opacity) * 50%), transparent);
+    --shadow-tone-strong: color-mix(in srgb, var(--shadow-color) calc(min(1, var(--shadow-opacity) * 2.5) * 100%), transparent);
+    --shadow-2xs: var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-tone-soft);
+    --shadow-xs: var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-tone-soft);
+    --shadow-sm:
+        var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-tone),
+        var(--shadow-offset-x) 1px 2px -1px var(--shadow-tone);
+    --shadow-md:
+        var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-tone),
+        var(--shadow-offset-x) 2px 4px -1px var(--shadow-tone);
+    --shadow-lg:
+        var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-tone),
+        var(--shadow-offset-x) 4px 6px -1px var(--shadow-tone);
+    --shadow-xl:
+        var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-tone),
+        var(--shadow-offset-x) 8px 10px -1px var(--shadow-tone);
+    --shadow-2xl: var(--shadow-offset-x) var(--shadow-offset-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-tone-strong);
+
+    /* โทเคนที่โปรเจกต์เพิ่มเอง (ไฟล์ธีม LINE ไม่มี) */
+    --brand: #04803a; /* เขียว LINE เข้มขึ้นให้อ่านออก — ตัวอักษร ลิงก์ ของที่เลือก ฟองแชทแอดมิน (5.06:1 บนขาว · 4.64:1 บน #F5F5F5) */
     --brand-foreground: #ffffff;
-    --brand-accent: #07c160; /* สี CI ตรงตัว — ใช้กับของตกแต่งที่ไม่ใช่ตัวอักษร */
+    --brand-accent: #06c755; /* เขียว LINE ตรงตัว — ของตกแต่งที่ไม่ใช่ตัวอักษร */
     --success: oklch(0.465 0.15 152);
     --warning: oklch(0.5 0.13 52);
     --info: oklch(0.48 0.134 242.749);
-    /* โหมดสว่าง (เจ้าของงานสั่ง 12 ต.ค. 2026): ห้องแชทเป็นการ์ดขาวใบเดียว · แถบบน เมนูข้าง รายการแชท แผงลูกค้า
-       ลดจากขาวเป็นเทาอ่อน #F4F6F9 · พื้นรอบห้องแชทเทาลงอีกขั้น #E9ECF1 (ตัวเทา #5C6370 บนพื้นนี้ 5.1:1)
-       เทาทั้งหมดเป็นโทนเย็นอมน้ำเงินตามโหมดมืด (เจ้าของงานสั่ง 12 ต.ค. 2026) */
-    --surface-page: #e9ecf1;
+    /* พื้นของกรอบ (แถบบน เมนูข้าง รายการแชท แผงลูกค้า) = --background · พื้นรอบการ์ดห้องแชท = --muted ⇒ ห้องแชทเป็นการ์ดขาวบนพื้นเทาอ่อน */
+    --surface-page: var(--muted);
     --surface-chrome: var(--background);
+    /* พื้นที่ข้อความแชทโหมดสว่าง = ท้องฟ้าแบบ LINE (เจ้าของงานสั่ง 14 ต.ค. 2026 · static/chat-bg/line-sky.webp)
+       --chat-bg = สีฟ้าเฉลี่ยของรูป แสดงระหว่างโหลด · ชื่อ/เวลาเหนือฟองเป็นตัวเข้ม #111111 (5.86–7.47:1 บนท้องฟ้า · ตัวเทาได้แค่ 1.92) */
+    --chat-bg: #7c94c0;
+    --chat-wallpaper: url("/chat-bg/line-sky.webp");
+    --chat-meta: var(--foreground);
+    /* แผงซ้าย (Merchant) สีกรมท่าแบบแถบซ้ายของ LINE (เจ้าของงานสั่ง 14 ต.ค. 2026 · ใช้ผ่านคลาส .surface-rail ข้างล่าง)
+       ตัวขาว 14.25:1 · ตัวรอง #989FB0 5.38:1 (บนแถวที่ชี้ 4.57) · ขอบ checkbox = เทาไอคอนของ LINE #707991 3.28:1 · วงโฟกัส 4.16:1 */
+    --rail: #202a43;
+    --rail-foreground: #ffffff;
+    --rail-muted-foreground: #989fb0;
+    --rail-accent: #2b3552;
+    --rail-border: #323d5b;
+    --rail-input: #707991;
+    --rail-ring: #96b2ff;
 
     /* สีประเภทเคสของ OneChat (ตามต้นฉบับ: ฝาก เหลือง · ถอน ส้ม · ทั่วไป แดง · ปิดเคส ขาว)
        แถบซ้าย · พื้นแถว · ตัวอักษรบนพื้นนั้น (≥5.8:1 · ตัวเทา muted บนพื้นได้ ≥5.3:1)
@@ -111,68 +152,124 @@
     --case-white-fg: #48505e;
 }
 
-/* ── สี: WeChat (WeUI) — โหมดมืด (ไม่ใช้ดำสนิท · กล่องสว่างกว่าพื้น) ── */
+/* ── สี: LINE — โหมดมืด (บล็อก .dark ของไฟล์ธีม LINE · ใช้กับ data-theme="dark" ของตัวสลับโหมดด้วย) ── */
 :is([data-theme="dark"], .dark) {
-    --background: #15181e;
-    --foreground: #e2e6ed;
-    --card: #282d36;
-    --card-foreground: #e2e6ed;
-    --popover: #282d36;
-    --popover-foreground: #e2e6ed;
-    --primary: #07c160; /* ตัว #15181e บนปุ่มได้ 7.45:1 */
-    --primary-foreground: #15181e;
-    --secondary: #333944;
-    --secondary-foreground: #e2e6ed;
-    --muted: #333944;
-    --muted-foreground: #9da5b4; /* ⚑ แทน #808080 — บน #333944 ได้ 4.68:1 */
-    --accent: #333944;
-    --accent-foreground: #e2e6ed;
-    --destructive: oklch(0.8 0.14 22.216);
-    --border: rgb(255 255 255 / 10%);
-    --input: rgb(255 255 255 / 45%);
-    --ring: var(--brand);
-    --sidebar: #1a1e25;
-    --sidebar-foreground: #e2e6ed;
-    --sidebar-primary: #07c160;
-    --sidebar-primary-foreground: #15181e;
-    --sidebar-accent: #333944;
-    --sidebar-accent-foreground: #e2e6ed;
-    --sidebar-border: rgb(255 255 255 / 10%);
-    --sidebar-ring: var(--brand);
+    --background: #111111;
+    --foreground: #ffffff;
+    --card: #1a1a1a;
+    --card-foreground: #ffffff;
+    --popover: #1f1f1f;
+    --popover-foreground: #ffffff;
+    --primary: #06c755; /* ปุ่มหลักพื้น #06C755 เหมือนโหมดสว่าง */
+    --primary-foreground: #ffffff; /* เหมือนโหมดสว่าง (⚠ 2.26:1) */
+    --secondary: #2a2a2a;
+    --secondary-foreground: #ffffff;
+    --muted: #2a2a2a;
+    --muted-foreground: #b7b7b7;
+    --accent: #383838;
+    --accent-foreground: #ffffff;
+    --destructive: #ff9ca7; /* ⚑ แดง LINE เฉดสว่างให้ผ่าน AA บนพื้นมืด: ตัวอักษร 8.76 · ปุ่มลบพื้นอ่อน 5.81 (ชี้ 4.54) */
+    --destructive-foreground: #ffffff;
+    --border: #3f3f3f;
+    --input: #777777; /* ขอบช่องกรอก 3.89:1 บนการ์ด */
+    --ring: #96b2ff;
+    --chart-1: #06c755;
+    --chart-2: #96b2ff;
+    --chart-3: #98a0b3;
+    --chart-4: #ff334b;
+    --chart-5: #c8c8c8;
+    --sidebar: #1a1a1a;
+    --sidebar-foreground: #ffffff;
+    --sidebar-primary: #06c755;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #2a2a2a;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #3f3f3f;
+    --sidebar-ring: #96b2ff;
 
-    --brand: #07c160;
-    --brand-foreground: #15181e;
-    --brand-accent: #07c160;
+    --brand: #06c755; /* 7.71:1 บนการ์ด #1A1A1A */
+    --brand-foreground: #111111;
+    --brand-accent: #06c755;
     --success: oklch(0.76 0.15 152);
     --warning: oklch(0.78 0.14 70);
     --info: oklch(0.766 0.16 232.661);
-    /* โหมดมืดโทนเย็น: แถบ/เมนู #1a1e25 · พื้นหน้า #15181e · การ์ดห้องแชท #282d36 */
+    /* พื้นหน้า #111111 · แถบบน/เมนู/รายการแชท/แผงลูกค้า #1A1A1A (= --sidebar เท่าการ์ด ⇒ การ์ดในแผงลูกค้าแยกด้วยเส้นขอบ) */
     --surface-page: var(--background);
     --surface-chrome: var(--sidebar);
+    /* พื้นที่ข้อความแชทโหมดมืดคงเดิม (ไม่มีท้องฟ้า) */
+    --chat-bg: var(--background);
+    --chat-wallpaper: none;
+    --chat-meta: var(--muted-foreground);
+    /* แผงซ้ายโหมดมืด = เข้มที่สุดของหน้า แบ่งส่วนแบบ LINE (เจ้าของงานสั่ง 14 ต.ค. 2026)
+       LINE: ราง #1F1F1F กับรายการ #2C2E2F ต่างกัน L* 7.0 ⇒ ของเรา #080808 กับรายการ #1A1A1A ต่างกัน L* 7.1
+       ตัวขาว 19.8:1 · ตัวรอง #B7B7B7 9.87:1 (แถวที่ชี้ #1C1C1C 8.5) · ขอบ checkbox #777777 4.42:1 · วงโฟกัส 5.09:1 */
+    --rail: #080808;
+    --rail-foreground: #ffffff;
+    --rail-muted-foreground: #b7b7b7;
+    --rail-accent: #1c1c1c;
+    --rail-border: #242424;
+    --rail-input: #777777;
+    --rail-ring: #96b2ff;
     /* ปุ่มทึบในโหมดมืด: เฉดเข้ม + ตัวขาว (ตัวขาวบนพื้น ≥5:1) แทนพื้นพาสเทลตัวดำ */
     --success-solid: #047b3d;
-    --destructive-solid: #c62828;
+    --destructive-solid: #bd0016; /* แดง LINE เฉดเข้มเท่าโหมดสว่าง — ตัวขาว 6.61:1 */
     --warning-solid: #b45309;
     --info-solid: #0369a1;
 
-    /* สีประเภทเคส — โหมดมืดตามค่าเดิมของต้นฉบับ (ตัวอักษร ≥6.3:1) */
+    /* สีประเภทเคส — โหมดมืด · พื้นแถวอิ่มสีขึ้น (เจ้าของงาน 14 ต.ค. 2026: "ซีด ดูไม่ออกว่าสีอะไร")
+       ความอิ่มสี 0.10–0.22 → 0.47–0.60 · ปิดเคสเป็นเทาอ่อนกว่าพื้นรายการ · ตัวขาว ≥12:1 · ตัวรอง #B7B7B7 ≥6.1:1 */
     --case-yellow: #e9d95e;
-    --case-yellow-bg: #34352b;
+    --case-yellow-bg: #3d3510;
     --case-yellow-fg: #e9d95e;
     --case-orange: #f0a25e;
-    --case-orange-bg: #3a302d;
+    --case-orange-bg: #472a12;
     --case-orange-fg: #f0a25e;
     --case-red: #ee6c86;
-    --case-red-bg: #3b2633;
+    --case-red-bg: #4a1b2c;
     --case-red-fg: #ff8fa6;
     --case-white: #e2e6ed;
-    --case-white-bg: #282d36;
-    --case-white-fg: #e2e6ed;
+    --case-white-bg: #2e3033; /* ปิดเคส = เทาอ่อนกว่าพื้นรายการ #1A1A1A ให้แยกออก */
+    --case-white-fg: var(--foreground);
+}
+
+/* ── แผงซ้าย (Merchant) — <Sidebar.Root class="surface-rail"> ทั้งจอคอมและแผงเลื่อนบนมือถือ ──
+   ตั้งโทเคนใหม่เฉพาะในแผงนี้ ⇒ component ของ shadcn ข้างใน (checkbox · ปุ่ม ghost · เส้น · ตัวรอง) เปลี่ยนตามเอง ไม่ต้องแก้ไฟล์ใน ui/ */
+.surface-rail {
+    --sidebar: var(--rail);
+    --sidebar-foreground: var(--rail-foreground);
+    --sidebar-accent: var(--rail-accent);
+    --sidebar-accent-foreground: var(--rail-foreground);
+    --sidebar-border: var(--rail-border);
+    --sidebar-ring: var(--rail-ring);
+    --background: var(--rail);
+    --foreground: var(--rail-foreground);
+    --muted: var(--rail-accent);
+    --muted-foreground: var(--rail-muted-foreground);
+    --accent: var(--rail-accent);
+    --accent-foreground: var(--rail-foreground);
+    --border: var(--rail-border);
+    --input: var(--rail-input);
+    --ring: var(--rail-ring);
+    /* ตัวอักษรต้องตั้งที่นี่ด้วย — กรอบนอกของ sidebar ใส่ text-sidebar-foreground ไว้ก่อนถึงคลาสนี้ สีที่สืบทอดมาจึงยังเป็นของหน้า */
+    color: var(--rail-foreground);
+    color-scheme: dark;
+    scrollbar-color: color-mix(in oklab, var(--rail-foreground) 25%, transparent) transparent;
 }
 
 @theme inline {
-    --font-sans: "LINE Seed Sans TH", system-ui, sans-serif;
-    --font-heading: "LINE Seed Sans TH", system-ui, sans-serif;
+    /* ฟอนต์: LINE Seed Sans TH (DS §3 · เจ้าของงานเลือก) ขึ้นก่อน แล้วต่อด้วยชุดฟอนต์ระบบของไฟล์ธีม LINE เป็นตัวสำรอง */
+    --font-sans: "LINE Seed Sans TH", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Thonburi, "Noto Sans Thai", sans-serif;
+    --font-heading: "LINE Seed Sans TH", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Thonburi, "Noto Sans Thai", sans-serif;
+    --font-serif: "LINE Seed Sans TH", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Thonburi, "Noto Sans Thai", sans-serif;
+
+    /* เงา — คลาส shadow-* ของ Tailwind อ่านค่าที่ประกอบจากตัวแปรเงาของธีม (:root) */
+    --shadow-2xs: var(--shadow-2xs);
+    --shadow-xs: var(--shadow-xs);
+    --shadow-sm: var(--shadow-sm);
+    --shadow-md: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
+    --shadow-xl: var(--shadow-xl);
+    --shadow-2xl: var(--shadow-2xl);
 
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
@@ -197,6 +294,7 @@
     --color-accent: var(--accent);
     --color-accent-foreground: var(--accent-foreground);
     --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -215,6 +313,8 @@
     --color-sidebar-ring: var(--sidebar-ring);
     --color-surface-page: var(--surface-page);
     --color-surface-chrome: var(--surface-chrome);
+    --color-chat-bg: var(--chat-bg);
+    --color-chat-meta: var(--chat-meta);
 
     /* ได้คลาส text-brand · bg-brand · text-success · bg-success/10 · text-warning · text-info … */
     --color-brand: var(--brand);
@@ -255,11 +355,11 @@
 
 @layer base {
     :root {
-        --header-height: 4rem;
+        --header-height: 3.25rem; /* 52px เท่าต้นฉบับ (เจ้าของงานเลือก 14 ต.ค. 2026 · DS §9.1 ตั้ง 64px) — เพิ่มพื้นที่ข้อความแชท */
         --below-header: calc(100svh - var(--header-height));
         /* ผังของ OneChat (DESIGN-SYSTEM §8 · ขนาดโครงหน้าเป็นชื่อ ไม่ใช่ค่าตายตัวในคลาส) */
         --grid-console-md: 17rem minmax(0, 1fr); /* รายการแชท + ห้องแชท */
-        --grid-console-xl: 18rem minmax(0, 1fr) 20rem; /* + แผงลูกค้า · ห้องแชทได้ที่ที่เหลือทั้งหมด */
+        --grid-console-xl: 18rem minmax(0, 1fr) 25rem; /* + แผงลูกค้า 25rem (เดิม 20rem · เจ้าของงานว่าเบียด 14 ต.ค. 2026 ⇒ 333px ที่ย่อ 83% · ต้นฉบับ 360px) · ห้องแชทได้ที่ที่เหลือ */
         --grid-settings: 15rem minmax(0, 1fr); /* เมนูตั้งค่า + เนื้อหา */
         --grid-kv: 5.5rem minmax(0, 1fr); /* ตารางชื่อ–ค่าในการ์ด */
         --grid-packs: repeat(auto-fill, minmax(min(7rem, 100%), 1fr)); /* ชุดสติ๊กเกอร์ในคลัง */
@@ -273,6 +373,14 @@
     html {
         @apply font-sans;
         scroll-padding-top: var(--header-height); /* แถบบนห้ามบังของที่โฟกัส (WCAG 2.4.11) */
+    }
+    /* ⚑ ย่อทั้งหน้าบนจอคอม (≥1280px) ให้เห็นข้อมูลมากขึ้น — เจ้าของงานให้ลอง 14 ต.ค. 2026
+       ทุกขนาดเป็น rem ⇒ ลดฐาน 16 → 13.33px ย่อทุกอย่าง 83.3% · ตัวเล็กสุด text-xs 12 → 10px (เจ้าของงาน: ห้ามต่ำกว่า 10px)
+       ไม่ย่อบนแท็บเล็ต/มือถือ: ช่องกรอกบนมือถือต้อง 16px กัน iOS ซูม · rem ใน @media อ่านจาก 16px เสมอ ⇒ ไม่วนกลับ */
+    @media (width >= 80rem) {
+        html {
+            font-size: 83.333%;
+        }
     }
     body {
         @apply bg-background text-foreground;
@@ -317,9 +425,7 @@
 }
 [data-slot="toggle-group-item"][data-state="on"] {
     background-color: var(--background);
-    box-shadow:
-        0 1px 3px 0 rgb(0 0 0 / 0.1),
-        0 1px 2px -1px rgb(0 0 0 / 0.1);
+    box-shadow: var(--shadow-sm); /* เงาของธีม (ธีม LINE ไม่มีเงา) */
 }
 :is([data-theme="dark"], .dark) [data-slot="toggle-group-item"],
 :is([data-theme="dark"], .dark)
@@ -557,7 +663,7 @@
 }
 
 /* 10c ปุ่มทึบในโหมดมืด (เจ้าของงาน: "สีทึบ") — success · destructive · warning · info ใช้เฉดเข้ม ตัวขาว
-   primary คงเดิม (#07C160 ตัว #191919 7.4:1) */
+   primary ใช้ --brand (#06C755 ตัว #111111 8.37:1) */
 :is([data-theme="dark"], .dark) [data-tone="success"] {
     --tone-solid: var(--success-solid);
 }
@@ -662,7 +768,7 @@
 #consoleWrap [data-slot="card"] {
     --card-spacing: 0.75rem;
 }
-/* ฟอร์มในแผงลูกค้า (จัดการเครดิต · สมัครสมาชิก · เปลี่ยนรหัส) — ป้ายชิดช่อง 6px · ช่องห่างกัน 12px */
+/* ฟอร์มในแผงลูกค้า (จัดการเครดิต · สมัครสมาชิก · เปลี่ยนรหัสผ่านลูกค้า) — ป้ายชิดช่อง 6px · ช่องห่างกัน 12px */
 #colPanel [data-slot="field-group"] {
     gap: 0.75rem;
 }

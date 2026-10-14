@@ -11,8 +11,7 @@
     import Status from "../ui/Status.svelte";
     import BankLogo from "../ui/BankLogo.svelte";
     import { DL, DT, DD } from "../ui/kv.js";
-    import { bankOf } from "../data.js";
-    import { toast } from "../store.svelte.js";
+    import { bankOf, money } from "../data.js";
     let { c } = $props();
     const s = $derived(c.slip);
 </script>
@@ -40,9 +39,9 @@
     </Card.Header>
     <Card.Content>
         {#if s.state === "pending"}
-            <p class="text-muted-foreground text-sm">ลูกค้าส่งสลิปมา <span class="tabular-nums">{s.amt.toFixed(2)}</span> บาท กดปุ่ม "ตรวจสอบสลิป" ใต้รูปสลิปในแชทเพื่อตรวจว่าสลิปจริงหรือปลอม</p>
+            <p class="text-muted-foreground text-sm">รอตรวจสอบสลิป ยอด <span class="tabular-nums">{money(s.amt)}</span> บาท</p>
         {:else if s.state === "reading"}
-            <p class="text-muted-foreground flex items-center gap-2 text-sm" aria-busy="true"><Spinner class="text-brand" aria-label="กำลังตรวจสลิป" />AI ตรวจสลิป… (ระบบจริงประมาณ 120 วินาที ตัวอย่างใช้ 4 วินาที)</p>
+            <p class="text-muted-foreground flex items-center gap-2 text-sm" aria-busy="true"><Spinner class="text-brand" aria-label="กำลังตรวจสลิป" />กำลังตรวจสลิป…</p>
         {:else}
             <Alert.Root data-tone={s.fake ? "destructive" : "success"} role="status" class="verdict">
                 {#if s.fake}<OctagonX />{:else}<CircleCheck />{/if}
@@ -50,12 +49,13 @@
             </Alert.Root>
             {@render party("ผู้โอน", s.fromBank, s.fromName, s.fromNo)}
             <dl class={DL}>
-                <dt class={DT}>ยอดโอน</dt><dd class={DD + " font-bold tabular-nums"}>{s.amt.toFixed(2)} บาท</dd>
+                <dt class={DT}>ยอดโอน</dt><dd class={DD + " font-bold tabular-nums"}>{money(s.amt)} บาท</dd>
                 <dt class={DT}>วันที่โอน</dt><dd class={DD}>{s.date}</dd>
                 <dt class={DT}>เวลาที่โอน</dt><dd class={DD + " tabular-nums"}>{s.time}</dd>
+                <dt class={DT}>เลขที่รายการ</dt><dd class={DD + " text-xs tabular-nums"}>{s.ref}</dd>
             </dl>
             {@render party("ผู้รับ", s.toBank, s.toName, s.toNo)}
-            <Button variant="secondary" onclick={() => toast("ไปหน้า Auto fast (ปุ่มตัวอย่าง ยังไม่มีลิงก์จริง)")}><ArrowRight data-icon="inline-start" />ไปหน้า Auto fast</Button>
+            <Button variant="secondary"><ArrowRight data-icon="inline-start" />ไปหน้า Auto fast</Button>
         {/if}
     </Card.Content>
 </Card.Root>

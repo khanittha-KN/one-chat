@@ -2,7 +2,7 @@
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Item from "$lib/components/ui/item/index.js";
     import Status from "../ui/Status.svelte";
-    import { pendingDep, pendingWd } from "../data.js";
+    import { pendingDep, pendingWd, money } from "../data.js";
     let { c } = $props();
     const sum = (a) => a.reduce((s, r) => s + r.amt, 0);
     const secs = $derived([["ค้างฝาก", pendingDep(c)], ["ค้างถอน", pendingWd(c)]]);
@@ -18,7 +18,7 @@
             <section class={"flex flex-col gap-1.5 " + (si ? "mt-2 border-t pt-2" : "")} aria-label={title}>
                 <div class="flex items-center justify-between gap-2 text-sm font-bold">
                     {title}
-                    {#if a.length}<Status tone="warning"><span class="tabular-nums">{a.length} รายการ · {sum(a).toFixed(2)} บาท</span></Status>
+                    {#if a.length}<Status tone="warning"><span class="tabular-nums">{a.length} รายการ · {money(sum(a))} บาท</span></Status>
                     {:else}<Status tone="success">ไม่มี</Status>{/if}
                 </div>
                 {#if a.length}
@@ -26,7 +26,7 @@
                         {#each a as r, i (i)}
                             <Item.Root variant="muted" size="sm" class="py-1.5">
                                 <Item.Content class="min-w-0">
-                                    <Item.Title class="tabular-nums">{r.amt.toFixed(2)}</Item.Title>
+                                    <Item.Title class="tabular-nums">{money(r.amt)}</Item.Title>
                                     <Item.Description>{r.st}</Item.Description>
                                 </Item.Content>
                                 <Item.Actions class="text-muted-foreground text-xs tabular-nums">{r.time}</Item.Actions>

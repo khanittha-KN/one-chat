@@ -52,11 +52,9 @@
         {#if st.regMsg}
             {#if bad}<Field.Error>{st.regMsg.text}</Field.Error>
             {:else}<p class="text-success flex items-center gap-1.5 text-sm" role="status"><CircleCheck class="size-4" aria-hidden="true" />{st.regMsg.text}</p>{/if}
-        {:else}
-            <p class="text-muted-foreground text-xs">ลองเลือก {c.user.bank} และกรอกเลข {c.user.number} เพื่อดูกรณีเลขบัญชีซ้ำ</p>
         {/if}
         <div class="flex gap-2 *:flex-1">
-            <Button data-tone="success" data-fill="solid" onclick={() => regSubmit(c)}><UserPlus data-icon="inline-start" />สมัครสมาชิก</Button>
+            <Button onclick={() => regSubmit(c)}><UserPlus data-icon="inline-start" />สมัครสมาชิก</Button>
             <Button variant="outline" onclick={regClear}>ล้างฟอร์ม</Button>
         </div>
         <Button variant="secondary" onclick={() => askAcc(c)}>ขอเลขบัญชีลูกค้า</Button>

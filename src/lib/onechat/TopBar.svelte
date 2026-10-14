@@ -50,7 +50,7 @@
                 {#if gi > 0}<DropdownMenu.Separator />{/if}
                 <DropdownMenu.Group>
                     {#each g as [label, Icon, key] (label)}
-                        <DropdownMenu.Item class="h-9" onSelect={() => go(key, label)}>
+                        <DropdownMenu.Item class="h-9" onSelect={() => go(key)}>
                             <Icon aria-hidden="true" />{label}
                         </DropdownMenu.Item>
                     {/each}

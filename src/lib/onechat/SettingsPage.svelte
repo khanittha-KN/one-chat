@@ -1,6 +1,6 @@
 <!-- หน้า Settings (Channel settings zone) — 7 แท็บในเมนูซ้าย + 4 หน้าที่ต้นฉบับมีโค้ดแต่ไม่มีแท็บ (flex · mgr · sk · pw)
      DESIGN-SYSTEM: หัวหน้า §9.3 · การ์ด §10.6 · ช่องกรอก field §10.3 · รายการ item §10.14 · ปุ่มมีไอคอนนำหน้า §10.1
-     ปุ่มบันทึก/ยืนยัน = เขียวทึบ · เพิ่มแถว = primary พื้นอ่อน · ลบ = แดง · แก้ไข/ยกเลิก = ขอบ -->
+     ปุ่มบันทึก/ยืนยัน = ปุ่มหลัก (เขียว LINE #06C755 · 14 ต.ค. 2026) · เพิ่มแถว = primary พื้นอ่อน · ลบ = แดง · แก้ไข/ยกเลิก = ขอบ -->
 <script>
     import ArrowLeft from "@lucide/svelte/icons/arrow-left";
     import Plus from "@lucide/svelte/icons/plus";
@@ -13,7 +13,6 @@
     import EyeOff from "@lucide/svelte/icons/eye-off";
     import Copy from "@lucide/svelte/icons/copy";
     import LinkIcon from "@lucide/svelte/icons/link";
-    import Upload from "@lucide/svelte/icons/upload";
     import Send from "@lucide/svelte/icons/send";
     import Megaphone from "@lucide/svelte/icons/megaphone";
     import GripVertical from "@lucide/svelte/icons/grip-vertical";
@@ -45,6 +44,7 @@
     import StickerImg from "./ui/StickerImg.svelte";
     import StickerField from "./ui/StickerField.svelte";
     import ImageField from "./ui/ImageField.svelte";
+    import PasswordInput from "./ui/PasswordInput.svelte";
     import { BANKS, PACKS, TYPE_LBL, GUIDE, SET_TABS, bankOf, stickerLabel } from "./data.js";
     import { S, showPage, setTab, settingsAct } from "./store.svelte.js";
 
@@ -66,13 +66,13 @@
         mgr: ["Manager Session", "บันทึก session ของ manager.line.biz เพื่อให้ระบบสร้าง OA Manager Card อัตโนมัติได้"],
         stk: ["ชุดสติ๊กเกอร์", "จัดเก็บชุดสติ๊กเกอร์ LINE ไว้ส่งให้ลูกค้าจากหน้าแชทได้อย่างรวดเร็ว"],
         qr: ["คีย์ลัด", "สร้างคำตอบสำเร็จรูปเป็นชุดรายการ — ข้อความ (แทรกอิโมจิได้) สติ๊กเกอร์ และรูปภาพ ส่งเรียงตามลำดับในคลิกเดียว"],
-        bc: ["Broadcast — ยิงข้อความหาผู้ติดตามทั้งหมด", "ข้อความจะถูกส่งหา <b>ทุกห้องแชทของ OA นี้</b> ตามลำดับ part ด้านล่าง (ลากสลับลำดับได้) — ตรวจให้ชัดก่อนส่ง เพราะยกเลิกคนที่ส่งไปแล้วไม่ได้"],
+        bc: ["Broadcast — ยิงข้อความหาผู้ติดตามทั้งหมด", "ข้อความจะถูกส่งหา <b>ทุกห้องแชทของ OA นี้</b> ตามลำดับ part ด้านล่าง — ตรวจให้ชัดก่อนส่ง เพราะยกเลิกคนที่ส่งไปแล้วไม่ได้"],
         am: ["ข้อความอัตโนมัติ", "เมื่อลูกค้าพิมพ์ข้อความที่มีคำค้นที่ตั้งไว้ ระบบจะตอบกลับอัตโนมัติด้วยข้อความที่กำหนด — กฎเหล่านี้ใช้กับไลน์เอเย่น (LINE OA) ของช่องนี้เท่านั้น"],
         ba: ["บัญชี", "จัดการบัญชีธนาคารของบริษัทไว้ส่งหรือแทรกให้ลูกค้าจากหน้าแชทได้ในคลิกเดียว"],
         tg: ["โพสต์ไป Telegram", "เขียนโพสต์ (รูป + ข้อความ + ปุ่มเมนู) เพื่อส่งไปยังช่อง Telegram ของเอเย่น"],
-        sk: ["Secret Key", "ค่าตัวอย่างเพื่อแสดงหน้าตาเท่านั้น — ไม่ใช่คีย์จริงของระบบ"],
-        pw: ["เปลี่ยนรหัสผ่าน", "เปลี่ยนรหัสผ่านของบัญชีผู้ใช้งาน (operator) ที่กำลังล็อกอินอยู่"],
-        gd: ["คู่มือการใช้งาน", 'ขั้นตอนการใช้งาน OneChat สำหรับทีมแอดมิน เรียงตามลำดับการทำงาน: เลือก Channel → อ่านรายการ → ตอบแชท → ตรวจข้อมูลลูกค้า → ตั้งค่า — กด "คัดลอกลิงก์" ที่แต่ละหัวข้อเพื่อแชร์ให้เพื่อนร่วมทีม'],
+        sk: ["Secret Key", "คีย์สำหรับเชื่อมต่อ API ของช่องนี้"],
+        pw: ["เปลี่ยนรหัสผ่าน", "เปลี่ยนรหัสผ่านสำหรับเข้าสู่ระบบของบัญชีคุณ"],
+        gd: ["คู่มือการใช้งาน", "ขั้นตอนการใช้งาน OneChat สำหรับทีมแอดมิน"],
     };
     const head = $derived(HEAD[S.tab] || HEAD.gd);
 </script>
@@ -175,7 +175,8 @@
     <Card.Header>
         <Card.Title class="flex items-center gap-2">{title} <Badge variant="secondary" class="tabular-nums">{n}</Badge></Card.Title>
         <Card.Action>
-            <Button size="sm" data-tone="primary" data-fill="solid" onclick={act(newAct)}><Plus data-icon="inline-start" />{btnLabel}</Button>
+            <!-- ปุ่มหลักของการ์ด = Button แบบ default (พื้น --primary #06C755 ตัวขาว ตามธีม LINE) -->
+            <Button size="sm" onclick={act(newAct)}><Plus data-icon="inline-start" />{btnLabel}</Button>
         </Card.Action>
     </Card.Header>
 {/snippet}
@@ -195,7 +196,7 @@
                 {@render smsg(key)}
             </div>
             <Sheet.Footer class="flex-row border-t">
-                <Button data-tone="success" data-fill="solid" class="flex-1" onclick={act(saveAct)}><SaveIcon data-icon="inline-start" />{editing ? editSave : newSave}</Button>
+                <Button class="flex-1" onclick={act(saveAct)}><SaveIcon data-icon="inline-start" />{editing ? editSave : newSave}</Button>
                 <Button variant="outline" onclick={act(cancelAct)}>ยกเลิก</Button>
             </Sheet.Footer>
         </Sheet.Content>
@@ -239,7 +240,7 @@
                                         <Table.Cell>
                                             <NativeSelect aria-label={"การ์ดของ " + x.n} bind:value={x.v}>
                                                 <NativeSelectOption value="">— ยังไม่เลือก —</NativeSelectOption>
-                                                {#each ["การ์ด OA ตัวอย่าง A", "การ์ด OA ตัวอย่าง B"] as o (o)}<NativeSelectOption value={o}>{o}</NativeSelectOption>{/each}
+                                                {#each ["โปรโมชั่นสมาชิกใหม่", "แจ้งยอดฝากสำเร็จ", "แจ้งยอดถอนสำเร็จ"] as o (o)}<NativeSelectOption value={o}>{o}</NativeSelectOption>{/each}
                                             </NativeSelect>
                                         </Table.Cell>
                                     </Table.Row>
@@ -260,16 +261,16 @@
                             <Alert.Title>มี session อัตโนมัติจากผู้ช่วย</Alert.Title>
                             <Alert.Description>อัปเดตล่าสุด: 7/10/2569 14:01:18</Alert.Description>
                         </Alert.Root>
-                        <p class="text-muted-foreground max-w-prose text-sm">ระบบดึง session นี้มาจากผู้ช่วย (Assistant) ที่ผูกกับช่องนี้โดยอัตโนมัติ — แค่เพิ่มผู้ช่วย หรือกด Verify ผู้ช่วย ระบบก็จะเก็บ session ให้เอง ไม่ต้อง copy cookie เอง</p>
+                        <p class="text-muted-foreground max-w-prose text-sm">ระบบดึง session จากผู้ช่วย (Assistant) ที่ผูกกับช่องนี้ให้อัตโนมัติ</p>
                         <Button variant="outline" size="sm" class="self-start" aria-expanded={S.mgrOpen} onclick={act("mgr-toggle")}>
                             {#if S.mgrOpen}<ChevronUp data-icon="inline-start" />{:else}<ChevronDown data-icon="inline-start" />{/if}กรอกเอง (ขั้นสูง)
                         </Button>
                         {#if S.mgrOpen}
                             <Field.Field>
-                                <Field.Label for="mgrCk">Session / Cookie (ตัวอย่าง ไม่ต้องกรอกจริง)</Field.Label>
+                                <Field.Label for="mgrCk">Session / Cookie</Field.Label>
                                 <Textarea id="mgrCk" placeholder="วาง cookie ที่นี่" bind:value={S.f.mgrCk} />
                             </Field.Field>
-                            <Button data-tone="success" data-fill="solid" class="self-start" onclick={act("mgr-save")}><Save data-icon="inline-start" />บันทึก session</Button>
+                            <Button class="self-start" onclick={act("mgr-save")}><Save data-icon="inline-start" />บันทึก session</Button>
                         {/if}
                         <Button variant="outline" class="self-start" onclick={act("mgr-test")}><Play data-icon="inline-start" />ทดสอบสร้างการ์ด</Button>
                         {@render smsg("mgr")}
@@ -282,7 +283,6 @@
                         <Card.Title class="flex items-center gap-2"
                             ><Star class="text-warning size-4" fill="currentColor" aria-hidden="true" />สติ๊กเกอร์โปรด <Badge variant="secondary" class="tabular-nums">{S.fav.length}</Badge></Card.Title
                         >
-                        <Card.Description>สติ๊กเกอร์โปรดขึ้นเป็นกลุ่มแรกในปุ่มสติ๊กเกอร์ของหน้าแชท · กดที่สติ๊กเกอร์ในคลังเพื่อติดดาวหรือเอาดาวออก</Card.Description>
                     </Card.Header>
                     <Card.Content class="gap-4">
                         {#if S.fav.length}
@@ -416,7 +416,7 @@
                 </section>
                 {/snippet}
                 {@render formSheet("stk", S.ed.stk != null, "สร้างชุดสติ๊กเกอร์ใหม่", "แก้ไขชุด: " + editingName,
-                    S.ed.stk != null ? "การเปลี่ยนแปลงจะทับชุดเดิมเมื่อกดบันทึก — ปิดแผงนี้ = ยกเลิก" : "ตั้งชื่อชุด แล้วกดเลือกสติ๊กเกอร์จากคลังหรือเพิ่มด้วย ID",
+                    "ตั้งชื่อชุด แล้วเลือกสติ๊กเกอร์จากคลังหรือเพิ่มด้วย ID",
                     stkBody, "stk-save", "สร้างชุด", "บันทึกการแก้ไข", "stk-cancel")}
             {:else if S.tab === "qr"}
                 <Card.Root>
@@ -454,7 +454,8 @@
                 <section class="prev flex flex-col gap-2 border-t pt-3" aria-label="ตัวอย่างในแชท">
                     <span class="flex items-center gap-2 text-sm font-bold"><Eye class="size-4" aria-hidden="true" />ตัวอย่างในแชท</span>
                     {#if S.qrDraft.length}
-                        <div class="bg-muted dark:bg-background flex flex-col items-end gap-2 rounded-lg p-3">
+                        <!-- พื้นเดียวกับห้องแชท (ท้องฟ้าแบบ LINE ในโหมดสว่าง) -->
+                        <div class="bg-chat-bg flex flex-col items-end gap-2 rounded-lg bg-(image:--chat-wallpaper) bg-cover bg-center p-3">
                             {#each S.qrDraft as x, i (i)}
                                 {#if x.t === "sticker" && x.v}
                                     <StickerImg k={x.v} class="size-20" />
@@ -482,11 +483,11 @@
                         {#if S.bcAsk}
                             <Alert.Root data-tone="warning">
                                 <TriangleAlert />
-                                <Alert.Title>ยืนยันส่ง {S.bc.length} part ถึงทุกห้องแชทของช่องนี้? (ตัวอย่าง ไม่ได้ส่งจริง)</Alert.Title>
+                                <Alert.Title>ยืนยันส่ง {S.bc.length} part ถึงทุกห้องแชทของช่องนี้?</Alert.Title>
                                 <Alert.Description>ยกเลิกคนที่ส่งไปแล้วไม่ได้</Alert.Description>
                             </Alert.Root>
                             <div class="flex flex-wrap gap-2">
-                                <Button data-tone="success" data-fill="solid" onclick={act("bc-yes")}><Send data-icon="inline-start" />ยืนยันส่ง</Button>
+                                <Button onclick={act("bc-yes")}><Send data-icon="inline-start" />ยืนยันส่ง</Button>
                                 <Button variant="outline" onclick={act("bc-no")}><X data-icon="inline-start" />ยกเลิก</Button>
                             </div>
                         {:else}
@@ -548,7 +549,7 @@
                 </Field.Group>
                 {/snippet}
                 {@render formSheet("am", S.ed.am != null, "สร้างกฎใหม่", "แก้ไขกฎ: " + (S.ed.am != null ? S.am[S.ed.am]?.name : ""),
-                    "ลูกค้าพิมพ์ข้อความที่ตรงคำค้น ⇒ ระบบตอบกลับอัตโนมัติด้วยข้อความที่กำหนด", amBody, "am-save", "บันทึกกฎ", "บันทึกการแก้ไข", "am-cancel")}
+                    "เมื่อลูกค้าพิมพ์ข้อความที่ตรงคำค้น ระบบจะตอบกลับด้วยข้อความที่กำหนด", amBody, "am-save", "บันทึกกฎ", "บันทึกการแก้ไข", "am-cancel")}
             {:else if S.tab === "ba"}
                 <Card.Root>
                     {@render listHead("บัญชีทั้งหมด", S.ba.length, "เพิ่มบัญชีใหม่", "ba-new")}
@@ -599,7 +600,7 @@
                                 <Item.Root variant="outline" size="sm" class="lrow">
                                     <Item.Content class="min-w-0">
                                         <Item.Title class="line-clamp-none">{p.text}</Item.Title>
-                                        <Item.Description>{p.btns} ปุ่ม · {p.time} (ตัวอย่าง ไม่ได้โพสต์จริง)</Item.Description>
+                                        <Item.Description>{p.btns} ปุ่ม · {p.time}</Item.Description>
                                     </Item.Content>
                                 </Item.Root>
                             {:else}
@@ -611,7 +612,7 @@
                 {#snippet tgBody()}
                 <Field.Field>
                     <Field.Label>รูปภาพ</Field.Label>
-                    <Button variant="outline" class="self-start" onclick={act("tg-img")}><Upload data-icon="inline-start" />แนบรูปภาพ…</Button>
+                    <ImageField item={S.tgImg} />
                 </Field.Field>
                 <Field.Field>
                     <Field.Label for="tgText">ข้อความ</Field.Label>
@@ -639,9 +640,9 @@
                 <Card.Root>
                     <Card.Content class="gap-4">
                         <Field.Field>
-                            <Field.Label for="skVal">Secret Key (ตัวอย่าง)</Field.Label>
+                            <Field.Label for="skVal">Secret Key</Field.Label>
                             <InputGroup.Root>
-                                <InputGroup.Input id="skVal" readonly class="tabular-nums" value={S.skShow ? "sk_demo_0000000000000000" : "sk_demo_••••••••••••••••"} />
+                                <InputGroup.Input id="skVal" readonly class="tabular-nums" value={S.skShow ? S.skKey : "sk_live_" + "•".repeat(S.skKey.length - 8)} />
                                 <InputGroup.Addon align="inline-end">
                                     <InputGroup.Button size="xs" onclick={act("sk-show")}>{#if S.skShow}<EyeOff />ซ่อน{:else}<Eye />แสดง{/if}</InputGroup.Button>
                                     <InputGroup.Button size="xs" onclick={act("sk-copy")}><Copy />คัดลอก</InputGroup.Button>
@@ -658,19 +659,19 @@
                         <Field.Group class="gap-5">
                             <Field.Field>
                                 <Field.Label for="pwCur">รหัสผ่านปัจจุบัน</Field.Label>
-                                <Input id="pwCur" type="password" autocomplete="off" bind:value={S.f.pwCur} />
+                                <PasswordInput id="pwCur" autocomplete="off" bind:value={S.f.pwCur} />
                             </Field.Field>
                             <Field.Field>
                                 <Field.Label for="pwN1">รหัสผ่านใหม่</Field.Label>
-                                <Input id="pwN1" type="password" autocomplete="new-password" bind:value={S.f.pwN1} aria-describedby="pwHint" />
+                                <PasswordInput id="pwN1" bind:value={S.f.pwN1} aria-describedby="pwHint" />
                                 <Field.Description id="pwHint">แนะนำ: ความยาว 8 ตัวขึ้นไป ผสมตัวพิมพ์เล็ก-ใหญ่ ตัวเลข และอักขระพิเศษ</Field.Description>
                             </Field.Field>
                             <Field.Field>
                                 <Field.Label for="pwN2">ยืนยันรหัสผ่านใหม่</Field.Label>
-                                <Input id="pwN2" type="password" autocomplete="new-password" bind:value={S.f.pwN2} />
+                                <PasswordInput id="pwN2" bind:value={S.f.pwN2} />
                             </Field.Field>
                         </Field.Group>
-                        <Button data-tone="success" data-fill="solid" class="self-start" onclick={act("pw-save")}><Save data-icon="inline-start" />บันทึกรหัสผ่านใหม่</Button>
+                        <Button class="self-start" onclick={act("pw-save")}><Save data-icon="inline-start" />บันทึกรหัสผ่านใหม่</Button>
                         {@render smsg("pw")}
                     </Card.Content>
                 </Card.Root>
