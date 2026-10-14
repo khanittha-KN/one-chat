@@ -1,0 +1,8 @@
+node_modules
+.svelte-kit
+build
+avatar
+designs
+reference
+.env*
+.vercel
