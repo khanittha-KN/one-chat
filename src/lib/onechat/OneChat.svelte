@@ -70,7 +70,6 @@
                         <ConversationList class={listCls} />
                         {#if shown}
                             <ChatPane class={chatCls} />
-                            <CustomerPanel class={panelCls} />
                         {:else}
                             <!-- ยังไม่เปิดแชท (หลังล็อกอิน · หรือแชทที่เปิดอยู่ไม่อยู่ใน Channel ที่ติ๊ก) — แบบ LINE: ไม่เปิดแชทให้เอง รอแอดมินเลือก -->
                             <Card.Root class={"m-2 min-h-0 md:m-3 " + chatCls} role="region" aria-label="ห้องแชท">
@@ -87,15 +86,9 @@
                                     </Empty.Header>
                                 </Empty.Root>
                             </Card.Root>
-                            <section aria-label="ข้อมูลลูกค้า" class={"bg-surface-chrome min-h-0 flex-col border-l " + panelCls}>
-                                <Empty.Root class="h-full">
-                                    <Empty.Header>
-                                        <Empty.Media variant="icon"><UserRound /></Empty.Media>
-                                        <Empty.Description>ข้อมูลลูกค้าจะแสดงเมื่อเปิดแชท</Empty.Description>
-                                    </Empty.Header>
-                                </Empty.Root>
-                            </section>
                         {/if}
+                        <!-- แผงขวาแสดงเสมอ: เครื่องมือ (ค้นหา · ตรวจสอบ · สมัครสมาชิก) ใช้ได้โดยไม่ต้องเปิดแชท · การ์ดข้อมูลลูกค้าขึ้นเมื่อมีลูกค้า -->
+                        <CustomerPanel class={panelCls} />
                     </div>
                 </div>
                 {#if st.page === "announce"}

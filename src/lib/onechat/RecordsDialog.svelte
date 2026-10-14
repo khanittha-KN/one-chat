@@ -10,9 +10,9 @@
     import BankLogo from "./ui/BankLogo.svelte";
     import HistRows from "./panel/HistRows.svelte";
     import { bankOf, histAll, histSums, accountsOf } from "./data.js";
-    import { st, cur } from "./store.svelte.js";
+    import { st, panelCase } from "./store.svelte.js";
 
-    const c = $derived(cur());
+    const c = $derived(panelCase()); // ลูกค้าที่แผงขวาแสดงอยู่ (จากแชทหรือจากช่องค้นหา)
     const all = $derived(histAll(c));
     const items = $derived(st.hist === "all" ? all : all.filter((x) => x.k === st.hist));
     const accs = $derived(accountsOf(c));

@@ -17,7 +17,7 @@ export const st = $state({
     loggedIn: false,
     // cur = แชทที่เปิดอยู่ · เริ่มที่ยังไม่เปิดแชทไหน (เจ้าของงาน 14 ต.ค. 2026 · แบบ LINE — เปิดให้เองลูกค้าจะเห็นว่าอ่านแล้วแต่ยังไม่ตอบ)
     tab: "all", sel: chatChannels().map((m) => m.id), collapsed: {}, cur: null, view: "list", page: "console", menu: false,
-    regMsg: null, lookup: null, hist: "all", histModal: false, accModal: false, coSel: null,
+    regMsg: null, lookup: null, lookErr: null, look: null, hist: "all", histModal: false, accModal: false, coSel: null,
     credit: blankCredit(), reg: blankReg(), pw: blankPw(),
     scrollTick: 0, // เพิ่มค่าเมื่อต้องเลื่อนห้องแชทลงล่างสุด (= scrollMsgs ของต้นฉบับ)
 });
@@ -90,6 +90,7 @@ export function openSettings(tab, ch, all) {
 export function login() {
     st.loggedIn = true;
     st.cur = null; // ล็อกอินทุกครั้งเริ่มที่หน้าว่าง ให้แอดมินเลือกแชทเอง (รวมล็อกอินใหม่หลังออกจากระบบ)
+    st.look = null;
     setView(isNarrow() ? "list" : st.view);
     scrollMsgs();
 }
@@ -124,26 +125,36 @@ export function toggleMerchant(id, checked) {
 }
 
 /* ---------- list ---------- */
-export function selectCase(id) {
-    st.cur = id;
+// ฟอร์มในแผงขวาผูกกับลูกค้าคนที่แสดง ⇒ เปลี่ยนลูกค้าแล้วล้าง
+function resetPanel() {
     st.regMsg = null;
     st.lookup = null;
+    st.lookErr = null;
     st.pw = blankPw();
     st.credit = blankCredit();
+}
+export function selectCase(id) {
+    st.cur = id;
+    st.look = null; // เปิดแชท ⇒ แผงขวากลับมาแสดงลูกค้าของแชทนั้น
+    resetPanel();
     scrollMsgs();
     if (window.innerWidth <= 1180) setView("chat");
 }
+/* ลูกค้าที่แผงขวาแสดง (เจ้าของงาน 14 ต.ค. 2026 · แอดมินจัดการข้อมูลลูกค้าจากช่องค้นหาได้โดยไม่ต้องเปิดแชท)
+   เลือกจากช่องค้นหา / ตรวจสอบ (st.look) ก่อน · ไม่มี ⇒ ลูกค้าของแชทที่เปิดอยู่ (ถ้ายังอยู่ใน Channel ที่ติ๊ก) · ไม่มีทั้งคู่ ⇒ undefined */
+export const panelCase = () =>
+    (st.look && db.cases.find((c) => c.id === st.look)) || (st.cur && visible().some((c) => c.id === st.cur) ? cur() : undefined);
+// เลือกลูกค้าจากช่องค้นหา ⇒ แสดงข้อมูลในแผงขวาเท่านั้น ไม่เปิดแชท (ลูกค้าจะไม่เห็นว่าอ่านแล้ว)
 export function pickSearch(id) {
-    const pc = db.cases.filter((x) => x.id === id)[0];
-    if (!pc) return;
-    if (st.sel.indexOf(pc.merchant) < 0) st.sel.push(pc.merchant); // เปิดจากผลค้นหา ⇒ ติ๊ก Channel ของลูกค้าคนนั้นให้ด้วย
-    st.tab = "all";
-    st.cur = pc.id;
-    st.regMsg = null;
-    st.lookup = null;
+    if (!db.cases.some((x) => x.id === id)) return;
+    st.look = id === st.cur && visible().some((c) => c.id === id) ? null : id;
+    resetPanel();
     showPage("console");
-    scrollMsgs();
-    if (isNarrow()) setView("chat");
+    if (window.innerWidth <= 1180) setView("panel");
+}
+export function closeLook() {
+    st.look = null;
+    resetPanel();
 }
 export function counts() {
     const base = visible();
@@ -207,9 +218,17 @@ export function verifyLine(c) {
     push(c, "sys", "Verify สำเร็จ");
     ok("Verify แล้ว");
 }
+// ตรวจสอบด้วย Username ⇒ พบ: แผงขวาแสดงลูกค้าคนนั้น (แบบเดียวกับเลือกจากช่องค้นหา) · ไม่พบ: แจ้งใต้ช่อง
 export function lookup(v) {
-    st.lookup = v;
-    toast("ตรวจสอบแล้ว");
+    const q = (v || "").trim().toLowerCase();
+    const hit = q && db.cases.find((c) => c.user.username.toLowerCase() === q);
+    if (!hit) {
+        st.lookup = v;
+        st.lookErr = q ? 'ไม่พบ Username "' + v.trim() + '"' : "กรอก Username ก่อน";
+        return;
+    }
+    pickSearch(hit.id);
+    ok("ตรวจสอบแล้ว");
 }
 export function coAcc(c, i) {
     if (c.status === "closed") return;
@@ -274,7 +293,7 @@ export function regSubmit(c) {
         const rname = rg.name.trim();
         st.regMsg = { ok: true, text: "สมัครสมาชิกให้ " + rname + " สำเร็จ" };
         st.reg = blankReg();
-        push(c, "sys", "สมัครสมาชิก Player ให้ " + rname + " เรียบร้อย");
+        if (c) push(c, "sys", "สมัครสมาชิก Player ให้ " + rname + " เรียบร้อย");
         ok("สมัครสมาชิกแล้ว");
     }
 }
@@ -337,8 +356,7 @@ export function settingsAct(a, i, el = {}) {
             if (el.on && p < 0) arr.push(k);
             if (!el.on && p >= 0) arr.splice(p, 1);
         });
-    } else if (a === "stkset-fav") S.stk[i].fav = !S.stk[i].fav;
-    else if (a === "stk-addid") {
+    } else if (a === "stk-addid") {
         const v = (f.stkId || "").trim();
         if (!/^\d+$/.test(v)) sset("stk", false, "กรอก Sticker ID เป็นตัวเลข");
         else {

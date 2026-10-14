@@ -1,5 +1,5 @@
 <!-- ปุ่มสติ๊กเกอร์ในช่องพิมพ์ของหน้าแชต — มีสติ๊กเกอร์ทุกชุดในระบบ แต่เปิดมาเจอแท็บ "บันทึกไว้" ก่อนเสมอ (เจ้าของงาน 14 ต.ค. 2026)
-     แท็บ "บันทึกไว้" = สติ๊กเกอร์โปรด + ชุดที่บันทึกใน Settings › ชุดสติ๊กเกอร์ (ชุดโปรดขึ้นก่อน) · แท็บถัดไป = ทุกชุดในคลัง LINE (รูปปกเป็นสติ๊กเกอร์แรกของชุด แบบแถบชุดใน LINE)
+     แท็บ "บันทึกไว้" = สติ๊กเกอร์โปรด + ชุดที่บันทึกใน Settings › ชุดสติ๊กเกอร์ (เรียงตามที่สร้าง · ปุ่ม "โปรด" ของชุดเอาออกแล้ว 14 ต.ค. 2026) · แท็บถัดไป = ทุกชุดในคลัง LINE (รูปปกเป็นสติ๊กเกอร์แรกของชุด แบบแถบชุดใน LINE)
      popover ของ shadcn (DESIGN-SYSTEM §10.0 รายการที่ใช้) · กดสติ๊กเกอร์ = ส่งทันทีแล้วปิดแผง -->
 <script>
     import Sticker from "@lucide/svelte/icons/sticker";
@@ -15,7 +15,7 @@
     let { c, disabled = false } = $props();
     let open = $state(false);
     let tab = $state("saved");
-    const sets = $derived(S.stk.filter((x) => x.items && x.items.length).sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0)));
+    const sets = $derived(S.stk.filter((x) => x.items && x.items.length));
     const empty = $derived(!S.fav.length && !sets.length);
     const packKeys = (p) => Array.from({ length: p[1] }, (_, i) => p[0] + "-" + i);
 
@@ -87,7 +87,7 @@
                     {/if}
                     {#each sets as x, i (i)}
                         <section class="flex flex-col gap-1.5">
-                            {#snippet setTitle()}{#if x.fav}<Star class="text-warning size-3.5" fill="currentColor" aria-label="โปรด" />{/if}{x.name}{/snippet}
+                            {#snippet setTitle()}{x.name}{/snippet}
                             {@render heading(setTitle, x.items.length)}
                             {@render tiles(x.items, x.name)}
                         </section>

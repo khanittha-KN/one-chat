@@ -12,7 +12,7 @@
     import { accountsOf, money } from "../data.js";
     import { st, lookup, pwOpen, pwCancel, pwSave } from "../store.svelte.js";
     let { c } = $props();
-    const u = $derived(c.user);
+    const u = $derived(c?.user);
     let chk = $state(null);
 </script>
 
@@ -32,10 +32,21 @@
         <div class="flex gap-2">
             <InputGroup.Root class="flex-1">
                 <InputGroup.Addon><Search /></InputGroup.Addon>
-                <InputGroup.Input bind:ref={chk} id="chkIn" placeholder="Search users" value={st.lookup || u.username} aria-label="ค้นหาลูกค้า" />
+                <InputGroup.Input
+                    bind:ref={chk}
+                    id="chkIn"
+                    placeholder="Search users"
+                    value={st.lookup ?? u?.username ?? ""}
+                    aria-label="ค้นหาลูกค้า"
+                    aria-invalid={!!st.lookErr}
+                    aria-describedby={st.lookErr ? "chkErr" : undefined}
+                    onkeydown={(e) => e.key === "Enter" && lookup(chk.value)}
+                />
             </InputGroup.Root>
             <Button size="sm" class="h-9" onclick={() => lookup(chk.value)}>ตรวจสอบ</Button>
         </div>
+        {#if st.lookErr}<Field.Error id="chkErr">{st.lookErr}</Field.Error>{/if}
+        {#if c}
         <dl class={DL}>
             <dt class={DT}>Username</dt><dd class={DD + " flex flex-wrap items-center gap-1.5"}>{u.username} <Status tone="success">Active</Status></dd>
             <dt class={DT}>Fullname</dt><dd class={DD}>{u.fullname}</dd>
@@ -70,6 +81,7 @@
                     <Button variant="outline" size="sm" onclick={pwCancel}>ยกเลิก</Button>
                 </div>
             </div>
+        {/if}
         {/if}
     </Card.Content>
 </Card.Root>

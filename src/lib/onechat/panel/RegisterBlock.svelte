@@ -57,6 +57,6 @@
             <Button onclick={() => regSubmit(c)}><UserPlus data-icon="inline-start" />สมัครสมาชิก</Button>
             <Button variant="outline" onclick={regClear}>ล้างฟอร์ม</Button>
         </div>
-        <Button variant="secondary" onclick={() => askAcc(c)}>ขอเลขบัญชีลูกค้า</Button>
+        {#if c}<Button variant="secondary" onclick={() => askAcc(c)}>ขอเลขบัญชีลูกค้า</Button>{/if}
     </Card.Content>
 </Card.Root>

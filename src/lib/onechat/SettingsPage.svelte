@@ -51,7 +51,6 @@
     const act = (a, i, el) => () => settingsAct(a, i, el);
     const pk = $derived(PACKS.filter((p) => p[0] === S.pack)[0]);
     const amMode = $derived(S.f.amMode || "มีคำนี้");
-    const stkSorted = $derived(S.stk.map((x, i) => ({ x, i })).sort((a, b) => (b.x.fav ? 1 : 0) - (a.x.fav ? 1 : 0)));
     // สติ๊กเกอร์โปรดเลือกชุดจากคลังแยกจากแผงสร้างชุด (ไม่ปนกัน)
     let favPack = $state(null);
     const fpk = $derived(PACKS.filter((p) => p[0] === favPack)[0]);
@@ -336,20 +335,17 @@
                     {@render listHead("ชุดสติ๊กเกอร์", S.stk.length, "สร้างชุดใหม่", "stk-new")}
                     <Card.Content>
                         <Item.Group class="gap-2">
-                            {#each stkSorted as { x, i } (i)}
+                            {#each S.stk as x, i (i)}
                                 {@const editing = S.sheet === "stk" && S.ed.stk === i}
                                 <Item.Root variant="outline" size="sm" class={"lrow " + (editing ? "border-brand bg-brand/5" : "")}>
                                     <Item.Content class="min-w-0">
                                         <Item.Title class="line-clamp-none">
-                                            {#if x.fav}<Star class="text-warning inline size-3.5" fill="currentColor" aria-label="โปรด" />{/if}{x.name}
+                                            {x.name}
                                             {#if editing}<Badge data-tone="primary">กำลังแก้ไข</Badge>{/if}
                                         </Item.Title>
                                         <Item.Description>{x.n} รูป</Item.Description>
                                     </Item.Content>
                                     <Item.Actions class="flex-wrap gap-1.5">
-                                        <Button variant="outline" size="sm" aria-pressed={!!x.fav} aria-label={(x.fav ? "เอาชุดออกจากโปรด: " : "ตั้งเป็นชุดโปรด: ") + x.name} onclick={act("stkset-fav", i)}
-                                            ><Star data-icon="inline-start" class={x.fav ? "text-warning" : ""} fill={x.fav ? "currentColor" : "none"} />โปรด</Button
-                                        >
                                         <Button variant="outline" size="sm" onclick={act("stk-edit", i)}><Pencil data-icon="inline-start" />แก้ไข</Button>
                                         <Button variant="destructive" size="sm" onclick={act("stk-del", i)}><Trash data-icon="inline-start" />ลบ</Button>
                                     </Item.Actions>
