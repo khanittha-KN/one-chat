@@ -8,7 +8,6 @@ import SettingsIcon from "@lucide/svelte/icons/settings";
 import ZapIcon from "@lucide/svelte/icons/zap";
 import MegaphoneIcon from "@lucide/svelte/icons/megaphone";
 import BotIcon from "@lucide/svelte/icons/bot";
-import LandmarkIcon from "@lucide/svelte/icons/landmark";
 import SendIcon from "@lucide/svelte/icons/send";
 import BookOpenIcon from "@lucide/svelte/icons/book-open";
 import MessageCircleIcon from "@lucide/svelte/icons/message-circle";
@@ -20,25 +19,37 @@ import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
 import ImageOffIcon from "@lucide/svelte/icons/image-off";
 import KeyRoundIcon from "@lucide/svelte/icons/key-round";
 import LogOutIcon from "@lucide/svelte/icons/log-out";
+import WalletIcon from "@lucide/svelte/icons/wallet";
 
 export const ME = "admin01";
+// วันที่วันนี้แบบ วว/ดด/ปป (พ.ศ.) — ใช้ใต้ฟองแชทและในโน้ต (เว็บต้นฉบับ 15 ต.ค. 2026: "15/10/69 14:35")
+const d0 = new Date();
+export const TODAY = String(d0.getDate()).padStart(2, "0") + "/" + String(d0.getMonth() + 1).padStart(2, "0") + "/" + String((d0.getFullYear() + 543) % 100).padStart(2, "0");
+// วันที่ในรายการสนทนา แบบ "15 Oct" (เจ้าของงานสั่ง 15 ต.ค. 2026 — แสดงเป็น "15 Oct - 13:30")
+export const DAY_SHORT = d0.getDate() + " " + d0.toLocaleString("en-US", { month: "short" });
 
-// LINE Channel (ไลน์ OA) — เว็บละหลายช่อง ตั้งชื่อตามเว็บ (เจ้าของงานให้ม็อคอัพแบบนี้ 14 ต.ค. 2026: "LSM55Goal → 55Goal 1 · สำรอง · VIP · Support")
+// Channel ของเว็บ — LINE OA หรือ Telegram (platform · เจ้าของงานสั่งเพิ่ม Telegram 15 ต.ค. 2026) · เว็บละหลายช่อง ตั้งชื่อตามเว็บ (เจ้าของงานให้ม็อคอัพแบบนี้ 14 ต.ค. 2026: "LSM55Goal → 55Goal 1 · สำรอง · VIP · Support")
 // id = LINE ID ที่แสดงเป็น @id บนหัวห้องแชทและการ์ดสถานะไลน์ · เรียงตามเว็บ แล้วตามลำดับช่อง
 export const merchants = [
-    { id: "55goal1", name: "55Goal 1", chats: 3482 },
-    { id: "55goal2", name: "55Goal สำรอง", chats: 4863 },
-    { id: "55goalvip", name: "55Goal VIP", chats: 59216 },
-    { id: "55goalcs", name: "55Goal Support", chats: 2371 },
-    { id: "99queen1", name: "99Queen 1", chats: 25422 },
-    { id: "99queen2", name: "99Queen สำรอง", chats: 14912 },
-    { id: "99queenvip", name: "99Queen VIP", chats: 5982 },
-    { id: "99queencs", name: "99Queen Support", chats: 18107 },
+    { id: "55goal1", name: "55Goal 1", chats: 3482, platform: "line" },
+    { id: "55goal2", name: "55Goal สำรอง", chats: 4863, platform: "line" },
+    { id: "55goalvip", name: "55Goal VIP", chats: 59216, platform: "line" },
+    { id: "55goalcs", name: "55Goal Support", chats: 2371, platform: "line" },
+    { id: "55goaltg", name: "55Goal Telegram", chats: 1284, platform: "telegram" },
+    { id: "99queen1", name: "99Queen 1", chats: 25422, platform: "line" },
+    { id: "99queen2", name: "99Queen สำรอง", chats: 14912, platform: "line" },
+    { id: "99queenvip", name: "99Queen VIP", chats: 5982, platform: "line" },
+    { id: "99queencs", name: "99Queen Support", chats: 18107, platform: "line" },
+    { id: "99queentg", name: "99Queen Telegram", chats: 932, platform: "telegram" },
     // ⚠ 2 ช่องนี้ไม่มีในต้นฉบับ — ทดสอบ Channel ที่ใช้ LINE LIFF เท่านั้น (ไม่มีแชต ⇒ ไม่แสดงในแผงซ้าย)
-    { id: "99queenmember", name: "99Queen Member", chats: 0 },
-    { id: "88kingpromo", name: "88King Promo", chats: 0 },
+    { id: "99queenmember", name: "99Queen Member", chats: 0, platform: "line" },
+    { id: "88kingpromo", name: "88King Promo", chats: 0, platform: "line" },
 ];
 export const merch = (id) => merchants.filter((m) => m.id === id)[0];
+export const chanByName = (name) => merchants.filter((m) => m.name === name)[0];
+// ช่องทางของ Channel — ใช้กับสัญลักษณ์ ui/PlatformIcon และข้อความ "ส่งทาง …"
+export const PLATFORM = { line: "LINE", telegram: "Telegram" };
+export const platformOf = (id) => (merch(id) || {}).platform || "line";
 
 /* ---------- Organization → Agent → LINE Channel (เอกสารส่งต่องาน 9 ต.ค. 2026 ฉบับแก้) ----------
    ⚠ ข้อมูลสมมติทั้งหมด — ของจริงต้องจัดกลุ่มด้วยรหัส Org · Agent · Channel ของระบบ ไม่เดาจากชื่อหรือเลข
@@ -57,10 +68,12 @@ const CHANNEL_META = {
     "55goal2": { agent: "agA", chat: true, liff: true },
     "55goalvip": { agent: "agA", chat: true, liff: false },
     "55goalcs": { agent: "agA", chat: true, liff: false },
+    "55goaltg": { agent: "agA", chat: true, liff: false }, // Telegram ไม่มี LIFF
     "99queen1": { agent: "agB", chat: true, liff: false },
     "99queen2": { agent: "agB", chat: true, liff: false },
     "99queenvip": { agent: "agB", chat: true, liff: true },
     "99queencs": { agent: "agB", chat: true, liff: false },
+    "99queentg": { agent: "agB", chat: true, liff: false },
     "99queenmember": { agent: "agB", chat: false, liff: true },
     "88kingpromo": { agent: "agC", chat: false, liff: true }, // LSM88King ไม่มี Channel สำหรับแชต ⇒ ไม่แสดงทั้งกลุ่ม
 };
@@ -106,6 +119,7 @@ const PEOPLE = [
     ["benjamas3368", "เบญจมาศ ทองคำ"], ["mintra8842", "มินตรา แสงทอง"], ["natcha5517", "ณัฐชา รัตนพันธ์"], ["somchai1290", "สมชาย ศรีสุข"],
     ["kritsada6603", "กฤษดา บุญมา"], ["thanawat4475", "ธนวัฒน์ วงศ์ไทย"], ["arthit8126", "อาทิตย์ ศรีวงศ์"], ["wanchai3054", "วันชัย ใจกล้า"],
     ["teerapat7789", "ธีรภัทร์ มั่นคง"], ["sorawit2461", "สรวิศ พรหมมา"], ["jirapat9930", "จิรภัทร นาคประเสริฐ"], ["pongsak1187", "พงศ์ศักดิ์ อินทร์แก้ว"],
+    ["natthapong5402", "ณัฐพงษ์ ศรีสวัสดิ์"], ["phakhin3317", "ภาคิน ทองประเสริฐ"], ["chalisa6624", "ชลิสา วงศ์สุวรรณ"],
 ];
 export const usernameOf = (n) => (PEOPLE[n - 1] ? PEOPLE[n - 1][0] : "member" + String(n).padStart(4, "0"));
 // เลขบัญชี 10 หลักแบบ XXX-X-XXXXX-X และเบอร์มือถือ ที่คงที่ตามลำดับลูกค้า (ไม่สุ่มใหม่ทุกครั้งที่โหลด)
@@ -115,6 +129,14 @@ export const acctNo = (seed) => {
     return d.slice(0, 3) + "-" + d[3] + "-" + d.slice(4, 9) + "-" + d[9];
 };
 const mobileOf = (n) => "0" + "896"[n % 3] + digits(n + 3, 1) + "-" + digits(n * 11 + 5, 3) + "-" + digits(n * 13 + 1, 4);
+
+// ปิดเลขบางส่วนในแผงขวา (เว็บต้นฉบับ 15 ต.ค. 2026): เลขบัญชี 3 ตัวแรก + XXXX + 3 ตัวท้าย · เบอร์ 3 ตัวแรก + XXXX + 3 ตัวท้าย
+export const maskNo = (s) => {
+    const d = String(s).replace(/\D/g, "");
+    return d.slice(0, 3) + "XXXX" + d.slice(-3);
+};
+// ค่า Ping ของไลน์ (ms) — ตัวอย่างคงที่ตามลูกค้า · ไลน์หลุด ⇒ null
+export const pingOf = (c) => (c.lineOk ? 90 + ((c.user.no || 1) * 17) % 90 : null);
 
 function mkUser(n) {
     const b = BANKS[n % BANKS.length];
@@ -190,7 +212,7 @@ export function seedCases() {
             msgs: [{ who: "cust", text: "ขอถอน 500 ค่ะ", t: "13:52" }, { who: "cust", text: "รอนานแล้วนะคะ ยังไม่เข้าเลย", t: "13:53" }] },
         { id: "c6", name: "Mintra S.", type: "general", merchant: "55goalcs", status: "waiting", admin: null, secs: 20, ago: "20 วินาที", lineOk: true, wd: 0, user: mkUser(6),
             msgs: [{ who: "cust", text: "สมัครสมาชิกยังไงคะ", t: "13:55" }, { who: "cust", text: "มีโปรสมาชิกใหม่ไหมคะ", t: "13:55" }] },
-        { id: "c7", name: "ณัฐชา", type: "deposit", merchant: "99queencs", status: "open", admin: "admin01", secs: 80, ago: "14 นาที", lineOk: true, wd: 0, user: mkUser(7),
+        { id: "c7", name: "ณัฐชา", type: "deposit", merchant: "99queentg", status: "open", admin: "admin01", secs: 80, ago: "14 นาที", lineOk: true, wd: 0, user: mkUser(7),
             msgs: [{ who: "cust", text: "สวัสดีค่ะ", t: "13:36" }, { who: "admin", by: "admin01", text: "สวัสดีค่ะ ต้องการแจ้งฝากใช่ไหมคะ", t: "13:37" }, { who: "cust", text: "ใช่ค่ะ ฝาก " + said("bbl"), t: "13:38" }, { who: "admin", by: "admin01", text: ACC, t: "13:39" }, { who: "cust", text: "โอนแล้วนะคะ", t: "13:40" }, slipMsg("bbl", "13:41", { variant: "real" })] },
         { id: "c8", name: "Somchai", type: "general", merchant: "55goalvip", status: "closed", admin: "admin03", secs: 95, ago: "11 ชม.", lineOk: true, wd: 0, user: mkUser(8),
             msgs: [{ who: "cust", text: "สอบถามโปรโมชั่นฝากครั้งแรกหน่อยครับ", t: "12:25" }, { who: "admin", by: "admin03", text: "ฝากครั้งแรกรับโบนัสตามเงื่อนไขโปรโมชั่นค่ะ", t: "12:27" }, { who: "cust", text: "ขอบคุณครับ", t: "12:30" }], closedBy: "admin03", closedAt: "12:41" },
@@ -211,14 +233,46 @@ export function seedCases() {
         mkSlipCase("c15", 15, "จิรภัทร", "withdraw", "55goal1", "open", "admin01", 25, "12 นาที", "kbank", "fake", [["cust", "ขอถอน {amt} ค่ะ"], ["cust", "ส่งสลิปให้แล้วนะคะ"]]),
         mkSlipCase("c16", 16, "Pongsak", "deposit", "55goalcs", "waiting", null, 15, "30 วินาที", "bbl", "fake", [["cust", "ฝาก {amt} ครับ"], ["cust", "โอนแล้วนะครับ"]]),
     );
+    /* เคสสถานการณ์ใหม่จากเว็บต้นฉบับ (15 ต.ค. 2026) — ยูสโดนล็อก · ถอนติดเทิร์น · ลูกค้าใหม่ยังไม่ผูกสมาชิก */
+    const line3 = (who, text, by) => ({ who, text, by });
+    const mk = (id, n, name, type, merchant, status, admin, secs, ago, lines, extra) => {
+        const c = { id, name, type, merchant, status, admin, secs, ago, lineOk: true, wd: 0, user: mkUser(n), msgs: [] };
+        lines.forEach((l, i) => c.msgs.push({ ...l, t: "14:" + String(35 + i).padStart(2, "0") }));
+        return Object.assign(c, extra || {});
+    };
+    cases.push(
+        mk("c17", 17, "ณัฐพงษ์", "general", "55goal1", "open", "admin02", 45, "2 นาที", [
+            line3("cust", "ยูสโดนล็อกครับ ขึ้นว่าล็อกอินผิดหลายครั้ง"),
+            line3("admin", "ขอทราบยูสเซอร์ และชื่อ-นามสกุลที่สมัครไว้ด้วยนะคะ", "admin02"),
+            line3("cust", "ยูส " + usernameOf(17) + " ครับ ชื่อ" + PEOPLE[16][1]),
+        ]),
+        mk("c18", 18, "Phakhin", "withdraw", "99queen1", "open", "admin03", 38, "3 นาที", [
+            line3("cust", "ถอน 1000 ไม่ได้ครับ ขึ้นว่าไม่ผ่านเงื่อนไข"),
+            line3("admin", "ตรวจสอบแล้ว ยอดเทิร์นยังไม่ครบตามโปรโมชั่นที่รับไว้ค่ะ", "admin03"),
+            line3("cust", "ต้องทำเทิร์นอีกเท่าไหร่ครับ"),
+        ], { claim: 1000 }),
+        mk("c19", 19, "ชลิสา", "general", "99queenvip", "waiting", null, 12, "15 วินาที", [
+            line3("cust", "สวัสดีค่ะ เพิ่งเห็นเพจนี้ค่ะ"),
+            line3("cust", "ฝากขั้นต่ำเท่าไหร่คะ แล้วต้องสมัครก่อนไหม"),
+        ], { unbound: true }),
+    );
     const byId = (id) => cases.filter((c) => c.id === id)[0];
+    // ลูกค้าใหม่ที่ยังไม่ผูกสมาชิก (unbound) ⇒ แผงขวาแสดงแค่ค้นหาเพื่อผูก + สมัครสมาชิก
+    byId("c6").unbound = true;
+    // โน้ตของเคส (แสดงใต้ช่องโน้ตในหัวห้องแชท)
+    byId("c2").notes = [{ t: TODAY + " 13:52", text: "ลูกค้าถอนบ่อย ตรวจเทิร์นก่อนทุกครั้ง", by: "admin02" }];
     byId("c2").extraWd = [{ amt: 500, time: "12:10", st: "รอทำรายการ" }];
     byId("c5").extraWd = [{ amt: 300, time: "11:20", st: "รอทำรายการ" }];
     byId("c9").extraDep = [{ amt: 200, time: "13:05", st: "รอเติมเงิน" }];
     byId("c12").extraDep = [{ amt: 350, time: "12:40", st: "รอตรวจสลิป" }, { amt: 100, time: "11:55", st: "รอเติมเงิน" }];
     byId("c15").extraWd = [{ amt: 300, time: "11:40", st: "รอทำรายการ" }];
     const now = Date.now();
-    cases.forEach((c) => {
+    // แสดงครบทุกสีในคำอธิบาย (เจ้าของงานสั่ง 15 ต.ค. 2026): ฝาก c1 c9 · ถอน c2 c18 c5 · เรื่องทั่วไป c3 c17 c6 c19 · ปิดเคส c4 c8 · c7 = ลูกค้าจาก Telegram
+    // c6 · c19 = ลูกค้าใหม่ยังไม่ผูกสมาชิก
+    // เคสอื่นข้างบนเก็บไว้ ไม่แสดง — เพิ่ม id ใน SHOWN เพื่อเอากลับมา
+    const SHOWN = ["c1", "c9", "c2", "c18", "c3", "c17", "c6", "c19", "c5", "c4", "c8", "c7"];
+    const shown = SHOWN.map(byId);
+    shown.forEach((c) => {
         c.at = now - agoSecs(c.ago) * 1000; // เวลาข้อความล่าสุด (ms) — ใช้เรียงรายการแชท
         const n = c.user.no;
         c.histDep = makeHist(n, "dep");
@@ -227,7 +281,9 @@ export function seedCases() {
         if (n % 4 === 0 || n % 4 === 1) c.turn = { need: 500 + n * 100, done: n * 37 };
         if (n % 4 === 0 || n % 4 === 2) c.promo = ["โปรสมาชิกใหม่ 100%", "โปรฝากทุกวัน 10%", "โปรคืนยอดเสีย"][n % 3];
     });
-    return cases;
+    byId("c18").turn = { need: 3000, done: 1200 };
+    byId("c18").promo = "โปรสมาชิกใหม่ 100%";
+    return shown;
 }
 
 export function seedAnnounces() {
@@ -249,21 +305,31 @@ export const COACC = [
 export const accounts = ["กสิกรไทย  038-8-41275-6", "ไทยพาณิชย์  412-2-90564-1"];
 
 export const typeLabel = { deposit: "ฝาก", withdraw: "ถอน", general: "เรื่องทั่วไป" };
-export const tabOf = (c) => (c.type === "general" ? "line" : "payment");
+// แท็บ Payment = ฝาก/ถอน · เรื่องทั่วไปอยู่แท็บ Line
+export const tabOf = (c) => (c.type === "deposit" || c.type === "withdraw" ? "payment" : "line");
 export const cls = (c) => (c.status === "closed" ? "st-white" : c.type === "deposit" ? "st-yellow" : c.type === "withdraw" ? "st-orange" : "st-red");
 
 export const nowT = () => new Date().toTimeString().slice(0, 5);
 // ชื่อสติ๊กเกอร์จากรหัส: "789-5" = ชุด 789 ลำดับที่ 6 · "id-123" = Sticker ID ที่เพิ่มเอง
 // Sticker ID แรกของชุดพื้นฐานใน LINE Messaging API (ลำดับในชุดเรียงต่อกัน) ⇒ ลิงก์รูปบน CDN ของ LINE
-const PACK_FIRST = { 446: 1988, 789: 10855, 1070: 17839, 6136: 10551376, 6325: 10979904, 6359: 11069848 };
+const PACK_FIRST = {
+    446: 1988, 789: 10855, 1070: 17839, 6136: 10551376, 6325: 10979904, 6359: 11069848,
+    6362: 11087920, 6370: 11088016, 6632: 11825374, 8515: 16581242, 8522: 16581266, 8525: 16581290,
+    11537: 52002734, 11538: 51626494, 11539: 52114110,
+};
+// คีย์สติ๊กเกอร์ 3 แบบ: "446-3" ลำดับในชุดของคลัง · "id-123" Sticker ID เดิม · "x-446-1990" packageId + stickerId (เพิ่มด้วย ID)
 export const stickerSrc = (k) => {
-    const id = k.startsWith("id-") ? +k.slice(3) : PACK_FIRST[k.split("-")[0]] + +k.split("-")[1];
+    if (k.startsWith("tg-")) return "https://fonts.gstatic.com/s/e/notoemoji/latest/" + k.slice(3) + "/512.webp";
+    const id = k.startsWith("x-") ? +k.split("-")[2] : k.startsWith("id-") ? +k.slice(3) : PACK_FIRST[k.split("-")[0]] + +k.split("-")[1];
     return id ? "https://stickershop.line-scdn.net/stickershop/v1/sticker/" + id + "/android/sticker.png" : "";
 };
-export const isStickerKey = (k) => /^(\d+-\d+|id-\d+)$/.test(k || "");
-export const stickerLabel = (k) => (k.startsWith("id-") ? "ID " + k.slice(3) : "ชุด " + k.split("-")[0] + " #" + (+k.split("-")[1] + 1));
+export const isStickerKey = (k) => /^(\d+-\d+|id-\d+|x-\d+-\d+|tg-[0-9a-f_]+)$/.test(k || "");
+const tgChar = (k) => k.slice(3).split("_").map((h) => String.fromCodePoint(parseInt(h, 16))).join("");
+export const stickerLabel = (k) =>
+    k.startsWith("tg-") ? "Telegram " + tgChar(k) : k.startsWith("x-") ? "ชุด " + k.split("-")[1] + " · ID " + k.split("-")[2] : k.startsWith("id-") ? "ID " + k.slice(3) : "ชุด " + k.split("-")[0] + " #" + (+k.split("-")[1] + 1);
 // ข้อความสรุปของข้อความล่าสุดในรายการแชต
-export const msgPreview = (m) => (m.action === "slip" ? "[สลิปโอนเงิน]" : m.action === "sticker" ? "[สติ๊กเกอร์]" : m.text);
+export const msgPreview = (m) =>
+    m.action === "slip" ? "[สลิปโอนเงิน]" : m.action === "sticker" ? "[สติ๊กเกอร์]" : m.action === "image" ? "[รูปภาพ]" : m.action === "card" ? "[การ์ดข้อความ] " + m.card : m.text;
 export const money = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ผลตรวจสลิป — อ่านจากรูปสลิปที่ลูกค้าส่ง (SLIPS) · จริง/ปลอมตาม variant ของข้อความ
@@ -306,98 +372,108 @@ export function histSums(items) {
 }
 export function accountsOf(c) {
     const n = c.user.no || 1, cnt = 1 + (n % 5);
-    const out = [{ bank: c.user.bankCode, no: c.user.number, main: true, on: true }];
-    for (let k = 1; k < cnt; k++) out.push({ bank: BANKS[(n + k) % BANKS.length].code, no: acctNo(n * 10 + k), main: false, on: k % 3 !== 0 });
+    // st = สถานะอนุมัติบัญชี (อนุมัติ · รออนุมัติ · ไม่อนุมัติ) · nm = ชื่อบัญชีตรงกับสมาชิก (เว็บต้นฉบับ 15 ต.ค. 2026)
+    const out = [{ bank: c.user.bankCode, no: c.user.number, main: true, st: "อนุมัติ", nm: true }];
+    for (let k = 1; k < cnt; k++) out.push({ bank: BANKS[(n + k) % BANKS.length].code, no: acctNo(n * 10 + k), main: false, st: ["อนุมัติ", "รออนุมัติ", "ไม่อนุมัติ"][(n + k) % 3], nm: (n + k) % 4 !== 0 });
     return out;
 }
 
 /* ---------- settings ---------- */
 // เปลี่ยนรหัสผ่าน (pw) = รหัสของ Agent / แอดมินที่ล็อกอินอยู่ — เปิดเป็นแท็บตาม Flow ใน Figma (เจ้าของงาน 14 ต.ค. 2026)
-export const SET_TABS = [["stk", StickerIcon, "ชุดสติ๊กเกอร์"], ["qr", ZapIcon, "คีย์ลัด"], ["bc", MegaphoneIcon, "Broadcast (ยิงทั้งหมด)"], ["am", BotIcon, "ข้อความอัตโนมัติ"], ["ba", LandmarkIcon, "บัญชี"], ["tg", SendIcon, "โพสต์ Telegram"], ["pw", KeyRoundIcon, "เปลี่ยนรหัสผ่าน"], ["gd", BookOpenIcon, "คู่มือการใช้งาน"]];
-export const PACKS = [[446, 40], [789, 40], [1070, 40], [6136, 24], [6325, 24], [6359, 24]];
+// เว็บต้นฉบับ 15 ต.ค. 2026: เพิ่ม "ตั้งค่าทั่วไป" · เอาแท็บ บัญชี และ โพสต์ Telegram ออก · ท้ายเมนูมีลิงก์ไปหน้า Line Liff (ใน SettingsPage)
+export const SET_TABS = [["gen", SettingsIcon, "ตั้งค่าทั่วไป"], ["stk", StickerIcon, "ชุดสติ๊กเกอร์"], ["qr", ZapIcon, "คีย์ลัด"], ["bc", MegaphoneIcon, "Broadcast (ยิงทั้งหมด)"], ["am", BotIcon, "ข้อความอัตโนมัติ"], ["pw", KeyRoundIcon, "เปลี่ยนรหัสผ่าน"], ["gd", BookOpenIcon, "คู่มือการใช้งาน"]];
+// ชุดสติ๊กเกอร์พื้นฐานใน LINE Messaging API — 15 ชุด (เว็บต้นฉบับ 15 ต.ค. 2026 · เดิม 6)
+/* สติ๊กเกอร์สำหรับ Channel Telegram (เจ้าของงานขอ 15 ต.ค. 2026) — คีย์ "tg-<รหัสอีโมจิ>"
+   ⚠ ต้นแบบ: ดึงสติ๊กเกอร์ Telegram จริงต้องใช้ Bot API (getStickerSet + getFile) ด้วย bot token ของ OA ฝั่งเซิร์ฟเวอร์ ⇒ ต้นแบบนี้ใช้
+   Noto Animated Emoji ของ Google (CC BY 4.0 · ภาพเคลื่อนไหวแบบอีโมจิ Telegram) จาก fonts.gstatic.com แทน · ทุกรหัสทดสอบแล้วว่าโหลดได้ */
+export const TG_PACKS = [
+    { id: "tgface", name: "หน้ายิ้ม", codes: ["1f600", "1f603", "1f604", "1f601", "1f606", "1f605", "1f602", "1f923", "1f60a", "1f607", "1f642", "1f609", "1f60d", "1f970", "1f618", "1f60e", "1f914", "1f62e", "1f97a", "1f62d"] },
+    { id: "tghand", name: "ท่าทาง", codes: ["1f44d", "1f44e", "1f44f", "1f64f", "1f44b", "1f44c", "270c_fe0f", "1f91e", "1f4aa", "1f64c", "1f449", "1f446", "1f447", "270d_fe0f", "1f91d"] },
+    { id: "tgheart", name: "หัวใจ & ฉลอง", codes: ["2764_fe0f", "1f9e1", "1f49b", "1f49a", "1f499", "1f49c", "1f496", "1f525", "2728", "1f389", "1f38a", "1f381", "1f3c6", "1f31f", "1f4af"] },
+    { id: "tgluck", name: "เงิน & โชค", codes: ["1f4b8", "1f911", "1f48e", "1f4c8", "1f3b0", "1f340", "1f680", "1f514", "23f3", "2705", "274c", "1f973", "1f929", "1faf6"] },
+];
+export const PACKS = [[446, 40], [789, 40], [1070, 40], [6136, 24], [6325, 24], [6359, 24], [6362, 24], [6370, 24], [6632, 24], [8515, 24], [8522, 24], [8525, 24], [11537, 40], [11538, 40], [11539, 40]];
+// การ์ดข้อความ (ปุ่ม 💳 ในช่องพิมพ์) — ส่งการ์ดให้ลูกค้าในแชท
+export const CARDS = [
+    { name: "การ์ดโปรโมชั่น", desc: "โปรโมชั่นปัจจุบัน" },
+    { name: "การ์ดวิธีฝากเงิน", desc: "ขั้นตอนการฝาก" },
+    { name: "การ์ดวิธีสมัครสมาชิก", desc: "ขั้นตอนการสมัคร" },
+];
 export const TYPE_LBL = { text: "ข้อความ", sticker: "สติ๊กเกอร์", image: "รูปภาพ" };
-// คู่มือ — ตรงกับหน้าจอปัจจุบัน (ปรับ 12 ต.ค. 2026: Org → Agent → Channel · สีเคส · แผงขวา · ตั้งค่าแบบแผงสไลด์ · สติ๊กเกอร์จากรูป)
+// คู่มือ — ตรงกับหน้าจอปัจจุบัน (ปรับ 15 ต.ค. 2026 ตามเว็บต้นฉบับ: แถบเครื่องมือช่องพิมพ์ · โน้ต · ผูกสมาชิก · การ์ดพับได้ · ตั้งค่าทั่วไป)
 export const GUIDE = [
-    [BuildingIcon, "เลือก Channel ที่จะดูแชท", [
-        "แถบซ้ายเรียงเป็น Organization → Agent → LINE Channel (แสดงเฉพาะ Channel ที่เปิดแชทรวม)",
-        "ติ๊ก Channel ที่ต้องการดูแชท · ติ๊กที่ชื่อ Agent = เลือกทุก Channel ของ Agent นั้น · ติ๊กแถว \"ทั้งหมด\" = เลือกทุก Channel",
-        "ไม่ติ๊กเลย = ไม่แสดงแชท · เปิดระบบมาจะติ๊กไว้ทุก Channel ให้แล้ว",
-        "กดลูกศรท้ายชื่อ Agent เพื่อพับ/ขยาย · ตัวเลขท้าย Channel คือจำนวนแชทที่เคยทักเข้ามา",
+    [BuildingIcon, "เลือกแชทที่แสดง", [
+        "กดปุ่ม \"เลือกแชทที่แสดง\" ใต้หัวข้อการสนทนา — แผงจะเลื่อนออกมาจากด้านซ้าย ตัวเลขบนปุ่มคือจำนวน Channel ที่เลือกอยู่",
+        "ในแผงเรียงเป็น Organization → Agent → LINE Channel · ติ๊ก Channel ที่ต้องการดูแชท · ติ๊กที่ชื่อ Agent = เลือกทุก Channel ของ Agent นั้น · ติ๊ก \"ทั้งหมด\" = เลือกทุก Channel · ไม่ติ๊กเลย = ไม่แสดงแชท",
+        "ปุ่มเฟืองท้าย Channel เปิดหน้าตั้งค่าของ Channel นั้น",
+        "โลโก้หน้าชื่อ Channel บอกช่องทาง: โลโก้ LINE (เขียว) = LINE · โลโก้ Telegram (ฟ้า เครื่องบินกระดาษ) = Telegram (มีในรายการสนทนาและหัวห้องแชทด้วย)",
     ]],
     [InboxIcon, "อ่านรายการสนทนา", [
         "กรองรายการด้วยแท็บ All / Line / Payment ที่หัวรายการ",
-        "สีพื้นและแถบซ้ายบอกประเภทเคส: เหลือง = ฝาก · ส้ม = ถอน · แดง = เรื่องทั่วไป · ขาว = ปิดเคสแล้ว (ดูคำอธิบายสีท้ายรายการ)",
-        "ป้าย \"รอแอดมินรับเคส\" = ยังไม่มีใครรับ · ป้ายชื่อแอดมิน = คนที่รับเคสอยู่ (ตัวเลขในวงเล็บคือวินาทีที่ผ่านไป)",
-        "ลำดับ: แชทที่ยังไม่ปิดอยู่บน ข้อความล่าสุดขึ้นก่อน · แชทที่ปิดเคสแล้วลงไปอยู่ล่างสุด เรียงตามเวลาเหมือนกัน · ตอบแชทแล้วแถวนั้นขึ้นบนสุด",
-        "กดที่แถวเพื่อเปิดห้องแชทของลูกค้าคนนั้น",
+        "สีพื้นและแถบสีหน้าแถวบอกประเภทเคส: เหลือง = ฝาก · ส้ม = ถอน · แดง = เรื่องทั่วไป · ขาว = ปิดเคสแล้ว",
+        "ป้ายตัวเลขสีแดงท้ายแถว = ข้อความใหม่ที่ยังไม่ได้เปิดอ่าน · มีข้อความลูกค้าเข้าจะมีเสียงแจ้งเตือน (เปิด/ปิดที่ปุ่มกระดิ่งบนแถบบน)",
+        "ป้าย \"รอแอดมินรับเคส\" = ยังไม่มีใครรับ · ป้ายชื่อแอดมิน = คนที่รับเคสอยู่ · กดที่แถวเพื่อเปิดห้องแชท",
     ]],
-    [MessageCircleIcon, "ตอบแชทลูกค้า", [
-        "หัวห้องแชทแสดงชื่อลูกค้า ประเภทเคส และ LINE Channel ที่ลูกค้าทักเข้ามา",
-        "พิมพ์ข้อความแล้วกด Enter หรือปุ่ม \"ส่ง\" — ส่งครั้งแรกระบบรับเคสให้อัตโนมัติ",
-        "ปุ่มสติ๊กเกอร์ (ซ้ายของช่องพิมพ์) ส่งจากสติ๊กเกอร์โปรดหรือชุดที่บันทึกไว้",
-        "ปุ่มคีย์ลัดใต้ห้องแชทส่งข้อความสำเร็จรูปในคลิกเดียว · \"ขอเลขบัญชีลูกค้า\" ส่งคำขอเลขบัญชีให้ลูกค้า",
-        "แก้ชื่อ/ไอดีลูกค้าแล้วกด \"Save\" · ช่อง Note พิมพ์แล้วกด Enter เพื่อบันทึก",
-        "คุยจบ กดปุ่มแดง \"ปิดเคส (F4)\" หรือกด F4 — ห้องแชทขึ้นแถบแดง \"ปิดเคส โดย … - เวลา\"",
+    [MessageCircleIcon, "การรับแชทและตอบลูกค้า", [
+        "ค้นหาลูกค้าที่ช่องค้นหาบนรายการสนทนา — เลือกผลแล้วข้อมูลขึ้นที่แผงลูกค้าโดยไม่เปิดแชท",
+        "หัวห้องแชทแสดงรูปและชื่อลูกค้า ผู้รับเคส และ LINE Channel · กดปุ่มดินสอข้างชื่อเพื่อแก้ชื่อ/ไอดี",
+        "เปลี่ยนประเภทเคสด้วยปุ่ม ฝาก / ถอน / เรื่องทั่วไป ในหัวห้องแชท",
+        "พิมพ์ข้อความแล้วกด Enter — ส่งครั้งแรกระบบรับเคสให้อัตโนมัติ · แถบเครื่องมือหน้าช่องพิมพ์: คีย์ลัด · การ์ดข้อความ · สติ๊กเกอร์ · ส่งรูปภาพ",
+        "พิมพ์ / ในช่องพิมพ์ที่ว่างอยู่เพื่อเรียกรายการคีย์ลัด",
+        "เพิ่มโน้ตของลูกค้า: พิมพ์ในช่องโน้ตแล้วกด Enter — โน้ตแสดงเป็นรายการพร้อมเวลาและชื่อแอดมิน ลบได้ด้วยปุ่ม ×",
+        "คุยจบ กดปุ่มแดง \"ปิดเคส [F4]\" หรือกด F4 — ระบบบันทึกว่าใครรับและปิดเมื่อไร และส่งข้อความหลังปิดเคสที่ตั้งไว้ให้ลูกค้า",
+        "ปุ่ม ◫ ที่หัวห้องแชทซ่อน/แสดงแผงข้อมูลลูกค้า (จอกว้าง)",
+    ]],
+    [UserSearchIcon, "ตรวจสอบข้อมูลสมาชิก", [
+        "แผงขวา: ปุ่ม \"ไปหน้า Auto fast\" อยู่บนสุด · สถานะไลน์ / ตรวจสอบสลิป / ประวัติฝาก-ถอน / สมัครสมาชิก เป็นปุ่ม กดแล้วเปิดหน้าต่าง (ไลน์หลุดหรือมีสลิปรอตรวจจะกางเป็นการ์ดให้เอง) · การ์ดที่เหลือกดหัวการ์ดเพื่อพับ/กาง",
+        "การ์ด \"ตรวจสอบ\": พิมพ์ username แล้วกด \"ตรวจสอบ\" — แชทที่ยังไม่ผูกสมาชิกจะผูกกับสมาชิกที่พบ · \"เลิกผูก\" เพื่อยกเลิก",
+        "ดูสถานะ เทิร์น และโปรโมชั่นของสมาชิกที่ผูกไว้ · การ์ด \"บัญชีธนาคาร\" แสดงบัญชีพร้อมสถานะ อนุมัติ / รออนุมัติ / ไม่อนุมัติ และผลตรวจชื่อ",
+        "เปลี่ยนรหัสผ่านสมาชิกที่ปุ่ม \"เปลี่ยนรหัสผ่านลูกค้า\" — กรอกรหัสใหม่สองครั้ง แล้วแจ้งรหัสใหม่ให้ลูกค้าทางแชทเอง",
+        "สมัครสมาชิกใหม่ที่การ์ด \"สมัครสมาชิก Player\" — กด \"Check เลข\" เพื่อตรวจว่าเลขบัญชีซ้ำหรือไม่ · สมัครแล้วกด \"ส่งเบอร์และรหัสให้ลูกค้า\"",
+        "สถานะไลน์ (OA): ถ้าส่งข้อความไม่ได้ กด Verify เพื่อ login ใหม่ · Ping / Update สถานะ เพื่อตรวจการเชื่อมต่อ",
+    ]],
+    [WalletIcon, "เครดิตและประวัติ", [
+        "ปรับเครดิตสมาชิกที่การ์ด \"จัดการเครดิต\" — กรอกจำนวนเงิน เลือกเติมหรือถอน และกรอกรหัสผ่านแอดมินของคุณ",
+        "ดูรายการฝาก/ถอนล่าสุดที่การ์ด \"สถานะยอดค้าง\" และ \"ประวัติฝาก/ถอน\"",
     ]],
     [ReceiptIcon, "ตรวจสลิปโอนเงิน", [
-        "เมื่อลูกค้าส่งสลิป กดปุ่ม \"ตรวจสอบสลิป\" ใต้รูปสลิปในห้องแชท",
-        "ผลตรวจขึ้นในการ์ด \"ตรวจสอบสลิป\" ที่แผงขวา",
+        "เมื่อลูกค้าส่งสลิป กดปุ่ม \"ตรวจสอบสลิป\" ใต้รูปสลิปในห้องแชท — ผลตรวจขึ้นในการ์ด \"ตรวจสอบสลิป\" ที่แผงขวา",
     ]],
-    [UserSearchIcon, "ข้อมูลลูกค้า (แผงขวา)", [
-        "ค้นหาลูกค้าด้วยชื่อ / ไอดี / เบอร์ ที่ช่องค้นหาบนสุดของแผงขวา แล้วเลือกจากผลค้นหา ข้อมูลลูกค้าจะขึ้นในแผงขวาโดยไม่เปิดแชท · กด \"เปิดแชท\" เมื่อต้องการคุย · กด × เพื่อปิด",
-        "ตรวจสอบสถานะไลน์: ถ้าขึ้น \"หลุด\" กดปุ่มฟ้า \"Verify\" เพื่อเชื่อมต่อใหม่ · \"Update\" = รีเฟรชสถานะ",
-        "การ์ดตรวจสอบ: กรอก username แล้วกด \"ตรวจสอบ\" เพื่อดูข้อมูลบัญชี เทิร์น และโปรโมชั่น · ดูบัญชีธนาคารลูกค้าได้จากการ์ดนี้ · \"เปลี่ยนรหัสผ่านลูกค้า\" ใส่รหัสผ่านใหม่ 2 ครั้ง (กดรูปลูกตาท้ายช่องเพื่อดูสิ่งที่พิมพ์) แล้วกดบันทึก",
-        "สถานะยอดค้าง และประวัติฝาก/ถอน (ป้ายฝากสีเหลือง ถอนสีส้ม) · กด \"ดูทั้งหมด / แยกฝาก-ถอน\" เพื่อดูครบทุกรายการ",
-        "จัดการเครดิต: เลือก เติม หรือ ถอน ใส่จำนวนเงินและรหัสผ่านแอดมิน แล้วกด \"บันทึก\" · สมัครสมาชิก Player ได้จากการ์ดล่างสุด",
-    ]],
-    [SettingsIcon, "เข้าหน้าตั้งค่าและใช้ฟอร์ม", [
-        "กดไอคอนเฟืองที่หัว Agent ในแถบซ้าย (ตั้งค่าของ Agent นั้น) หรือเลือกจากเมนูมุมขวาบน",
+    [SettingsIcon, "ตั้งค่า", [
+        "ตั้งค่าทั่วไป → เสียงแจ้งเตือน: เปิด/ปิดเสียง เลือกเสียงและความดัง กด \"ทดสอบเสียง\" เพื่อฟัง",
+        "ตั้งค่าทั่วไป → ส่งข้อความหลังปิดเคส: ข้อความที่ระบบส่งให้ลูกค้าทันทีเมื่อกดปิดเคส (สูงสุด 5 รายการ)",
         "หน้าที่มีรายการ: กดปุ่ม \"สร้าง…ใหม่\" ที่หัวการ์ดรายการ แผงฟอร์มจะเลื่อนออกมาจากด้านขวา",
-        "กด \"แก้ไข\" ที่แถว หัวแผงจะบอกชื่อรายการที่กำลังแก้ และแถวนั้นมีป้าย \"กำลังแก้ไข\" · ปิดแผงหรือกด \"ยกเลิก\" = ไม่บันทึก",
-        "เปลี่ยนรหัสผ่านของตัวเอง (Agent / แอดมินที่ล็อกอินอยู่): ตั้งค่า → เปลี่ยนรหัสผ่าน หรือเมนูมุมขวาบน → เปลี่ยนรหัสผ่าน · ใส่รหัสปัจจุบัน รหัสใหม่ และยืนยันรหัสใหม่ · ทุกช่องมีรูปลูกตาไว้แสดง/ซ่อนรหัส",
+        "ปุ่ม \"ไปหน้า Line Liff\" อยู่ท้ายเมนูตั้งค่า",
     ]],
-    [StickerIcon, "สติ๊กเกอร์โปรดและชุดสติ๊กเกอร์", [
-        "ตั้งค่า → ชุดสติ๊กเกอร์",
-        "สติ๊กเกอร์โปรด: เลือกชุดในคลัง LINE แล้วกดที่รูปเพื่อติดดาว / เอาดาวออก หรือกด \"ติดดาวทั้งชุด\" — สติ๊กเกอร์โปรดขึ้นก่อนในปุ่มสติ๊กเกอร์ของหน้าแชท",
-        "สร้างชุด: กด \"สร้างชุดใหม่\" ตั้งชื่อ กดเลือกรูปจากคลัง (หรือเพิ่มด้วย Sticker ID) แล้วกด \"สร้างชุด\"",
-        "ปุ่มสติ๊กเกอร์ในหน้าแชท: เปิดมาเจอแท็บ \"บันทึกไว้\" (สติ๊กเกอร์โปรด + ชุดที่สร้างไว้) ก่อนเสมอ · แถบด้านบนมีทุกชุดในคลัง LINE กดรูปปกเพื่อเปลี่ยนชุด · กดสติ๊กเกอร์ = ส่งทันที",
+    [StickerIcon, "จัดการชุดสติ๊กเกอร์", [
+        "ไปที่ ตั้งค่า → ชุดสติ๊กเกอร์ · ค้นหาชุดในคลังด้วยเลขชุด (packageId)",
+        "สร้างชุด: ตั้งชื่อ กดเลือกรูปจากคลัง หรือเพิ่มด้วย packageId + stickerId แล้วกดบันทึก",
     ]],
-    [ZapIcon, "คีย์ลัด (คำตอบหลายรายการ)", [
-        "ตั้งค่า → คีย์ลัด → \"สร้างคีย์ลัดใหม่\"",
-        "เพิ่มรายการ ข้อความ / สติ๊กเกอร์ (กดเลือกจากรูป ไม่ต้องจำ ID) / รูปภาพ (อัปโหลด JPG หรือ PNG ไม่เกิน 10 MB)",
-        "ลากที่ปุ่มจับหน้าแถวเพื่อเรียงลำดับ (หรือกดลูกศรขึ้น/ลงบนปุ่มจับ) แล้วดูตัวอย่างในแชทก่อนบันทึก",
+    [ZapIcon, "คีย์ลัด", [
+        "ตั้งค่า → คีย์ลัด → \"สร้างคีย์ลัดใหม่\" · เพิ่มข้อความ / สติ๊กเกอร์ / รูปภาพ แล้วลากเรียงลำดับ",
+        "ในห้องแชทกดปุ่มคีย์ลัด (หรือพิมพ์ /) แล้วเลือก — ระบบส่งทุกรายการตามลำดับ",
     ]],
-    [MegaphoneIcon, "Broadcast ถึงทุกห้องแชท", [
-        "ตั้งค่า → Broadcast · เพิ่ม part ข้อความ / สติ๊กเกอร์ / รูปภาพ ได้สูงสุด 10 part",
-        "กด \"ส่ง Broadcast\" แล้วกดยืนยันอีกครั้ง — ส่งถึงทุกห้องแชทของ OA นี้และยกเลิกไม่ได้",
+    [MegaphoneIcon, "Broadcast", [
+        "เลือกผู้รับ: ทุกคน หรือ เลือกผู้รับ · ติ๊ก \"ตั้งเวลาส่ง\" เพื่อส่งภายหลัง",
+        "กด \"ส่ง Broadcast\" แล้วยืนยัน — ดูผลในการ์ด \"ประวัติ & คิวที่ตั้งเวลาไว้\"",
     ]],
     [BotIcon, "ข้อความอัตโนมัติ (Keyword)", [
-        "ตั้งค่า → ข้อความอัตโนมัติ → \"สร้างกฎใหม่\"",
-        "ใส่คำค้น เลือกประเภทการจับคู่ (มีคำนี้ / ตรงทั้งข้อความ) และข้อความตอบกลับ",
-        "เปิด/ปิดแต่ละกฎด้วยสวิตช์ในรายการ",
-    ]],
-    [LandmarkIcon, "บัญชีบริษัท", [
-        "ตั้งค่า → บัญชี → \"เพิ่มบัญชีใหม่\"",
-        "เลือกธนาคาร กรอกเลขบัญชี 10–12 หลักและชื่อบัญชี แล้วกด \"บันทึกบัญชี\"",
-    ]],
-    [SendIcon, "โพสต์ไป Telegram", [
-        "ตั้งค่า → โพสต์ Telegram → \"เขียนโพสต์\"",
-        "แนบรูป ใส่ข้อความ และเพิ่มปุ่มเมนูได้สูงสุด 8 ปุ่ม",
-        "กด \"โพสต์ไป Telegram\" แล้วดูรายการที่โพสต์ในการ์ด \"ข้อมูลที่โพสต์\"",
+        "ไปที่ ตั้งค่า → ข้อความอัตโนมัติ",
+        "เพิ่มคำค้น (Keyword) และข้อความตอบกลับ",
+        "เปิด/ปิดการใช้งานแต่ละรายการได้ตามต้องการ",
     ]],
     [MessageSquareTextIcon, "ปุ่มคีย์ลัดใต้ห้องแชท (Announce)", [
-        "เมนูมุมขวาบน → จัดการข้อความอัตโนมัติ",
-        "ข้อความที่สถานะ \"ใช้งาน\" จะเป็นปุ่มคีย์ลัดใต้ห้องแชท เรียงตามลำดับที่ตั้งไว้",
+        "เมนูมุมขวาบน → จัดการข้อความอัตโนมัติ · ข้อความที่สถานะ \"ใช้งาน\" จะเป็นปุ่มใต้ห้องแชท",
     ]],
 ];
 
 /* ---------- menu — ไอคอน lucide นำหน้าทุกรายการ (DESIGN-SYSTEM §10.1 · แทนจุดสีของต้นฉบับ) ---------- */
 export const MENU_GROUPS = [
     [["หน้าหลัก", HouseIcon, "home"]],
-    [["จัดการข้อความอัตโนมัติ", MessageSquareTextIcon, "announce"], ["Telegram post", SendIcon, "tg"]],
+    [["จัดการข้อความอัตโนมัติ", MessageSquareTextIcon, "announce"], ["Telegram post", SendIcon, "x"]], // Telegram post ไม่มีหน้าในตั้งค่าแล้ว (เว็บต้นฉบับ 15 ต.ค. 2026)
     [["จัดการไลน์", MessageCircleIcon, "x"]],
     [["จัดการแอดมิน", UserCogIcon, "x"], ["คู่มือการใช้งาน", BookOpenIcon, "gd"], ["จัดการสติ๊กเกอร์", StickerIcon, "stk"]],
     [["อัพเดต", RefreshCwIcon, "update"], ["เคลียร์ภาพ", ImageOffIcon, "clear"]],
     [["เปลี่ยนรหัสผ่าน", KeyRoundIcon, "pw"], ["ออกจากระบบ", LogOutIcon, "logout"]],
 ];
-export const SETMAP = { tg: "tg", gd: "gd", stk: "stk", pw: "pw" };
+export const SETMAP = { gd: "gd", stk: "stk", pw: "pw" };

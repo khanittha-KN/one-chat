@@ -8,7 +8,8 @@
     import * as Popover from "$lib/components/ui/popover/index.js";
     import * as Tabs from "$lib/components/ui/tabs/index.js";
     import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
-    import { PACKS, stickerLabel } from "./data.js";
+    import { PACKS, TG_PACKS, stickerLabel, platformOf } from "./data.js";
+    import PlatformIcon from "./ui/PlatformIcon.svelte";
     import StickerImg from "./ui/StickerImg.svelte";
     import { S, sendSticker, openSettings } from "./store.svelte.js";
 
@@ -18,10 +19,13 @@
     const sets = $derived(S.stk.filter((x) => x.items && x.items.length));
     const empty = $derived(!S.fav.length && !sets.length);
     const packKeys = (p) => Array.from({ length: p[1] }, (_, i) => p[0] + "-" + i);
+    // ลูกค้า Telegram ⇒ ชุดสติ๊กเกอร์ Telegram (สติ๊กเกอร์ LINE ส่งไป Telegram ไม่ได้) · เจ้าของงานขอ 15 ต.ค. 2026
+    const tg = $derived(platformOf(c.merchant) === "telegram");
+    const tgKeys = (p) => p.codes.map((x) => "tg-" + x);
 
     // เปิดแผงทุกครั้งกลับไปที่ "บันทึกไว้" แม้ครั้งก่อนจะเลื่อนไปดูชุดอื่น
     function onOpenChange(o) {
-        if (o) tab = "saved";
+        if (o) tab = tg ? TG_PACKS[0].id : "saved";
     }
     function send(k) {
         sendSticker(c, k);
@@ -52,23 +56,44 @@
 <Popover.Root bind:open {onOpenChange}>
     <Popover.Trigger
         {disabled}
-        class={buttonVariants({ variant: "outline", size: "icon" })}
-        aria-label="ส่งสติ๊กเกอร์"
-        title="ส่งสติ๊กเกอร์"
+        class={buttonVariants({ variant: "ghost", size: "icon" })}
+        aria-label="ชุดสติ๊กเกอร์"
+        title="ชุดสติ๊กเกอร์"
     >
         <Sticker />
     </Popover.Trigger>
-    <Popover.Content align="end" side="top" class="w-80 gap-3 p-3 sm:w-96">
+    <Popover.Content align="start" side="top" class="w-md max-w-(--bits-popover-content-available-width) gap-3 p-3">
         <Popover.Header>
-            <Popover.Title>สติ๊กเกอร์</Popover.Title>
+            <Popover.Title class="flex items-center gap-1.5">สติ๊กเกอร์ <PlatformIcon p={tg ? "telegram" : "line"} label class="text-muted-foreground text-xs font-normal" /></Popover.Title>
         </Popover.Header>
+        {#if tg}
+            <Tabs.Root bind:value={tab} class="gap-3">
+                <Tabs.List class="w-full flex-wrap justify-start gap-1 group-data-horizontal/tabs:h-auto" aria-label="ชุดสติ๊กเกอร์ Telegram">
+                    {#each TG_PACKS as p (p.id)}
+                        <Tabs.Trigger value={p.id} class="size-11 flex-none p-1" aria-label={p.name} title={p.name}>
+                            <StickerImg k={"tg-" + p.codes[0]} class="size-8" />
+                        </Tabs.Trigger>
+                    {/each}
+                </Tabs.List>
+                <div class="max-h-80 overflow-y-auto">
+                    {#each TG_PACKS as p (p.id)}
+                        <Tabs.Content value={p.id} class="flex flex-col gap-1.5">
+                            {#snippet tgTitle()}{p.name}{/snippet}
+                            {@render heading(tgTitle, p.codes.length)}
+                            {@render tiles(tgKeys(p), p.name)}
+                        </Tabs.Content>
+                    {/each}
+                </div>
+            </Tabs.Root>
+        {:else}
         <Tabs.Root bind:value={tab} class="gap-3">
-            <!-- แถบชุด: บันทึกไว้ (ตัวหนังสือ) + รูปปกของทุกชุดในคลัง · ชุดเยอะเกินความกว้าง ⇒ เลื่อนแนวนอน -->
-            <Tabs.List class="w-full justify-start overflow-x-auto" aria-label="ชุดสติ๊กเกอร์">
-                <Tabs.Trigger value="saved" class="flex-none"><Star class="text-warning" fill="currentColor" aria-hidden="true" />บันทึกไว้</Tabs.Trigger>
+            <!-- แถบชุด: ★ บันทึกไว้ + รูปปกของทุกชุดในคลัง (ปุ่มสี่เหลี่ยมเท่ากัน 2 แถว) · ปุ่มใหญ่ขึ้น (รูป 32px · กดได้ 44px) ขึ้นบรรทัดใหม่แทนเลื่อนแนวนอน
+                 (เจ้าของงานสั่ง 15 ต.ค. 2026 — แถบเดิมเล็กและต้องเลื่อน ใช้ยาก) -->
+            <Tabs.List class="w-full flex-wrap justify-start gap-1 group-data-horizontal/tabs:h-auto" aria-label="ชุดสติ๊กเกอร์">
+                <Tabs.Trigger value="saved" class="size-11 flex-none p-1" aria-label="บันทึกไว้" title="บันทึกไว้"><Star class="text-warning size-6" fill="currentColor" aria-hidden="true" /></Tabs.Trigger>
                 {#each PACKS as p (p[0])}
-                    <Tabs.Trigger value={"p" + p[0]} class="flex-none px-1" aria-label={"ชุด " + p[0]} title={"ชุด " + p[0]}>
-                        <StickerImg k={p[0] + "-0"} class="size-6" />
+                    <Tabs.Trigger value={"p" + p[0]} class="size-11 flex-none p-1" aria-label={"ชุด " + p[0]} title={"ชุด " + p[0]}>
+                        <StickerImg k={p[0] + "-0"} class="size-8" />
                     </Tabs.Trigger>
                 {/each}
             </Tabs.List>
@@ -102,5 +127,6 @@
                 {/each}
             </div>
         </Tabs.Root>
+        {/if}
     </Popover.Content>
 </Popover.Root>

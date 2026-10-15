@@ -12,8 +12,10 @@
         <script>
             try {
                 const saved = localStorage.getItem(location.hostname + ":theme");
-                document.documentElement.dataset.theme =
-                    saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                let mode = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                if (mode === "charcoal") mode = "teal";
+                document.documentElement.dataset.theme = mode === "light" ? "light" : "dark";
+                if (mode !== "light" && mode !== "dark") document.documentElement.dataset.palette = mode;
             } catch {}
         </script>
         %sveltekit.head%

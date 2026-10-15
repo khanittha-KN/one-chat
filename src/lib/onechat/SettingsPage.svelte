@@ -3,6 +3,12 @@
      ปุ่มบันทึก/ยืนยัน = ปุ่มหลัก (เขียว LINE #06C755 · 14 ต.ค. 2026) · เพิ่มแถว = primary พื้นอ่อน · ลบ = แดง · แก้ไข/ยกเลิก = ขอบ -->
 <script>
     import ArrowLeft from "@lucide/svelte/icons/arrow-left";
+    import ExternalLink from "@lucide/svelte/icons/external-link";
+    import Users from "@lucide/svelte/icons/users";
+    import UserCheck from "@lucide/svelte/icons/user-check";
+    import Clock from "@lucide/svelte/icons/clock";
+    import Search from "@lucide/svelte/icons/search";
+    import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import Plus from "@lucide/svelte/icons/plus";
     import Save from "@lucide/svelte/icons/save";
     import X from "@lucide/svelte/icons/x";
@@ -23,6 +29,8 @@
     import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
     import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
     import Play from "@lucide/svelte/icons/play";
+    import Volume2 from "@lucide/svelte/icons/volume-2";
+    import MessageSquarePlus from "@lucide/svelte/icons/message-square-plus";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Sheet from "$lib/components/ui/sheet/index.js";
     import * as Field from "$lib/components/ui/field/index.js";
@@ -33,6 +41,7 @@
     import { Input } from "$lib/components/ui/input/index.js";
     import { Textarea } from "$lib/components/ui/textarea/index.js";
     import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+    import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
     import { Switch } from "$lib/components/ui/switch/index.js";
     import { Toggle } from "$lib/components/ui/toggle/index.js";
     import { Badge } from "$lib/components/ui/badge/index.js";
@@ -40,16 +49,28 @@
     import { NativeSelect, NativeSelectOption } from "$lib/components/ui/native-select/index.js";
     import PageHeader from "./ui/PageHeader.svelte";
     import Status from "./ui/Status.svelte";
-    import BankLogo from "./ui/BankLogo.svelte";
     import StickerImg from "./ui/StickerImg.svelte";
     import StickerField from "./ui/StickerField.svelte";
     import ImageField from "./ui/ImageField.svelte";
     import PasswordInput from "./ui/PasswordInput.svelte";
-    import { BANKS, PACKS, TYPE_LBL, GUIDE, SET_TABS, bankOf, stickerLabel } from "./data.js";
-    import { S, showPage, setTab, settingsAct } from "./store.svelte.js";
+    import { PACKS, TYPE_LBL, GUIDE, SET_TABS, stickerLabel, chanByName, PLATFORM } from "./data.js";
+    import PlatformIcon from "./ui/PlatformIcon.svelte";
+    import { S, db, showPage, setTab, settingsAct, simIncoming } from "./store.svelte.js";
+    import { snd, setSound, playChime, TONES, VOLS } from "./sound.svelte.js";
 
     const act = (a, i, el) => () => settingsAct(a, i, el);
     const pk = $derived(PACKS.filter((p) => p[0] === S.pack)[0]);
+    // ค้นหาชุดในคลังด้วยเลขชุด (packageId) — เว็บต้นฉบับ 15 ต.ค. 2026
+    const packsOf = (q) => PACKS.filter((p) => !(q || "").trim() || String(p[0]).indexOf(q.trim()) >= 0);
+    let favQ = $state("");
+    // Broadcast › เลือกผู้รับ: รายชื่อแชท (ชื่อที่แสดงใน LINE) ค้นหาด้วยชื่อ / username / chatId
+    let bcQ = $state("");
+    const bcList = $derived(db.cases.filter((c) => (!chan || c.merchant === chan.id) && (!bcQ.trim() || [c.name, c.user.username, c.id].join(" ").toLowerCase().indexOf(bcQ.trim().toLowerCase()) >= 0)));
+    const bcAllOn = $derived(bcList.length > 0 && bcList.every((c) => S.bcSel.indexOf(c.id) >= 0));
+    const bcN = $derived(S.bcTo === "all" ? null : S.bcSel.length);
+    // Channel ที่กำลังตั้งค่า (เปิดจากเฟืองของ Channel) ⇒ รู้ว่าเป็น LINE หรือ Telegram
+    const chan = $derived(S.ch ? chanByName(S.ch) : null);
+    const via = $derived(chan ? PLATFORM[chan.platform] : "");
     const amMode = $derived(S.f.amMode || "มีคำนี้");
     // สติ๊กเกอร์โปรดเลือกชุดจากคลังแยกจากแผงสร้างชุด (ไม่ปนกัน)
     let favPack = $state(null);
@@ -61,19 +82,20 @@
     let dragOver = $state(null);
 
     const HEAD = {
+        gen: ["ตั้งค่าทั่วไป", "เสียงแจ้งเตือน · ส่งข้อความหลังปิดเคส"],
         flex: ["Flex Card → OA Manager", "เลือกการ์ดจาก OA Manager ให้ตรงกับ Flex Card ของ SmartLIFF เพื่อส่งผ่าน chat.line.biz (ไม่เสียโควต้า)"],
         mgr: ["Manager Session", "บันทึก session ของ manager.line.biz เพื่อให้ระบบสร้าง OA Manager Card อัตโนมัติได้"],
         stk: ["ชุดสติ๊กเกอร์", "จัดเก็บชุดสติ๊กเกอร์ LINE ไว้ส่งให้ลูกค้าจากหน้าแชทได้อย่างรวดเร็ว"],
         qr: ["คีย์ลัด", "สร้างคำตอบสำเร็จรูปเป็นชุดรายการ — ข้อความ (แทรกอิโมจิได้) สติ๊กเกอร์ และรูปภาพ ส่งเรียงตามลำดับในคลิกเดียว"],
-        bc: ["Broadcast — ยิงข้อความหาผู้ติดตามทั้งหมด", "ข้อความจะถูกส่งหา <b>ทุกห้องแชทของ OA นี้</b> ตามลำดับ part ด้านล่าง — ตรวจให้ชัดก่อนส่ง เพราะยกเลิกคนที่ส่งไปแล้วไม่ได้"],
+        bc: ["Broadcast — ยิงข้อความหาผู้ติดตาม", ""],
         am: ["ข้อความอัตโนมัติ", "เมื่อลูกค้าพิมพ์ข้อความที่มีคำค้นที่ตั้งไว้ ระบบจะตอบกลับอัตโนมัติด้วยข้อความที่กำหนด — กฎเหล่านี้ใช้กับไลน์เอเย่น (LINE OA) ของช่องนี้เท่านั้น"],
-        ba: ["บัญชี", "จัดการบัญชีธนาคารของบริษัทไว้ส่งหรือแทรกให้ลูกค้าจากหน้าแชทได้ในคลิกเดียว"],
-        tg: ["โพสต์ไป Telegram", "เขียนโพสต์ (รูป + ข้อความ + ปุ่มเมนู) เพื่อส่งไปยังช่อง Telegram ของเอเย่น"],
         sk: ["Secret Key", "คีย์สำหรับเชื่อมต่อ API ของช่องนี้"],
         pw: ["เปลี่ยนรหัสผ่าน", "เปลี่ยนรหัสผ่านสำหรับเข้าสู่ระบบของบัญชีคุณ"],
         gd: ["คู่มือการใช้งาน", "ขั้นตอนการใช้งาน OneChat สำหรับทีมแอดมิน"],
     };
     const head = $derived(HEAD[S.tab] || HEAD.gd);
+    // ข้อความหลังปิดเคสที่ใช้ได้จริง (ช่องว่างไม่นับ)
+    const ccSet = $derived(S.cc.filter((x) => (x.t === "image" ? x.src : x.v.trim())));
 </script>
 
 {#snippet smsg(k)}
@@ -149,12 +171,12 @@
     </Item.Group>
 {/snippet}
 
-{#snippet addBtns(key, max, n)}
-    <div class="flex flex-wrap items-center gap-2">
+{#snippet addBtns(key, max, n, compact = false)}
+    <div class={"flex flex-wrap items-center gap-2 " + (compact ? "contents" : "")}>
         <Button size="sm" data-tone="primary" disabled={n >= max} onclick={act("add-" + key, 0, { t: "text" })}><Plus data-icon="inline-start" />ข้อความ</Button>
         <Button size="sm" data-tone="primary" disabled={n >= max} onclick={act("add-" + key, 0, { t: "sticker" })}><Plus data-icon="inline-start" />สติ๊กเกอร์</Button>
         <Button size="sm" data-tone="primary" disabled={n >= max} onclick={act("add-" + key, 0, { t: "image" })}><Plus data-icon="inline-start" />รูปภาพ</Button>
-        <span class="text-muted-foreground ms-auto text-xs tabular-nums">{n}/{max}</span>
+        {#if !compact}<span class="text-muted-foreground ms-auto text-xs tabular-nums">{n}/{max}</span>{/if}
     </div>
 {/snippet}
 
@@ -207,7 +229,10 @@
         <Card.Root size="sm" class="snav lg:sticky lg:top-0">
             <Card.Header>
                 <Card.Title>Settings</Card.Title>
-                <Card.Description>{S.ch ? "Agent: " + S.ch : "ตั้งค่ารวม"}</Card.Description>
+                <!-- บอกแค่ว่าตั้งค่านี้ของ LINE หรือ Telegram ด้วยโลโก้ + ชื่อ Channel (เจ้าของงานสั่ง 15 ต.ค. 2026 — เอาช่องเลือก Channel และคำว่า LINE/Telegram ออก) · เปิดจากเฟืองของ Channel -->
+                <Card.Description class="flex min-w-0 items-center gap-1.5">
+                    {#if chan}<PlatformIcon p={chan.platform} /><span class="min-w-0 truncate">{chan.name}</span>{:else}ตั้งค่ารวม{/if}
+                </Card.Description>
             </Card.Header>
             <Card.Content class="gap-3">
                 <Button variant="outline" size="sm" onclick={() => showPage("console")}><ArrowLeft data-icon="inline-start" />กลับไปแชท</Button>
@@ -220,6 +245,8 @@
                             onclick={() => setTab(k)}><Icon data-icon="inline-start" aria-hidden="true" />{label}</Button
                         >
                     {/each}
+                    <!-- ลิงก์ออกไปหน้า Line Liff (เว็บต้นฉบับ 15 ต.ค. 2026) -->
+                    <Button variant="ghost" class="stab h-10 justify-start" onclick={act("liff")}><ExternalLink data-icon="inline-start" aria-hidden="true" />ไปหน้า Line Liff</Button>
                 </nav>
             </Card.Content>
         </Card.Root>
@@ -227,7 +254,82 @@
         <section class="sbody flex min-w-0 flex-col gap-4">
             <PageHeader title={head[0]} description={head[1]} />
 
-            {#if S.tab === "flex"}
+            {#if S.tab === "gen"}
+                <!-- เสียงแจ้งเตือนแชท (เจ้าของงานสั่ง 15 ต.ค. 2026) · แถวเดียว: เปิด/ปิด · เสียง · ความดัง · ทดสอบ · จำค่าไว้ในเบราว์เซอร์นี้ -->
+                <Card.Root size="sm">
+                    <Card.Header>
+                        <Card.Title>เสียงแจ้งเตือน</Card.Title>
+                        <Card.Description>มีเสียงเมื่อลูกค้าส่งข้อความเข้ามา · ปุ่มกระดิ่งบนแถบบนเปิด/ปิดได้เหมือนกัน</Card.Description>
+                    </Card.Header>
+                    <Card.Content class="flex-row flex-wrap items-center gap-x-5 gap-y-3">
+                        <label class="flex min-h-8 items-center gap-2 text-sm">
+                            <Switch checked={snd.on} onCheckedChange={(v) => setSound({ on: v })} />เปิดเสียง
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            เสียง
+                            <NativeSelect size="sm" class="w-28" disabled={!snd.on} value={snd.tone} onchange={(e) => setSound({ tone: e.currentTarget.value }, true)}>
+                                {#each TONES as [k, label] (k)}<NativeSelectOption value={k}>{label}</NativeSelectOption>{/each}
+                            </NativeSelect>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            ความดัง
+                            <NativeSelect size="sm" class="w-24" disabled={!snd.on} value={String(snd.vol)} onchange={(e) => setSound({ vol: +e.currentTarget.value }, true)}>
+                                {#each VOLS as [v, label] (v)}<NativeSelectOption value={String(v)}>{label}</NativeSelectOption>{/each}
+                            </NativeSelect>
+                        </label>
+                        <span class="flex flex-wrap gap-2 sm:ms-auto">
+                            <Button variant="outline" size="sm" onclick={() => playChime(true)}><Volume2 data-icon="inline-start" />ทดสอบเสียง</Button>
+                            <!-- ต้นแบบเท่านั้น: ให้ได้ยินเสียงแบบมีข้อความเข้าจริง -->
+                            <Button variant="ghost" size="sm" onclick={simIncoming}><MessageSquarePlus data-icon="inline-start" />จำลองข้อความเข้า</Button>
+                        </span>
+                    </Card.Content>
+                </Card.Root>
+                <!-- ส่งข้อความหลังปิดเคส — ปิดเคส 1 ครั้งส่งทุกรายการรวดเดียว สูงสุด 5 รายการ · บันทึกแล้วแสดงแบบอ่าน + ปุ่มแก้ไข
+                     ตอนแก้: ปุ่มเพิ่มรายการซ้าย · ยกเลิก/บันทึกขวา แถวเดียวกัน (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
+                <Card.Root size="sm">
+                    <Card.Header>
+                        <Card.Title class="flex items-center gap-2">ส่งข้อความหลังปิดเคส
+                            <Badge variant="secondary" class="tabular-nums">{S.ccEdit ? S.cc.length : ccSet.length}/5</Badge></Card.Title>
+                        <Card.Description class="max-w-prose">
+                            กด "ปิดเคส" (F4) 1 ครั้ง ระบบส่งทุกรายการด้านล่างให้ลูกค้ารวดเดียวตามลำดับ — สูงสุด 5 รายการ (ข้อความ · สติ๊กเกอร์ · รูปภาพ) · ลูกค้า Telegram ไม่ได้รับสติ๊กเกอร์
+                        </Card.Description>
+                        {#if !S.ccEdit}
+                            <Card.Action><Button variant="outline" size="sm" onclick={act("cc-edit")}><Pencil data-icon="inline-start" />แก้ไข</Button></Card.Action>
+                        {/if}
+                    </Card.Header>
+                    <Card.Content class="gap-2">
+                        {#if S.ccEdit}
+                            {@render itemRows(S.cc, "cc")}
+                            <div class="flex flex-wrap items-center gap-2">
+                                {@render addBtns("cc", 5, S.cc.length, true)}
+                                <span class="flex gap-2 ms-auto">
+                                    {#if S.ccBak}<Button variant="outline" size="sm" onclick={act("cc-cancel")}>ยกเลิก</Button>{/if}
+                                    <Button size="sm" onclick={act("cc-save")}><Save data-icon="inline-start" />บันทึก</Button>
+                                </span>
+                            </div>
+                        {:else if ccSet.length}
+                            <ol class="flex flex-col gap-1">
+                                {#each ccSet as x, i (i)}
+                                    <li class="flex min-h-8 items-center gap-2 rounded-md border px-2 py-1">
+                                        <Badge variant="secondary" class="tabular-nums">{i + 1}</Badge>
+                                        <span class="text-muted-foreground w-14 shrink-0 text-xs">{TYPE_LBL[x.t]}</span>
+                                        {#if x.t === "text"}
+                                            <span class="min-w-0 flex-1 text-sm break-words whitespace-pre-line">{x.v}</span>
+                                        {:else if x.t === "sticker"}
+                                            <StickerImg k={x.v} class="size-10" />
+                                        {:else}
+                                            <img src={x.src} alt={"รูปภาพ " + (i + 1)} class="h-10 max-w-28 rounded object-cover" />
+                                        {/if}
+                                    </li>
+                                {/each}
+                            </ol>
+                        {:else}
+                            <p class="text-muted-foreground text-sm">ยังไม่ได้ตั้งข้อความ — ปิดเคสแล้วระบบจะไม่ส่งอะไรให้ลูกค้า · กด "แก้ไข" เพื่อเพิ่ม</p>
+                        {/if}
+                        {@render smsg("cc")}
+                    </Card.Content>
+                </Card.Root>
+            {:else if S.tab === "flex"}
                 <Card.Root>
                     <Card.Content>
                         <Table.Root>
@@ -307,8 +409,9 @@
                                     >
                                 {/if}
                             </div>
+                            <Input bind:value={favQ} placeholder="ค้นหาด้วยเลขชุด (packageId)…" aria-label="ค้นหาชุดในคลังด้วยเลขชุด" inputmode="numeric" autocomplete="off" class="tabular-nums" />
                             <div class="grid grid-cols-(--grid-packs) gap-2">
-                                {#each PACKS as p (p[0])}
+                                {#each packsOf(favQ) as p (p[0])}
                                     <Toggle variant="outline" class="data-[state=on]:border-brand data-[state=on]:text-brand h-auto flex-col items-start gap-0 px-3 py-1.5" pressed={favPack === p[0]} onPressedChange={() => (favPack = favPack === p[0] ? null : p[0])}>
                                         <span class="font-bold">ชุด {p[0]}</span><span class="text-muted-foreground text-xs">{p[1]} รูป</span>
                                     </Toggle>
@@ -360,7 +463,7 @@
                 {#snippet stkBody()}
                 <Field.Field>
                     <Field.Label for="stkName">ชื่อชุด</Field.Label>
-                    <Input id="stkName" autocomplete="off" bind:value={S.f.stkName} />
+                    <Input id="stkName" autocomplete="off" placeholder="เช่น ทักทายลูกค้า" bind:value={S.f.stkName} />
                 </Field.Field>
                 <section class="flex flex-col gap-2" aria-label="เลือกจากคลัง LINE">
                     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -371,8 +474,9 @@
                             <Button variant="outline" size="sm" onclick={act("stk-pick-all", 0, { keys, on: !allOn })}>{allOn ? "ยกเลิกทั้งชุด" : "เลือกทั้งชุด"} {pk[0]}</Button>
                         {/if}
                     </div>
+                    <Input bind:value={S.f.packQ} placeholder="ค้นหาด้วยเลขชุด (packageId)…" aria-label="ค้นหาชุดในคลังด้วยเลขชุด" inputmode="numeric" autocomplete="off" class="tabular-nums" />
                     <div class="packs grid grid-cols-(--grid-packs) gap-2">
-                        {#each PACKS as p (p[0])}
+                        {#each packsOf(S.f.packQ) as p (p[0])}
                             <Toggle variant="outline" class="pack data-[state=on]:border-brand data-[state=on]:text-brand h-auto flex-col items-start gap-0 px-3 py-1.5" pressed={S.pack === p[0]} onPressedChange={act("stk-pack", p[0])}>
                                 <span class="font-bold">ชุด {p[0]}</span><span class="text-muted-foreground text-xs">{p[1]} รูป</span>
                             </Toggle>
@@ -389,9 +493,10 @@
                     {/if}
                 </section>
                 <Field.Field>
-                    <Field.Label for="stkId">เพิ่มด้วย ID (สำหรับสติ๊กเกอร์นอกคลัง)</Field.Label>
+                    <Field.Label for="stkPkg">เพิ่มด้วย ID (สำหรับสติ๊กเกอร์นอกคลัง)</Field.Label>
                     <div class="flex gap-2">
-                        <Input id="stkId" class="min-w-0 flex-1 tabular-nums" inputmode="numeric" placeholder="Sticker ID" bind:value={S.f.stkId} />
+                        <Input id="stkPkg" class="min-w-0 flex-1 tabular-nums" inputmode="numeric" placeholder="packageId" aria-label="packageId" bind:value={S.f.stkPkg} />
+                        <Input id="stkId" class="min-w-0 flex-1 tabular-nums" inputmode="numeric" placeholder="stickerId" aria-label="stickerId" bind:value={S.f.stkId} />
                         <Button data-tone="primary" class="shrink-0" onclick={act("stk-addid")}><Plus data-icon="inline-start" />เพิ่ม</Button>
                     </div>
                 </Field.Field>
@@ -458,7 +563,7 @@
                                 {:else if x.t === "image" && x.src}
                                     <img src={x.src} alt={"รูป " + x.v} class="max-h-40 max-w-40 rounded-lg object-cover" />
                                 {:else}
-                                    <div class="bub bg-brand text-brand-foreground max-w-5/6 rounded-lg px-3 py-2 text-sm whitespace-pre-wrap">{x.t === "text" ? x.v || "…" : "[" + TYPE_LBL[x.t] + "] ยังไม่ได้เลือก"}</div>
+                                    <div class="bub bg-bubble-admin text-bubble-admin-foreground max-w-5/6 rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap">{x.t === "text" ? x.v || "…" : "[" + TYPE_LBL[x.t] + "] ยังไม่ได้เลือก"}</div>
                                 {/if}
                             {/each}
                         </div>
@@ -471,25 +576,107 @@
                 {@render formSheet("qr", S.ed.qr != null, "สร้างคีย์ลัดใหม่", "แก้ไขคีย์ลัด: " + (S.ed.qr != null ? S.qr[S.ed.qr]?.name : ""),
                     "ตั้งชื่อ แล้วเพิ่มรายการ ข้อความ / สติ๊กเกอร์ / รูปภาพ — ลูกค้าได้รับเรียงตามลำดับ", qrBody, "qr-save", "บันทึกคีย์ลัด", "บันทึกการแก้ไข", "qr-cancel")}
             {:else if S.tab === "bc"}
+                <!-- แบบระบบจริง (เจ้าของงานส่งรูปมา 15 ต.ค. 2026): แถบเตือนบอกว่าส่งหาใคร · การ์ดผู้รับ · การ์ดข้อความ · ปุ่ม "ส่งหา N คน" -->
+                <Alert.Root data-tone="warning" role="status">
+                    <TriangleAlert />
+                    <Alert.Description class="text-foreground">
+                        {#if chan}
+                            ข้อความจะถูกส่ง<b class="inline-flex items-center gap-1 align-middle">ทาง <PlatformIcon p={chan.platform} label /></b> ของ <b>{chan.name}</b> หา
+                            <b>{bcN == null ? "ทุกห้องแชทของ Channel นี้" : bcN + " คนที่เลือก"}</b> ตามลำดับ part ด้านล่าง (ลากสลับลำดับได้) — ตรวจให้ชัดก่อนส่ง เพราะยกเลิกคนที่ส่งไปแล้วไม่ได้
+                            {#if chan.platform === "telegram"}· ลูกค้า Telegram จะไม่ได้รับสติ๊กเกอร์ LINE{/if}
+                        {:else}
+                            <b>ยังไม่ได้เลือก Channel</b> — เปิด Broadcast จากปุ่มเฟืองของ Channel ในแผง "เลือกแชทที่แสดง" เพื่อให้รู้ว่าส่งทาง LINE หรือ Telegram
+                        {/if}
+                    </Alert.Description>
+                </Alert.Root>
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>ผู้รับ</Card.Title>
+                        {#if bcN != null}<Card.Action class="text-muted-foreground self-center text-sm">เลือกแล้ว <b class="text-foreground tabular-nums">{bcN}</b> คน</Card.Action>{/if}
+                    </Card.Header>
+                    <Card.Content class="gap-3">
+                        <ToggleGroup.Root type="single" variant="outline" class="self-start" aria-label="ผู้รับ Broadcast" bind:value={() => S.bcTo, (t) => t && settingsAct("bc-to", 0, { t })}>
+                            <ToggleGroup.Item value="all"><Users />ทุกคน</ToggleGroup.Item>
+                            <ToggleGroup.Item value="pick"><UserCheck />เลือกผู้รับ</ToggleGroup.Item>
+                        </ToggleGroup.Root>
+                        {#if S.bcTo === "pick"}
+                            <div class="flex gap-2">
+                                <InputGroup.Root class="flex-1">
+                                    <InputGroup.Addon><Search /></InputGroup.Addon>
+                                    <InputGroup.Input bind:value={bcQ} placeholder="ค้นหาชื่อ / chatId…" aria-label="ค้นหาผู้รับ" />
+                                </InputGroup.Root>
+                                <Button variant="outline" disabled={!bcList.length} onclick={act("bc-pick-all", 0, { ids: bcList.map((c) => c.id), on: !bcAllOn })}>{bcAllOn ? "ล้างที่เลือก" : "เลือกทั้งหมด"}</Button>
+                            </div>
+                            <div class="max-h-64 overflow-y-auto rounded-lg border" role="group" aria-label="รายชื่อผู้รับ">
+                                {#each bcList as rc (rc.id)}
+                                    <label class="hover:bg-muted/50 flex cursor-pointer items-center gap-3 border-b px-3 py-2 text-sm last:border-b-0">
+                                        <Checkbox checked={S.bcSel.indexOf(rc.id) >= 0} onCheckedChange={() => settingsAct("bc-pick", 0, { id: rc.id })} />
+                                        <span class="min-w-0 flex-1 truncate">{rc.name}</span>
+                                        <span class="text-muted-foreground shrink-0 text-xs tabular-nums">{rc.user.username}</span>
+                                    </label>
+                                {:else}
+                                    <p class="text-muted-foreground px-3 py-4 text-center text-sm">ไม่พบรายชื่อ "{bcQ}"</p>
+                                {/each}
+                            </div>
+                        {/if}
+                    </Card.Content>
+                </Card.Root>
                 <Card.Root>
                     <Card.Header><Card.Title>ข้อความที่จะส่ง</Card.Title><Card.Description>{S.bc.length} part</Card.Description></Card.Header>
                     <Card.Content class="gap-4">
                         {@render itemRows(S.bc, "bc")}
                         {@render addBtns("bc", 10, S.bc.length)}
+                        <Field.Field orientation="horizontal" class="border-t pt-3">
+                            <Checkbox id="bcSched" checked={S.bcSched} onCheckedChange={(v) => settingsAct("bc-sched", 0, { on: v })} />
+                            <Field.Label for="bcSched" class="font-normal"><Clock class="size-4" aria-hidden="true" />ตั้งเวลาส่ง</Field.Label>
+                        </Field.Field>
+                        {#if S.bcSched}
+                            <Input type="datetime-local" class="max-w-64" aria-label="เวลาที่ส่ง" bind:value={S.f.bcWhen} />
+                        {/if}
                         {#if S.bcAsk}
                             <Alert.Root data-tone="warning">
                                 <TriangleAlert />
-                                <Alert.Title>ยืนยันส่ง {S.bc.length} part ถึงทุกห้องแชทของช่องนี้?</Alert.Title>
+                                <Alert.Title>ยืนยัน{S.bcSched ? "ตั้งเวลาส่ง" : "ส่ง"} {S.bc.length} part ทาง {via} ({chan?.name}) ถึง{bcN == null ? "ทุกห้องแชทของ Channel นี้" : " " + bcN + " คนที่เลือก"}?</Alert.Title>
                                 <Alert.Description>ยกเลิกคนที่ส่งไปแล้วไม่ได้</Alert.Description>
                             </Alert.Root>
-                            <div class="flex flex-wrap gap-2">
-                                <Button onclick={act("bc-yes")}><Send data-icon="inline-start" />ยืนยันส่ง</Button>
+                            <div class="flex flex-wrap justify-end gap-2">
                                 <Button variant="outline" onclick={act("bc-no")}><X data-icon="inline-start" />ยกเลิก</Button>
+                                <Button data-tone="destructive" data-fill="solid" onclick={act("bc-yes")}><Send data-icon="inline-start" />ยืนยัน</Button>
                             </div>
                         {:else}
-                            <Button class="self-start" onclick={act("bc-send")}><Megaphone data-icon="inline-start" />ส่ง Broadcast</Button>
+                            <!-- สีปุ่มตามช่องทาง: LINE = เขียวหลัก · Telegram = ฟ้า Telegram (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
+                            <Button class={"self-end " + (chan?.platform === "telegram" ? "bg-telegram text-telegram-foreground hover:bg-telegram/90" : "")} disabled={bcN === 0 || !chan} onclick={act("bc-send")}
+                                ><Megaphone data-icon="inline-start" />{S.bcSched ? "ตั้งเวลาส่ง" : "ส่ง"}{bcN == null ? "หาทุกคน" : "หา " + bcN + " คน"}{chan ? " ทาง " + via : ""}</Button
+                            >
                         {/if}
                         {@render smsg("bc")}
+                    </Card.Content>
+                </Card.Root>
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>ประวัติ &amp; คิวที่ตั้งเวลาไว้</Card.Title>
+                        <Card.Action><Button variant="outline" size="sm" onclick={act("bc-refresh")}><RefreshCw data-icon="inline-start" />รีเฟรช</Button></Card.Action>
+                    </Card.Header>
+                    <Card.Content>
+                        <Item.Group class="gap-2">
+                            {#each S.bcHist as x, i (i)}
+                                <Item.Root variant="outline" size="sm" class="lrow">
+                                    <Item.Content class="min-w-0">
+                                        <Item.Title class="line-clamp-none flex-wrap items-center">
+                                            {#if x.queued}<Status tone="warning">รอส่ง</Status>{:else}<Status tone="success">ส่งเสร็จแล้ว</Status>{/if}
+                                            {#if x.title}<span class="wrap-anywhere">{x.title}</span>{/if}
+                                            {#each x.parts || [] as pt, pi (pi)}
+                                                {#if pt.t === "sticker"}<StickerImg k={pt.v} class="size-14" />
+                                                {:else if pt.t === "image" && pt.src}<img src={pt.src} alt={"รูป " + pt.v} class="size-14 rounded-md border object-cover" />{/if}
+                                            {/each}
+                                        </Item.Title>
+                                        <Item.Description>{x.queued ? "ตั้งเวลา " : "เริ่ม "}{x.when} · โดย {x.who} · {x.to}{x.sent ? " · " + x.sent : ""}</Item.Description>
+                                    </Item.Content>
+                                </Item.Root>
+                            {:else}
+                                <p class="text-muted-foreground text-sm">ยังไม่มีประวัติ</p>
+                            {/each}
+                        </Item.Group>
                     </Card.Content>
                 </Card.Root>
             {:else if S.tab === "am"}
@@ -546,92 +733,6 @@
                 {/snippet}
                 {@render formSheet("am", S.ed.am != null, "สร้างกฎใหม่", "แก้ไขกฎ: " + (S.ed.am != null ? S.am[S.ed.am]?.name : ""),
                     "เมื่อลูกค้าพิมพ์ข้อความที่ตรงคำค้น ระบบจะตอบกลับด้วยข้อความที่กำหนด", amBody, "am-save", "บันทึกกฎ", "บันทึกการแก้ไข", "am-cancel")}
-            {:else if S.tab === "ba"}
-                <Card.Root>
-                    {@render listHead("บัญชีทั้งหมด", S.ba.length, "เพิ่มบัญชีใหม่", "ba-new")}
-                    <Card.Content>
-                        <Item.Group class="gap-2">
-                            {#each S.ba as x, i (i)}
-                                {#snippet t()}{bankOf(x.bank).name}{/snippet}
-                                {#snippet d()}<Item.Description class="tabular-nums">{x.no}</Item.Description><Item.Description>{x.name}</Item.Description>{/snippet}
-                                {#snippet m()}<BankLogo code={x.bank} />{/snippet}
-                                {#snippet a()}
-                                    <Button variant="outline" size="sm" onclick={act("ba-edit", i)}><Pencil data-icon="inline-start" />แก้ไข</Button>
-                                    <Button variant="destructive" size="sm" onclick={act("ba-del", i)}><Trash data-icon="inline-start" />ลบ</Button>
-                                {/snippet}
-                                {@render listRow(t, d, a, m, S.sheet === "ba" && S.ed.ba === i)}
-                            {:else}
-                                <p class="text-muted-foreground text-sm">ยังไม่มีบัญชี</p>
-                            {/each}
-                        </Item.Group>
-                    </Card.Content>
-                </Card.Root>
-                {#snippet baBody()}
-                <Field.Group class="gap-4">
-                    <Field.Field>
-                        <Field.Label for="baBank">ธนาคาร</Field.Label>
-                        <NativeSelect id="baBank" class="w-full" bind:value={() => S.f.baBank || "", (v) => (S.f.baBank = v)}>
-                            <NativeSelectOption value="">เลือกธนาคาร</NativeSelectOption>
-                            {#each BANKS as b (b.code)}<NativeSelectOption value={b.code}>{b.name}</NativeSelectOption>{/each}
-                        </NativeSelect>
-                    </Field.Field>
-                    <Field.Field>
-                        <Field.Label for="baNo">เลขบัญชี</Field.Label>
-                        <Input id="baNo" class="tabular-nums" inputmode="numeric" autocomplete="off" bind:value={S.f.baNo} />
-                    </Field.Field>
-                    <Field.Field>
-                        <Field.Label for="baName">ชื่อบัญชี</Field.Label>
-                        <Input id="baName" autocomplete="off" bind:value={S.f.baName} />
-                    </Field.Field>
-                </Field.Group>
-                {/snippet}
-                {@render formSheet("ba", S.ed.ba != null, "เพิ่มบัญชีใหม่", "แก้ไขบัญชี: " + (S.ed.ba != null && S.ba[S.ed.ba] ? bankOf(S.ba[S.ed.ba].bank).name + " " + S.ba[S.ed.ba].no : ""),
-                    "บัญชีธนาคารของบริษัท ไว้ส่งให้ลูกค้าจากหน้าแชท", baBody, "ba-save", "บันทึกบัญชี", "บันทึกการแก้ไข", "ba-cancel")}
-            {:else if S.tab === "tg"}
-                <Card.Root>
-                    {@render listHead("ข้อมูลที่โพสต์", S.tgPosts.length, "เขียนโพสต์", "tg-new")}
-                    <Card.Content>
-                        <Item.Group class="gap-2">
-                            {#each S.tgPosts as p, i (i)}
-                                <Item.Root variant="outline" size="sm" class="lrow">
-                                    <Item.Content class="min-w-0">
-                                        <Item.Title class="line-clamp-none">{p.text}</Item.Title>
-                                        <Item.Description>{p.btns} ปุ่ม · {p.time}</Item.Description>
-                                    </Item.Content>
-                                </Item.Root>
-                            {:else}
-                                <p class="text-muted-foreground text-sm">ยังไม่มีโพสต์</p>
-                            {/each}
-                        </Item.Group>
-                    </Card.Content>
-                </Card.Root>
-                {#snippet tgBody()}
-                <Field.Field>
-                    <Field.Label>รูปภาพ</Field.Label>
-                    <ImageField item={S.tgImg} />
-                </Field.Field>
-                <Field.Field>
-                    <Field.Label for="tgText">ข้อความ</Field.Label>
-                    <Textarea id="tgText" bind:value={S.f.tgText} />
-                </Field.Field>
-                <section class="flex flex-col gap-2" aria-label="ปุ่มเมนู (ลิงก์)">
-                    <span class="text-sm font-bold">ปุ่มเมนู (ลิงก์)</span>
-                    {#each S.tgBtns as b, i (i)}
-                        <div class="irow flex items-start gap-2">
-                            <Input class="min-w-0 flex-1" placeholder="ชื่อปุ่ม" aria-label={"ชื่อปุ่ม " + (i + 1)} bind:value={b.l} />
-                            <Input class="min-w-0 flex-1" placeholder="https://" aria-label={"ลิงก์ปุ่ม " + (i + 1)} bind:value={b.u} />
-                            <Button variant="ghost" size="icon" aria-label={"ลบปุ่ม " + (i + 1)} onclick={act("tg-rm", i)}><Trash /></Button>
-                        </div>
-                    {:else}
-                        <p class="text-muted-foreground text-sm">ยังไม่มีปุ่มเมนู</p>
-                    {/each}
-                    <div class="flex flex-wrap items-center gap-2">
-                        <Button size="sm" data-tone="primary" disabled={S.tgBtns.length >= 8} onclick={act("tg-add")}><Plus data-icon="inline-start" />เพิ่มปุ่มเมนู</Button>
-                        <span class="text-muted-foreground text-xs tabular-nums">สูงสุด 8 ปุ่ม ({S.tgBtns.length}/8)</span>
-                    </div>
-                </section>
-                {/snippet}
-                {@render formSheet("tg", false, "เขียนโพสต์ใหม่", "", "รูป + ข้อความ + ปุ่มเมนู ส่งไปยังช่อง Telegram ของเอเย่น", tgBody, "tg-post", "โพสต์ไป Telegram", "", "tg-cancel", Send)}
             {:else if S.tab === "sk"}
                 <Card.Root>
                     <Card.Content class="gap-4">

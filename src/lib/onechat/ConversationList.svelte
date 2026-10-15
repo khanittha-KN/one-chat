@@ -11,44 +11,64 @@
     import { Badge } from "$lib/components/ui/badge/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
     import Inbox from "@lucide/svelte/icons/inbox";
-    import { merch, tabOf, msgPreview } from "./data.js";
+    import ListFilter from "@lucide/svelte/icons/list-filter";
+    import { merch, tabOf, msgPreview, DAY_SHORT, chatChannels } from "./data.js";
     import { st, visible, byRecent, counts, selectCase, toast } from "./store.svelte.js";
     import { kindOf, KINDS } from "./kinds.js";
+    import GlobalSearch from "./panel/GlobalSearch.svelte";
     import CustomerAvatar from "./ui/CustomerAvatar.svelte";
+    import PlatformIcon from "./ui/PlatformIcon.svelte";
 
     let { class: className = "" } = $props();
     const TABS = [["all", "All"], ["line", "Line"], ["payment", "Payment"]];
     const cnt = $derived(counts());
+    const total = chatChannels().length;
     const shown = $derived(visible().filter((c) => st.tab === "all" || tabOf(c) === st.tab).sort(byRecent));
 </script>
 
 <Card.Root id="colList" role="region" aria-label="การสนทนา" class={"bg-surface-chrome min-h-0 gap-0 rounded-none border-r py-0 shadow-none ring-0 " + className}>
-    <!-- ช่องรายการแชทแบบเดียวกับเมนู Organization: เต็มสูง พื้นเดียวกับเมนูข้าง คั่นด้วยเส้นขวา (ไม่ใช่การ์ด) -->
+    <!-- ช่องรายการแชท: เต็มสูง พื้นเดียวกับแถบบน คั่นด้วยเส้นขวา (ไม่ใช่การ์ด) -->
     <Card.Header class="gap-2 border-b py-3">
         <Card.Title>การสนทนา</Card.Title>
         <Card.Action>
             <Button variant="ghost" size="icon-sm" aria-label="รีเฟรช" onclick={() => toast("รีเฟรชรายการแล้ว")}><RefreshCw /></Button>
         </Card.Action>
+        <!-- เลือกแชทที่แสดง — ใต้หัว "การสนทนา" (เจ้าของงานสั่ง 15 ต.ค. 2026 · เดิมอยู่แถบบน) · เปิดแผงสไลด์จากซ้าย ติ๊ก Channel ที่ต้องการดูแชท -->
+        <Button
+            variant="outline"
+            class="col-span-full w-full justify-start"
+            aria-haspopup="dialog"
+            aria-expanded={st.chanOpen}
+            aria-label={"เลือกแชทที่แสดง — เลือกอยู่ " + st.sel.length + " จาก " + total + " Channel"}
+            onclick={() => (st.chanOpen = true)}
+        >
+            <ListFilter data-icon="inline-start" /><span class="flex-1 text-start">เลือกแชทที่แสดง</span>
+            <Badge variant="secondary" class="tabular-nums">{st.sel.length}/{total}</Badge>
+        </Button>
+        <!-- ค้นหาลูกค้า (ย้ายจากแผงลูกค้า — เจ้าของงานสั่ง 15 ต.ค. 2026) · เลือกผลแล้วข้อมูลขึ้นที่แผงลูกค้าโดยไม่เปิดแชท -->
+        <div class="col-span-full"><GlobalSearch /></div>
         <ToggleGroup.Root
             type="single"
             variant="outline"
             size="sm"
-            class="col-span-full w-full *:flex-1"
+            class="col-span-full w-full *:flex-auto *:gap-1 *:px-1 max-xl:*:text-xs"
             aria-label="กรองการสนทนา"
             bind:value={() => st.tab, (t) => t && (st.tab = t)}
         >
             {#each TABS as [t, label] (t)}
                 <ToggleGroup.Item value={t}>
-                    {label}<Badge variant="secondary" class="tabular-nums">{cnt[t]}</Badge>
+                    {label}<Badge variant="secondary" class="tabular-nums max-xl:px-1">{cnt[t]}</Badge>
                 </ToggleGroup.Item>
             {/each}
         </ToggleGroup.Root>
     </Card.Header>
-    <div id="caseList" class="min-h-0 flex-1 overflow-y-auto">
+    <!-- relative: ข้อความ sr-only (position:absolute) ในแถวล่าง ๆ ต้องอยู่ในกล่องเลื่อนนี้ ไม่งั้นดันหน้าทั้งหน้าให้เลื่อนได้
+         เส้นคั่นแถว foreground/15 ให้เห็นชัดบนพื้นสีเคสทุกสี ทั้งสองโหมด (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
+    <div id="caseList" class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         {#each shown as c (c.id)}
             {@const k = kindOf(c)}
             {@const last = c.msgs.length ? msgPreview(c.msgs[c.msgs.length - 1]) : ""}
-            <Item.Root size="sm" class={"case aria-[current=true]:ring-brand rounded-none border-0 border-b border-l-4 py-2 ps-2.5 pe-3 text-left aria-[current=true]:ring-2 aria-[current=true]:ring-inset " + k.row}>
+            <Item.Root size="sm" class={"case aria-[current=true]:ring-brand rounded-none border-0 border-b border-b-foreground/15 border-l-4 py-2 ps-2.5 pe-3 text-left aria-[current=true]:ring-2 aria-[current=true]:ring-inset " + k.row}>
                 {#snippet child({ props })}
                     <button
                         {...props}
@@ -58,12 +78,16 @@
                     >
                         <Item.Media><CustomerAvatar {c} /></Item.Media>
                         <Item.Content class="min-w-0 gap-0.5">
-                            <Item.Title class="w-full">
-                                <span class="r1 min-w-0 flex-1 truncate font-bold">{c.name}</span>
-                                <span class="text-muted-foreground shrink-0 text-xs font-normal">{c.ago}</span>
+                            <!-- วันเวลาชิดขวาเสมอ · รายการแคบ (tablet) ⇒ ลงบรรทัดใต้ชื่อแต่ยังชิดขวา ชื่อไม่ถูกตัดจนอ่านไม่ออก -->
+                            <!-- line-clamp-none ทำให้ Item.Title เป็น block ⇒ จัดแถวด้วย span ด้านใน -->
+                            <Item.Title class="line-clamp-none w-full">
+                                <span class="flex w-full flex-wrap items-baseline gap-x-2">
+                                <span class={"r1 min-w-0 flex-1 basis-24 truncate font-bold " + k.name}>{c.name}</span>
+                                <span class="text-muted-foreground ms-auto shrink-0 text-xs font-normal whitespace-nowrap tabular-nums">{DAY_SHORT} - {c.msgs.length ? c.msgs[c.msgs.length - 1].t : ""}</span>
+                                </span>
                             </Item.Title>
                             <span class="flex flex-wrap items-center gap-1 py-0.5">
-                                <Badge variant="outline" class="max-w-full" title={merch(c.merchant).name}><span class="truncate">{merch(c.merchant).name}</span></Badge>
+                                <Badge variant="outline" class="max-w-full ps-1" title={merch(c.merchant).name}><PlatformIcon p={merch(c.merchant).platform} /><span class="truncate">{merch(c.merchant).name}</span></Badge>
                                 {#if c.status === "waiting"}
                                     <Badge variant="secondary" data-tone="warning"
                                         ><Clock aria-hidden="true" />รอแอดมินรับเคส <span class="tabular-nums">({c.secs})</span></Badge
@@ -73,10 +97,15 @@
                                         ><UserRound aria-hidden="true" />{c.admin} <span class="tabular-nums">({c.secs})</span></Badge
                                     >
                                 {/if}
-                                <Badge variant="secondary">{k.label}</Badge>
+                                <span class="sr-only">ประเภท {k.label}</span>
                             </span>
                             <!-- ข้อความล่าสุดอยู่ล่างสุดเหมือน .r3 ของต้นฉบับ -->
-                            <Item.Description class="r3 line-clamp-1">{last}</Item.Description>
+                            <span class="flex min-w-0 items-center gap-2">
+                                <Item.Description class={"r3 line-clamp-1 flex-1 " + (c.unread ? "text-foreground font-bold" : "")}>{last}</Item.Description>
+                                {#if c.unread}
+                                    <Badge variant="destructive" class="h-5 min-w-5 rounded-full px-1.5 tabular-nums">{c.unread}<span class="sr-only"> ข้อความใหม่</span></Badge>
+                                {/if}
+                            </span>
                         </Item.Content>
                     </button>
                 {/snippet}
@@ -87,10 +116,10 @@
                     <Empty.Media variant="icon"><Inbox /></Empty.Media>
                     {#if st.sel.length}
                         <Empty.Title>ไม่มีแชทในตัวกรองนี้</Empty.Title>
-                        <Empty.Description>ลองติ๊ก Channel เพิ่ม หรือติ๊กแถว "ทั้งหมด" ที่แถบซ้ายเพื่อเลือกทุก Channel</Empty.Description>
+                        <Empty.Description>ลองติ๊ก Channel เพิ่ม หรือติ๊กแถว "ทั้งหมด" ในแผง "เลือกแชทที่แสดง" เพื่อเลือกทุก Channel</Empty.Description>
                     {:else}
                         <Empty.Title>ยังไม่ได้เลือก Channel</Empty.Title>
-                        <Empty.Description>ติ๊ก Channel, Agent หรือแถว "ทั้งหมด" ที่แถบซ้ายเพื่อแสดงแชท</Empty.Description>
+                        <Empty.Description>กดปุ่ม "เลือกแชทที่แสดง" ด้านบน แล้วติ๊ก Channel ที่ต้องการดูแชท</Empty.Description>
                     {/if}
                 </Empty.Header>
             </Empty.Root>

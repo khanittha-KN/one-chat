@@ -113,6 +113,9 @@
     /* โทเคนที่โปรเจกต์เพิ่มเอง (ไฟล์ธีม LINE ไม่มี) */
     --brand: #04803a; /* เขียว LINE เข้มขึ้นให้อ่านออก — ตัวอักษร ลิงก์ ของที่เลือก ฟองแชทแอดมิน (5.06:1 บนขาว · 4.64:1 บน #F5F5F5) */
     --brand-foreground: #ffffff;
+    /* ปุ่มส่งของ Channel Telegram (เจ้าของงานสั่ง 15 ต.ค. 2026) — ฟ้า Telegram เข้มให้ตัวขาวผ่าน AA 4.88:1 · ใช้ทั้งสองโหมด */
+    --telegram: #0077b5;
+    --telegram-foreground: #ffffff;
     --brand-accent: #06c755; /* เขียว LINE ตรงตัว — ของตกแต่งที่ไม่ใช่ตัวอักษร */
     --success: oklch(0.465 0.15 152);
     --warning: oklch(0.5 0.13 52);
@@ -125,6 +128,10 @@
     --chat-bg: #7c94c0;
     --chat-wallpaper: url("/chat-bg/line-sky.webp");
     --chat-meta: var(--foreground);
+    /* ฟองแชท — แอดมินเขียว LINE (เว็บต้นฉบับเป็นฟ้า แต่เจ้าของงานให้กลับเป็นเขียวแบบเดิม 15 ต.ค. 2026) */
+    --bubble-admin: var(--brand); /* ฟองแอดมินเขียว LINE แบบเดิม (เจ้าของงานสั่ง 15 ต.ค. 2026) · ตัว #111111 บน #06C755 8.37:1 */
+    --bubble-admin-foreground: var(--brand-foreground);
+    --bubble-cust: var(--card);
     /* แผงซ้าย (Merchant) สีกรมท่าแบบแถบซ้ายของ LINE (เจ้าของงานสั่ง 14 ต.ค. 2026 · ใช้ผ่านคลาส .surface-rail ข้างล่าง)
        ตัวขาว 14.25:1 · ตัวรอง #989FB0 5.38:1 (บนแถวที่ชี้ 4.57) · ขอบ checkbox = เทาไอคอนของ LINE #707991 3.28:1 · วงโฟกัส 4.16:1 */
     --rail: #202a43;
@@ -154,37 +161,39 @@
 
 /* ── สี: LINE — โหมดมืด (บล็อก .dark ของไฟล์ธีม LINE · ใช้กับ data-theme="dark" ของตัวสลับโหมดด้วย) ── */
 :is([data-theme="dark"], .dark) {
-    --background: #111111;
+    /* เทาโหมดมืดเป็นโทนเย็นอมฟ้าเล็กน้อย (ทีมแจ้ง 15 ต.ค. 2026: "สีแสบตา เทาออกไปทางแดง") · ตัวขาวบนการ์ด 17.4:1 · ตัวรอง #B4BAC4 8.9:1 */
+    --background: #0f1115;
     --foreground: #ffffff;
-    --card: #1a1a1a;
+    --card: #1d2128;
     --card-foreground: #ffffff;
-    --popover: #1f1f1f;
+    --popover: #22262d;
     --popover-foreground: #ffffff;
     --primary: #06c755; /* ปุ่มหลักพื้น #06C755 เหมือนโหมดสว่าง */
     --primary-foreground: #ffffff; /* เหมือนโหมดสว่าง (⚠ 2.26:1) */
-    --secondary: #2a2a2a;
+    --secondary: #2a2f37;
     --secondary-foreground: #ffffff;
-    --muted: #2a2a2a;
-    --muted-foreground: #b7b7b7;
-    --accent: #383838;
+    --muted: #2a2f37;
+    --muted-foreground: #b4bac4;
+    --accent: #343a44;
     --accent-foreground: #ffffff;
     --destructive: #ff9ca7; /* ⚑ แดง LINE เฉดสว่างให้ผ่าน AA บนพื้นมืด: ตัวอักษร 8.76 · ปุ่มลบพื้นอ่อน 5.81 (ชี้ 4.54) */
     --destructive-foreground: #ffffff;
-    --border: #3f3f3f;
-    --input: #777777; /* ขอบช่องกรอก 3.89:1 บนการ์ด */
+    --border: #3a3f49;
+    --control-border: #4a4f58; /* ขอบปุ่ม outline · ปุ่มสลับ/แท็บที่เลือก — มีตัวหนังสือบอกอยู่แล้ว ขอบเป็นแค่ตกแต่ง ⇒ หรี่ได้ต่ำกว่า 3:1 (2.1:1) */
+    --input: #6a707c; /* ขอบช่องกรอก 3.25:1 บนการ์ด #1D2128 (หรี่ตามเจ้าของงาน 15 ต.ค. 2026 · ยังผ่าน 3:1) */
     --ring: #96b2ff;
     --chart-1: #06c755;
     --chart-2: #96b2ff;
     --chart-3: #98a0b3;
     --chart-4: #ff334b;
     --chart-5: #c8c8c8;
-    --sidebar: #1a1a1a;
+    --sidebar: #15181d;
     --sidebar-foreground: #ffffff;
     --sidebar-primary: #06c755;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #2a2a2a;
+    --sidebar-accent: #22262d;
     --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: #3f3f3f;
+    --sidebar-border: #3a3f49;
     --sidebar-ring: #96b2ff;
 
     --brand: #06c755; /* 7.71:1 บนการ์ด #1A1A1A */
@@ -197,18 +206,24 @@
     --surface-page: var(--background);
     --surface-chrome: var(--sidebar);
     /* พื้นที่ข้อความแชทโหมดมืดคงเดิม (ไม่มีท้องฟ้า) */
-    --chat-bg: var(--background);
+    /* ไล่ชั้นความสว่าง (เจ้าของงานสั่ง 15 ต.ค. 2026 — เดิมสีใกล้กันหมด) · L*: พื้นข้อความแชท #0A0C0F (3) < พื้นหน้า #0F1115 (5)
+       < แผงรายการ/ลูกค้า #15181D (8) < การ์ด #1D2128 (13) < ช่องกรอก #2A2F37 (19) · ตัวรองบนการ์ด 8.3:1 */
+    --chat-bg: #0a0c0f;
     --chat-wallpaper: none;
     --chat-meta: var(--muted-foreground);
+    /* ฟองลูกค้าโหมดมืด = น้ำเงินเข้ม #2B3550 แบบต้นฉบับ (ตัวขาว 12:1) · ฟองแอดมินเขียวเดียวกับโหมดสว่าง */
+    --bubble-admin: var(--brand); /* ฟองแอดมินเขียว LINE แบบเดิม (เจ้าของงานสั่ง 15 ต.ค. 2026) · ตัว #111111 บน #06C755 8.37:1 */
+    --bubble-admin-foreground: var(--brand-foreground);
+    --bubble-cust: #2b3550;
     /* แผงซ้ายโหมดมืด = เข้มที่สุดของหน้า แบ่งส่วนแบบ LINE (เจ้าของงานสั่ง 14 ต.ค. 2026)
        LINE: ราง #1F1F1F กับรายการ #2C2E2F ต่างกัน L* 7.0 ⇒ ของเรา #080808 กับรายการ #1A1A1A ต่างกัน L* 7.1
        ตัวขาว 19.8:1 · ตัวรอง #B7B7B7 9.87:1 (แถวที่ชี้ #1C1C1C 8.5) · ขอบ checkbox #777777 4.42:1 · วงโฟกัส 5.09:1 */
-    --rail: #080808;
+    --rail: #08090c;
     --rail-foreground: #ffffff;
-    --rail-muted-foreground: #b7b7b7;
-    --rail-accent: #1c1c1c;
-    --rail-border: #242424;
-    --rail-input: #777777;
+    --rail-muted-foreground: #b4bac4;
+    --rail-accent: #1a1d22;
+    --rail-border: #22252b;
+    --rail-input: #626771;
     --rail-ring: #96b2ff;
     /* ปุ่มทึบในโหมดมืด: เฉดเข้ม + ตัวขาว (ตัวขาวบนพื้น ≥5:1) แทนพื้นพาสเทลตัวดำ */
     --success-solid: #047b3d;
@@ -217,19 +232,111 @@
     --info-solid: #0369a1;
 
     /* สีประเภทเคส — โหมดมืด · พื้นแถวอิ่มสีขึ้น (เจ้าของงาน 14 ต.ค. 2026: "ซีด ดูไม่ออกว่าสีอะไร")
-       ความอิ่มสี 0.10–0.22 → 0.47–0.60 · ปิดเคสเป็นเทาอ่อนกว่าพื้นรายการ · ตัวขาว ≥12:1 · ตัวรอง #B7B7B7 ≥6.1:1 */
+       ลดความอิ่มสีลงครึ่งหนึ่ง 15 ต.ค. 2026 (ทีมแจ้งว่าแสบตา) — แถบซ้ายยังสีสดบอกประเภท · ตัวขาว ≥13.6:1 · ตัวรอง ≥7:1 · ตัวสีประเภท ≥6.6:1 */
     --case-yellow: #e9d95e;
-    --case-yellow-bg: #3d3510;
+    --case-yellow-bg: #302d1a;
     --case-yellow-fg: #e9d95e;
     --case-orange: #f0a25e;
-    --case-orange-bg: #472a12;
+    --case-orange-bg: #38291e;
     --case-orange-fg: #f0a25e;
     --case-red: #ee6c86;
-    --case-red-bg: #4a1b2c;
+    --case-red-bg: #3a2029;
     --case-red-fg: #ff8fa6;
     --case-white: #e2e6ed;
-    --case-white-bg: #2e3033; /* ปิดเคส = เทาอ่อนกว่าพื้นรายการ #1A1A1A ให้แยกออก */
+    --case-white-bg: #2a2e35; /* ปิดเคส = เทาอ่อนกว่าพื้นรายการ #171A1F ให้แยกออก */
     --case-white-fg: var(--foreground);
+}
+
+/* ── ธีมมืดเพิ่ม 3 แบบ (เจ้าของงานสั่ง 15 ต.ค. 2026) — ทับเฉพาะเทา · พื้นแถวเคส ของโหมดมืดด้านบน (สีเขียวใช้ของธีมมืด)
+   ([data-theme][data-palette] เจาะจงกว่า :is([data-theme=dark], .dark) ⇒ ชนะเสมอ) ── */
+[data-theme="dark"][data-palette="teal"] {
+    /* ทีล (เดิมชื่อชาร์โคล) — เทาอมเขียวหัวเป็ดเข้มแบบภาพตัวอย่าง · สีเขียวเดียวกับธีมมืด #06C755 (บนการ์ด 6.1:1)
+       ไล่ชั้นความสว่างให้เห็นว่าตรงไหนสำคัญ (เจ้าของงานสั่ง 15 ต.ค. 2026 — เดิมทุกส่วนสีใกล้กันหมด) · L* = ความสว่าง
+         พื้นที่ข้อความแชท #091317 (L* 5 · เข้มสุด ฟองแชทเด่น) < พื้นหน้า #0D1A1E (8) < แผงรายการ/แผงลูกค้า #12242A (13)
+         < การ์ด (หัว/ท้ายห้องแชท · การ์ดในแผงลูกค้า) #1A3036 (18) < ช่องกรอก/ฟองลูกค้า #24393F (23)
+       ตัวรอง #A3B8BD บนการ์ด 6.7:1 · บนช่องกรอก 5.9:1 · ขอบช่องกรอก 3.1:1 · ตัวขาวบนฟองลูกค้า 12:1 */
+    --background: #0d1a1e;
+    --card: #1a3036;
+    --popover: #1f363c;
+    --secondary: #24393f;
+    --muted: #24393f;
+    --muted-foreground: #a3b8bd;
+    --accent: #2c444b;
+    --border: #2c4248;
+    --control-border: #3a5259;
+    --input: #647c83;
+    --sidebar: #12242a;
+    --sidebar-accent: #1c3137;
+    --sidebar-border: #24393f;
+    --rail: #081215;
+    --rail-muted-foreground: #a3b8bd;
+    --rail-accent: #12232a;
+    --rail-border: #18292f;
+    --rail-input: #647c83;
+    --chat-bg: #091317;
+    --bubble-cust: #24393f;
+    --case-yellow-bg: #2b2f1f;
+    --case-orange-bg: #322a22;
+    --case-red-bg: #33232b;
+    --case-white-bg: #24393f;
+}
+[data-theme="dark"][data-palette="slate"] {
+    /* ไล่ชั้น (15 ต.ค. 2026): พื้นข้อความแชท #11151A < พื้นหน้า #161B21 < แผง #1B2129 < การ์ด #242C36 < ช่องกรอก #2F3843 · ตัวรองบนการ์ด 6.7:1 · ขอบช่องกรอก 3.2:1 */
+    /* สเลท — เทาอมฟ้าแบบภาพตัวอย่าง 2 · สีเขียวเดียวกับธีมมืด #06C755
+       ตัวรองบนพื้นแถวเคสทุกสี ≥5.5:1 */
+    --background: #161b21;
+    --card: #242c36;
+    --popover: #29323d;
+    --secondary: #2f3843;
+    --muted: #2f3843;
+    --muted-foreground: #aab4c0;
+    --accent: #3a4450;
+    --border: #38424e;
+    --control-border: #4a5562;
+    --input: #6e7a8a;
+    --sidebar: #1b2129;
+    --sidebar-accent: #29323d;
+    --sidebar-border: #38424e;
+    --rail: #12161c;
+    --rail-muted-foreground: #aab4c0;
+    --rail-accent: #1d232b;
+    --rail-border: #262d36;
+    --rail-input: #6e7a8a;
+    --bubble-cust: #2f3a48;
+    --case-yellow-bg: #312f22;
+    --case-orange-bg: #382d26;
+    --case-red-bg: #3a2731;
+    --case-white-bg: #2f3843;
+    --chat-bg: #11151a;
+}
+[data-theme="dark"][data-palette="navy"] {
+    /* ไล่ชั้น (15 ต.ค. 2026): พื้นข้อความแชท #0A1120 < พื้นหน้า #0E1628 < แผง #121B30 < การ์ด #1A2540 < ช่องกรอก #25314D · ตัวรองบนการ์ด 7.1:1 · ขอบช่องกรอก 3.2:1 */
+    /* เนวี่ — กรมท่าแบบภาพตัวอย่าง 3 · สีเขียวเดียวกับธีมมืด #06C755
+       ตัวรองบนพื้นแถวเคสทุกสี ≥5.8:1 */
+    --background: #0e1628;
+    --card: #1a2540;
+    --popover: #1f2a47;
+    --secondary: #25314d;
+    --muted: #25314d;
+    --muted-foreground: #a7b1c7;
+    --accent: #2f3c5c;
+    --border: #2c3854;
+    --control-border: #3d4a6a;
+    --input: #64739a;
+    --sidebar: #121b30;
+    --sidebar-accent: #1f2a47;
+    --sidebar-border: #2c3854;
+    --rail: #060b16;
+    --rail-muted-foreground: #a7b1c7;
+    --rail-accent: #121a2c;
+    --rail-border: #1a2338;
+    --rail-input: #64739a;
+    --bubble-cust: #26324e;
+    --case-yellow-bg: #2c2d24;
+    --case-orange-bg: #33292a;
+    --case-red-bg: #352235;
+    --case-white-bg: #25314d;
+    --chat-bg: #0a1120;
 }
 
 /* ── แผงซ้าย (Merchant) — <Sidebar.Root class="surface-rail"> ทั้งจอคอมและแผงเลื่อนบนมือถือ ──
@@ -319,6 +426,8 @@
     /* ได้คลาส text-brand · bg-brand · text-success · bg-success/10 · text-warning · text-info … */
     --color-brand: var(--brand);
     --color-brand-foreground: var(--brand-foreground);
+    --color-telegram: var(--telegram);
+    --color-telegram-foreground: var(--telegram-foreground);
     --color-brand-accent: var(--brand-accent);
     --color-case-yellow: var(--case-yellow);
     --color-case-yellow-bg: var(--case-yellow-bg);
@@ -332,6 +441,9 @@
     --color-case-white: var(--case-white);
     --color-case-white-bg: var(--case-white-bg);
     --color-case-white-fg: var(--case-white-fg);
+    --color-bubble-admin: var(--bubble-admin);
+    --color-bubble-admin-foreground: var(--bubble-admin-foreground);
+    --color-bubble-cust: var(--bubble-cust);
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-info: var(--info);
@@ -359,6 +471,7 @@
         --below-header: calc(100svh - var(--header-height));
         /* ผังของ OneChat (DESIGN-SYSTEM §8 · ขนาดโครงหน้าเป็นชื่อ ไม่ใช่ค่าตายตัวในคลาส) */
         --grid-console-md: 17rem minmax(0, 1fr); /* รายการแชท + ห้องแชท */
+        --grid-console-tab: 12rem minmax(0, 1fr) 17.5rem; /* tablet แนวตั้ง 768–1279: รายการ · แชท · ลูกค้า ครบ 3 ช่อง (เจ้าของงานสั่ง 15 ต.ค. 2026) · ช่องลูกค้ากว้างขึ้น 15→17.5rem รายการ 13→12rem */
         --grid-console-xl: 18rem minmax(0, 1fr) 25rem; /* + แผงลูกค้า 25rem (เดิม 20rem · เจ้าของงานว่าเบียด 14 ต.ค. 2026 ⇒ 333px ที่ย่อ 83% · ต้นฉบับ 360px) · ห้องแชทได้ที่ที่เหลือ */
         --grid-settings: 15rem minmax(0, 1fr); /* เมนูตั้งค่า + เนื้อหา */
         --grid-kv: 5.5rem minmax(0, 1fr); /* ตารางชื่อ–ค่าในการ์ด */
@@ -453,8 +566,8 @@
     color: var(--foreground);
 }
 :is([data-theme="dark"], .dark) [data-slot="toggle-group-item"][data-state="on"] {
-    border-color: var(--input);
-    background-color: color-mix(in oklab, var(--input) 30%, transparent);
+    border-color: var(--control-border);
+    background-color: color-mix(in oklab, var(--input) 10%, transparent);
 }
 
 /* 2b ชิปตัวเลือก — <ToggleGroup data-look="chips"> สำหรับค่าในฟอร์ม · ทรงแคปซูล · ใบที่เลือกขอบและตัวสี brand */
@@ -891,4 +1004,33 @@
     .animate-spin {
         animation-duration: 2.4s;
     }
+}
+
+/* ตัวอย่างในช่องกรอก (placeholder) จางกว่าค่าที่กรอกจริงชัดเจน (เจ้าของงานสั่ง 15 ต.ค. 2026 — เดิมว่างกับกรอกแล้วดูคล้ายกัน)
+   ไม่อยู่ใน @layer ⇒ ชนะ placeholder:text-muted-foreground ของ component · ทุกช่องมีป้ายชื่อ placeholder เป็นแค่คำใบ้
+   สว่าง #8F8F8F บนขาว 3.2:1 · มืด #7F8590 บนพื้นช่อง #33363E 3.3:1 (ค่าที่กรอก ขาว 12:1) */
+:root {
+    --placeholder: #8f8f8f;
+}
+:is([data-theme="dark"], .dark) {
+    --placeholder: #7f8590;
+}
+input::placeholder,
+textarea::placeholder {
+    color: var(--placeholder);
+}
+
+/* โหมดมืด: พื้นในช่องกรอก · ปุ่ม outline · แท็บ/ปุ่มสลับที่เลือกอยู่ หรี่จาก --input 30% → 8% (ชี้ 20%) ไม่ให้สว่างเกิน
+   (เจ้าของงาน 15 ต.ค. 2026 สองรอบ) · checkbox ที่ติ๊กแล้วยังเป็นสีหลัก · ตัวอักษรขาวบนพื้นใหม่ ≥14:1
+   ขอบช่องกรอกคง --input (3.07:1 · ขั้นต่ำ WCAG 1.4.11 ให้เห็นว่าเป็นช่อง) · ขอบปุ่มที่มีตัวหนังสือใช้ --control-border ที่มืดกว่า */
+:is([data-theme="dark"], .dark) .dark\:bg-input\/30:not([data-checked]):not([data-state="checked"]),
+:is([data-theme="dark"], .dark) [data-slot="tabs-list"] [data-slot="tabs-trigger"]:is([data-state="active"], [data-active]) {
+    background-color: color-mix(in oklab, var(--input) 8%, transparent);
+}
+:is([data-theme="dark"], .dark) .dark\:hover\:bg-input\/50:hover {
+    background-color: color-mix(in oklab, var(--input) 20%, transparent);
+}
+:is([data-theme="dark"], .dark) [data-slot="button"].dark\:border-input,
+:is([data-theme="dark"], .dark) [data-slot="tabs-list"] [data-slot="tabs-trigger"]:is([data-state="active"], [data-active]) {
+    border-color: var(--control-border);
 }

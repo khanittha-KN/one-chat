@@ -9,7 +9,7 @@
     import Status from "./ui/Status.svelte";
     import BankLogo from "./ui/BankLogo.svelte";
     import HistRows from "./panel/HistRows.svelte";
-    import { bankOf, histAll, histSums, accountsOf } from "./data.js";
+    import { bankOf, histAll, histSums, accountsOf, maskNo } from "./data.js";
     import { st, panelCase } from "./store.svelte.js";
 
     const c = $derived(panelCase()); // ลูกค้าที่แผงขวาแสดงอยู่ (จากแชทหรือจากช่องค้นหา)
@@ -51,12 +51,13 @@
                         <Item.Media><BankLogo code={a.bank} /></Item.Media>
                         <Item.Content class="min-w-0">
                             <Item.Title>{bankOf(a.bank).name}</Item.Title>
-                            <Item.Description class="tabular-nums">{a.no}</Item.Description>
+                            <Item.Description class="tabular-nums">{maskNo(a.no)}</Item.Description>
                             <Item.Description>{c.user.fullname}</Item.Description>
                         </Item.Content>
                         <Item.Actions class="flex-col items-end gap-1">
                             {#if a.main}<Badge variant="outline">บัญชีหลัก</Badge>{/if}
-                            {#if a.on}<Status tone="success">ใช้งาน</Status>{:else}<Status>ไม่ใช้งาน</Status>{/if}
+                            <Status tone={a.st === "อนุมัติ" ? "success" : a.st === "รออนุมัติ" ? "warning" : "destructive"}>{a.st}</Status>
+                            {#if a.nm}<Status tone="success">ยืนยันชื่อแล้ว</Status>{:else}<Status tone="destructive">ชื่อไม่ตรง</Status>{/if}
                         </Item.Actions>
                     </Item.Root>
                 {/each}

@@ -8,5 +8,5 @@
 </script>
 
 <!-- toast มุมล่างขวา (มือถือล่างกลาง) หายเองใน 6 วินาที · ส่งโหมดเองเพราะไม่ใช้ mode-watcher — DESIGN-SYSTEM §10.9 -->
-<Toaster theme={theme.mode} position="bottom-right" duration={6000} />
+<Toaster theme={theme.mode === "light" ? "light" : "dark"} position="bottom-right" duration={6000} />
 {@render children()}
