@@ -1,6 +1,7 @@
 <!-- สถานะไลน์ (OA) — เว็บต้นฉบับ 15 ต.ค. 2026: ปุ่ม Verify เต็มกว้าง · สถานะ / Ping / OA · ปุ่ม Ping กับ Update สถานะ
      พับไว้ตั้งแต่แรกเมื่อไลน์ออนไลน์ · ไลน์หลุดกางให้เห็นทันที -->
 <script>
+    import Wifi from "@lucide/svelte/icons/wifi";
     import ShieldCheck from "@lucide/svelte/icons/shield-check";
     import { Button } from "$lib/components/ui/button/index.js";
     import Status from "../ui/Status.svelte";
@@ -16,7 +17,7 @@
     {#if c.lineOk}<Status tone="success">ออนไลน์</Status>{:else}<Status tone="destructive">หลุด</Status>{/if}
 {/snippet}
 
-<FoldCard {c} title="สถานะไลน์ (OA)" def={c.lineOk} action={badge} contentClass="gap-2.5">
+<FoldCard {c} title="สถานะไลน์ (OA)" icon={Wifi} hint={c.lineOk ? "ออนไลน์" : "หลุด"} dot={c.lineOk ? "success" : "destructive"} def={c.lineOk} action={badge} contentClass="gap-2.5">
     <p class="text-muted-foreground text-xs">ถ้าส่งข้อความไม่ได้ กด Verify เพื่อ login ใหม่</p>
     <Button data-tone="info" data-fill="solid" class="w-full" onclick={() => verifyLine(c)}><ShieldCheck data-icon="inline-start" />Verify</Button>
     <dl class={DL}>

@@ -14,7 +14,7 @@
 </script>
 
 <!-- สมัครสมาชิก Player — ลูกค้าเก่าพับไว้ตั้งแต่แรก · ลูกค้าใหม่ (ยังไม่ผูก) และหลังสมัครสำเร็จกางไว้ ให้กด "ส่งเบอร์และรหัสให้ลูกค้า" ได้ทันที -->
-<FoldCard {c} title="สมัครสมาชิก Player" def={!!c && !c.justReg && !c.unbound} contentClass="gap-3">
+<FoldCard {c} title="สมัครสมาชิก Player" icon={UserPlus} def={!!c && !c.justReg && !c.unbound} contentClass="gap-3">
     <!-- ทุกช่องจำเป็น ยกเว้นรหัสแนะนำ · ตรวจตอนออกจากช่องและตอนกดสมัคร · ข้อความบอกวิธีแก้ใต้ช่อง (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
     <Field.Group class="gap-4">
         <Field.Field data-invalid={!!st.regErr.name}>

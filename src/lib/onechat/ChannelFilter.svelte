@@ -6,12 +6,11 @@
 <script>
     import ChevronRight from "@lucide/svelte/icons/chevron-right";
     import SettingsIcon from "@lucide/svelte/icons/settings";
-    import Building2 from "@lucide/svelte/icons/building-2";
     import * as Sheet from "$lib/components/ui/sheet/index.js";
     import * as Collapsible from "$lib/components/ui/collapsible/index.js";
     import { Checkbox } from "$lib/components/ui/checkbox/index.js";
     import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
-    import { org, agentGroups, chatChannels } from "./data.js";
+    import { agentGroups, chatChannels } from "./data.js";
     import PlatformIcon from "./ui/PlatformIcon.svelte";
     import { st, selectAll, toggleMerchant, setAgent, openSettings } from "./store.svelte.js";
 
@@ -26,14 +25,9 @@
     <Sheet.Content side="left" class="w-full gap-0 data-[side=left]:sm:max-w-sm">
         <Sheet.Header class="border-b">
             <Sheet.Title>เลือกแชทที่แสดง</Sheet.Title>
-            <Sheet.Description>ติ๊ก Channel ที่ต้องการดูแชทในรายการสนทนา · ไม่ติ๊กเลย = ไม่แสดงแชท · โลโก้บอกว่าเป็น LINE หรือ Telegram</Sheet.Description>
         </Sheet.Header>
         <div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
             <div class="flex flex-col gap-1 p-3">
-                <div class="flex min-w-0 items-center gap-2 px-2 text-sm font-bold" title={org.name}>
-                    <Building2 class="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
-                    <span class="sr-only">Organization:</span><span class="min-w-0 flex-1 truncate">{org.name}</span>
-                </div>
                 <label class="hover:bg-muted flex h-9 cursor-pointer items-center gap-2 rounded-md px-2">
                     <Checkbox checked={allSel} indeterminate={someSel} onCheckedChange={() => selectAll(!allSel)} aria-label="เลือกทุก Channel" />
                     <span class="flex-1 text-sm font-bold">ทั้งหมด</span>

@@ -1,33 +1,39 @@
 <!-- การ์ดในแผงลูกค้า (เว็บต้นฉบับ 15 ต.ค. 2026 · ปรับ 15 ต.ค. 2026 ตามเจ้าของงาน)
-     def = ค่าเริ่มต้นพับ (true) หรือกาง (false) · action = ของท้ายหัวการ์ด (ป้าย · ชื่อลูกค้า · จำนวน)
+     def = ค่าเริ่มต้นพับ (true) หรือกาง (false) · cardClass = เน้นการ์ด (เช่นผลตรวจสลิป) · action = ของท้ายหัวการ์ด (ป้าย · ชื่อลูกค้า · จำนวน)
        - def false (ข้อมูลที่แสดงอยู่) = การ์ดเดิม กดหัวการ์ดพับ/กางได้ · สถานะจำแยกต่อเคส (store: isFolded / setFold)
-       - def true  (ข้อมูลที่ไม่แสดง)  = ปุ่มขนาดเล็ก กดแล้วเปิดหน้าต่าง (Modal) ของข้อมูลนั้น ⇒ แผงไม่ยาวจนต้องเลื่อน
+       - def true  (ข้อมูลที่ไม่แสดง)  = ปุ่มทึบ (icon · ชื่อเต็ม · dot) กดแล้วเปิดหน้าต่าง (Modal) ของข้อมูลนั้น ⇒ แผงไม่ยาวจนต้องเลื่อน
          CustomerPanel วางปุ่มพวกนี้เป็นตาราง 2 ช่อง -->
 <script>
     import ChevronDown from "@lucide/svelte/icons/chevron-down";
     import ChevronRight from "@lucide/svelte/icons/chevron-right";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Dialog from "$lib/components/ui/dialog/index.js";
+    import { Button } from "$lib/components/ui/button/index.js";
     import { isFolded, setFold } from "../store.svelte.js";
 
-    let { c, title, def = false, action, children, contentClass = "" } = $props();
+    let { c, title, def = false, action, children, contentClass = "", cardClass = "", icon: Icon = null, hint = "", dot = "" } = $props();
+    // ปุ่ม: hint = สถานะ (บอกโปรแกรมอ่านหน้าจอ + tooltip) · dot = จุดสีสถานะ success | warning | destructive
+    const DOT = { success: "bg-success", warning: "bg-warning", destructive: "bg-destructive" };
     const folded = $derived(isFolded(c, title, def));
     const id = $derived("fold-" + title.replace(/\W+/g, "") + "-" + (c ? c.id : "x"));
     let open = $state(false);
 </script>
 
 {#if def}
-    <button
-        type="button"
-        class="bg-card ring-foreground/10 hover:bg-muted focus-visible:ring-ring/50 flex min-h-11 w-full min-w-0 flex-col items-start justify-center gap-1 rounded-xl px-3 py-2 text-start shadow-xs ring-1 outline-none focus-visible:ring-3"
+    <!-- ปุ่มทึบสีเทาอ่อน (เจ้าของงานสั่ง 16 ต.ค. 2026 ให้ซอฟลง · พื้น = ตัวอักษร 10% ตัวอักษรสีหลัก ≥12:1 ทุกธีม) แถวเดียว ขึ้นบรรทัดใหม่เมื่อเต็ม · ชื่อเต็มไม่ย่อ (เจ้าของงานสั่ง 15–16 ต.ค. 2026)
+         จุดสถานะมีวงสีพื้นรอบให้เห็นบนพื้นเทา · สถานะเต็มอยู่ใน aria-label / tooltip · กดแล้วเปิดหน้าต่าง -->
+    <Button
+        size="sm"
+        class="bg-foreground/10 text-foreground hover:bg-foreground/15 rounded-full"
         aria-haspopup="dialog"
+        aria-label={title + (hint ? " — " + hint : "")}
+        title={title + (hint ? " · " + hint : "")}
         onclick={() => (open = true)}
     >
-        <span class="flex w-full min-w-0 items-start gap-1 text-sm font-medium">
-            <span class="min-w-0 flex-1 leading-snug">{title}</span><ChevronRight class="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
-        </span>
-        {#if action}<span class="flex max-w-full min-w-0 text-xs">{@render action()}</span>{/if}
-    </button>
+        {#if Icon}<Icon data-icon="inline-start" aria-hidden="true" />{/if}
+        {title}
+        {#if dot}<span class={"size-2 shrink-0 rounded-full ring-2 ring-background " + DOT[dot]} aria-hidden="true"></span>{/if}
+    </Button>
     <Dialog.Root bind:open>
         <Dialog.Content class="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-md">
             <Dialog.Header>
@@ -37,7 +43,7 @@
         </Dialog.Content>
     </Dialog.Root>
 {:else}
-    <Card.Root size="sm">
+    <Card.Root size="sm" class={cardClass}>
         <Card.Header>
             <Card.Title>
                 <button

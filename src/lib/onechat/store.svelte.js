@@ -275,6 +275,11 @@ export function slipCheck(c, i) {
     c.slip = { state: "reading", amt: sm.amt, variant: sm.variant };
     delete st.fold[c.id + "|ตรวจสอบสลิป"]; // กางการ์ดผลตรวจให้เห็น
     scrollMsgs();
+    // การ์ดผลตรวจอยู่บนสุดของแผงลูกค้า ⇒ เลื่อนแผงขึ้นบนให้เห็นทันที (ลดการเคลื่อนไหว ⇒ กระโดดไปเลย)
+    requestAnimationFrame(() => {
+        const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+        document.getElementById("colPanel")?.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    });
     setTimeout(() => {
         if (c.slip && c.slip.state === "reading") c.slip = slipData(sm);
     }, 4000);
@@ -670,7 +675,7 @@ export function settingsAct(a, i, el = {}) {
         sset("bc", true, S.bcSched ? "ตั้งเวลาส่งแล้ว (อยู่ในคิวด้านล่าง)" : "ส่ง Broadcast แล้ว");
     } else if (a === "am-save") {
         const an = (f.amName || "").trim(), ak = (f.amKw || "").trim(), ar = (f.amReply || "").trim();
-        if (!an || !ak || !ar) sset("am", false, "กรอกชื่อกฎ คำค้น และข้อความตอบกลับให้ครบ");
+        if (!an || !ak || !ar) sset("am", false, "กรอกชื่อรายการ คำค้น และข้อความตอบกลับให้ครบ");
         else {
             const rule = { name: an, kw: ak, mode: f.amMode || "มีคำนี้", reply: ar, on: f.amOn !== false };
             if (S.ed.am != null) S.am[S.ed.am] = rule;
@@ -681,7 +686,7 @@ export function settingsAct(a, i, el = {}) {
             f.amOn = true;
             S.msg.am = null;
             S.sheet = null;
-            ok("บันทึกกฎ \"" + an + "\" แล้ว");
+            ok("บันทึกการตอบกลับ \"" + an + "\" แล้ว");
         }
     } else if (a === "am-edit") {
         const x = S.am[i];

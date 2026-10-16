@@ -129,8 +129,8 @@
     --chat-wallpaper: url("/chat-bg/line-sky.webp");
     --chat-meta: var(--foreground);
     /* ฟองแชท — แอดมินเขียว LINE (เว็บต้นฉบับเป็นฟ้า แต่เจ้าของงานให้กลับเป็นเขียวแบบเดิม 15 ต.ค. 2026) */
-    --bubble-admin: var(--brand); /* ฟองแอดมินเขียว LINE แบบเดิม (เจ้าของงานสั่ง 15 ต.ค. 2026) · ตัว #111111 บน #06C755 8.37:1 */
-    --bubble-admin-foreground: var(--brand-foreground);
+    --bubble-admin: var(--brand); /* ฟองแอดมินเขียว LINE แบบเดิม (เจ้าของงานสั่ง 15 ต.ค. 2026) */
+    --bubble-admin-foreground: var(--brand-foreground); /* ขาวบน #04803A 5.06:1 */
     --bubble-cust: var(--card);
     /* แผงซ้าย (Merchant) สีกรมท่าแบบแถบซ้ายของ LINE (เจ้าของงานสั่ง 14 ต.ค. 2026 · ใช้ผ่านคลาส .surface-rail ข้างล่าง)
        ตัวขาว 14.25:1 · ตัวรอง #989FB0 5.38:1 (บนแถวที่ชี้ 4.57) · ขอบ checkbox = เทาไอคอนของ LINE #707991 3.28:1 · วงโฟกัส 4.16:1 */
@@ -213,7 +213,7 @@
     --chat-meta: var(--muted-foreground);
     /* ฟองลูกค้าโหมดมืด = น้ำเงินเข้ม #2B3550 แบบต้นฉบับ (ตัวขาว 12:1) · ฟองแอดมินเขียวเดียวกับโหมดสว่าง */
     --bubble-admin: var(--brand); /* ฟองแอดมินเขียว LINE แบบเดิม (เจ้าของงานสั่ง 15 ต.ค. 2026) · ตัว #111111 บน #06C755 8.37:1 */
-    --bubble-admin-foreground: var(--brand-foreground);
+    --bubble-admin-foreground: #ffffff; /* ตัวขาวตามเจ้าของงาน (15 ต.ค. 2026) — ⚠ 2.26:1 บน #06C755 เท่าปุ่มหลักโหมดมืด */
     --bubble-cust: #2b3550;
     /* แผงซ้ายโหมดมืด = เข้มที่สุดของหน้า แบ่งส่วนแบบ LINE (เจ้าของงานสั่ง 14 ต.ค. 2026)
        LINE: ราง #1F1F1F กับรายการ #2C2E2F ต่างกัน L* 7.0 ⇒ ของเรา #080808 กับรายการ #1A1A1A ต่างกัน L* 7.1
@@ -1033,4 +1033,31 @@ textarea::placeholder {
 :is([data-theme="dark"], .dark) [data-slot="button"].dark\:border-input,
 :is([data-theme="dark"], .dark) [data-slot="tabs-list"] [data-slot="tabs-trigger"]:is([data-state="active"], [data-active]) {
     border-color: var(--control-border);
+}
+
+/* ช่องที่กรอกแล้ว ≠ ช่องว่าง (เจ้าของงานสั่ง 15 ต.ค. 2026 สองรอบ) — ช่องที่มีค่า: พื้นสว่างขึ้นชัด · ขอบเกือบเท่าตัวอักษร · ตัวหนาขึ้น · ช่องว่างพื้นจมลง (มืด)
+   ช่องว่างคงเดิม (พื้นโปร่ง · ตัวอย่างสีจาง) · ใช้กับช่องที่มี placeholder (:placeholder-shown บอกได้ว่าว่างหรือไม่)
+   [placeholder] ซ้ำสองครั้งเพื่อให้เจาะจงกว่ากฎพื้นช่องของโหมดมืดด้านบน */
+:root {
+    --input-filled: color-mix(in oklab, var(--foreground) 7%, var(--card));
+    --input-filled-border: color-mix(in oklab, var(--foreground) 70%, var(--card));
+    --input-empty: transparent;
+}
+:is([data-theme="dark"], .dark) {
+    --input-filled: color-mix(in oklab, var(--foreground) 16%, var(--card));
+    --input-filled-border: color-mix(in oklab, var(--foreground) 70%, var(--card));
+    --input-empty: color-mix(in oklab, var(--background) 45%, var(--card)); /* ช่องว่างจมลง (เข้มกว่าการ์ด) · ช่องที่กรอกแล้วนูนขึ้น */
+}
+:is(input, textarea)[placeholder][placeholder]:not(:placeholder-shown):not(:disabled):not([data-slot="input-group-control"]),
+[data-slot="input-group"]:has(> input[placeholder]:not(:placeholder-shown)):not(:has(:disabled)) {
+    background-color: var(--input-filled);
+    border-color: var(--input-filled-border);
+}
+/* ช่องว่าง (ยังเห็นตัวอย่าง) — พื้นจมลงในโหมดมืด ให้ต่างจากช่องที่กรอกแล้วชัด ๆ */
+:is(input, textarea)[placeholder][placeholder]:placeholder-shown:not([data-slot="input-group-control"]),
+[data-slot="input-group"][data-slot="input-group"]:has(> input[placeholder]:placeholder-shown) {
+    background-color: var(--input-empty);
+}
+:is(input, textarea)[placeholder][placeholder]:not(:placeholder-shown) {
+    font-weight: 500;
 }

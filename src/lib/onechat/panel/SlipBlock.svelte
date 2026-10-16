@@ -1,4 +1,5 @@
 <script>
+    import ReceiptText from "@lucide/svelte/icons/receipt-text";
     import Clock from "@lucide/svelte/icons/clock";
     import CircleCheck from "@lucide/svelte/icons/circle-check";
     import OctagonX from "@lucide/svelte/icons/octagon-x";
@@ -12,6 +13,11 @@
     import { bankOf, money } from "../data.js";
     let { c } = $props();
     const s = $derived(c.slip);
+    // กำลังตรวจ / มีผล ⇒ การ์ดขึ้นบนสุดของแผงลูกค้า + ขอบและพื้นสีตามผล ให้เห็นว่าสำคัญ (เจ้าของงานสั่ง 15 ต.ค. 2026)
+    // ปลอม = แดง · จริง = เขียว · กำลังอ่าน = ฟ้า (มีป้ายข้อความบอกผลด้วย ไม่ได้บอกด้วยสีอย่างเดียว)
+    const tone = $derived(
+        !s ? "" : s.state === "reading" ? "ring-2 ring-info bg-info/5" : s.state === "ready" ? (s.fake ? "ring-2 ring-destructive bg-destructive/5" : "ring-2 ring-success bg-success/5") : "",
+    );
 </script>
 
 {#snippet party(role, code, name, no)}
@@ -35,7 +41,7 @@
     {:else}<Status icon={Clock}>รอตรวจ</Status>{/if}
 {/snippet}
 
-<FoldCard {c} title="ตรวจสอบสลิป" def={!(s && (s.state === "reading" || s.state === "ready"))} action={badge}>
+<FoldCard {c} title="ตรวจสอบสลิป" icon={ReceiptText} hint={!s ? "ไม่มีสลิป" : s.state === "pending" ? "รอตรวจ" : ""} dot={s && s.state === "pending" ? "warning" : ""} def={!(s && (s.state === "reading" || s.state === "ready"))} action={badge} cardClass={tone}>
     {#if !s}
         <p class="text-muted-foreground text-sm">ยังไม่มีสลิปในแชทนี้ เมื่อลูกค้าส่งรูปสลิปมา ให้กด "ตรวจสอบสลิป" ใต้รูปในแชท ผลจะแสดงที่นี่</p>
     {:else if s.state === "pending"}

@@ -20,7 +20,8 @@
     import PlatformIcon from "./ui/PlatformIcon.svelte";
 
     let { class: className = "" } = $props();
-    const TABS = [["all", "All"], ["line", "Line"], ["payment", "Payment"]];
+    // ทั้งหมด · ทั่วไป (เรื่องทั่วไป) · การเงิน (ฝาก/ถอน) — เจ้าของงานเปลี่ยนชื่อ 15 ต.ค. 2026 (เดิม All / Line / Payment)
+    const TABS = [["all", "ทั้งหมด"], ["line", "ทั่วไป"], ["payment", "การเงิน"]];
     const cnt = $derived(counts());
     const total = chatChannels().length;
     const shown = $derived(visible().filter((c) => st.tab === "all" || tabOf(c) === st.tab).sort(byRecent));

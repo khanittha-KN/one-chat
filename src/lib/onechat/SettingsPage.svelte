@@ -53,7 +53,7 @@
     import StickerField from "./ui/StickerField.svelte";
     import ImageField from "./ui/ImageField.svelte";
     import PasswordInput from "./ui/PasswordInput.svelte";
-    import { PACKS, TYPE_LBL, GUIDE, SET_TABS, stickerLabel, chanByName, PLATFORM } from "./data.js";
+    import { PACKS, TYPE_LBL, GUIDE, SET_TABS, stickerLabel, chanByName, PLATFORM, followersOf } from "./data.js";
     import PlatformIcon from "./ui/PlatformIcon.svelte";
     import { S, db, showPage, setTab, settingsAct, simIncoming } from "./store.svelte.js";
     import { snd, setSound, playChime, TONES, VOLS } from "./sound.svelte.js";
@@ -65,9 +65,16 @@
     let favQ = $state("");
     // Broadcast › เลือกผู้รับ: รายชื่อแชท (ชื่อที่แสดงใน LINE) ค้นหาด้วยชื่อ / username / chatId
     let bcQ = $state("");
-    const bcList = $derived(db.cases.filter((c) => (!chan || c.merchant === chan.id) && (!bcQ.trim() || [c.name, c.user.username, c.id].join(" ").toLowerCase().indexOf(bcQ.trim().toLowerCase()) >= 0)));
+    // ผู้รับที่เลือกได้ = ห้องแชทของ Channel นี้ (เคสในรายการสนทนา + ผู้ติดตามจำลอง) · bcList = หลังกรองด้วยคำค้น
+    const bcPool = $derived(
+        chan
+            ? db.cases.filter((c) => c.merchant === chan.id).map((c) => ({ id: c.id, name: c.name, user: c.user.username })).concat(followersOf(chan.id))
+            : [],
+    );
+    const bcList = $derived(bcPool.filter((c) => !bcQ.trim() || [c.name, c.user, c.id].join(" ").toLowerCase().indexOf(bcQ.trim().toLowerCase()) >= 0));
+    // ที่เลือกไว้แต่ไม่อยู่ใน Channel นี้ ไม่นับ (เปลี่ยน Channel แล้วตัวเลขไม่ค้าง)
     const bcAllOn = $derived(bcList.length > 0 && bcList.every((c) => S.bcSel.indexOf(c.id) >= 0));
-    const bcN = $derived(S.bcTo === "all" ? null : S.bcSel.length);
+    const bcN = $derived(S.bcTo === "all" ? null : S.bcSel.filter((id) => bcPool.some((c) => c.id === id)).length);
     // Channel ที่กำลังตั้งค่า (เปิดจากเฟืองของ Channel) ⇒ รู้ว่าเป็น LINE หรือ Telegram
     const chan = $derived(S.ch ? chanByName(S.ch) : null);
     const via = $derived(chan ? PLATFORM[chan.platform] : "");
@@ -88,7 +95,7 @@
         stk: ["ชุดสติ๊กเกอร์", "จัดเก็บชุดสติ๊กเกอร์ LINE ไว้ส่งให้ลูกค้าจากหน้าแชทได้อย่างรวดเร็ว"],
         qr: ["คีย์ลัด", "สร้างคำตอบสำเร็จรูปเป็นชุดรายการ — ข้อความ (แทรกอิโมจิได้) สติ๊กเกอร์ และรูปภาพ ส่งเรียงตามลำดับในคลิกเดียว"],
         bc: ["Broadcast — ยิงข้อความหาผู้ติดตาม", ""],
-        am: ["ข้อความอัตโนมัติ", "เมื่อลูกค้าพิมพ์ข้อความที่มีคำค้นที่ตั้งไว้ ระบบจะตอบกลับอัตโนมัติด้วยข้อความที่กำหนด — กฎเหล่านี้ใช้กับไลน์เอเย่น (LINE OA) ของช่องนี้เท่านั้น"],
+        am: ["ข้อความอัตโนมัติ", "เมื่อลูกค้าพิมพ์ข้อความที่มีคำค้นที่ตั้งไว้ ระบบจะตอบกลับอัตโนมัติด้วยข้อความที่กำหนด — รายการเหล่านี้ใช้กับไลน์เอเย่น (LINE OA) ของช่องนี้เท่านั้น"],
         sk: ["Secret Key", "คีย์สำหรับเชื่อมต่อ API ของช่องนี้"],
         pw: ["เปลี่ยนรหัสผ่าน", "เปลี่ยนรหัสผ่านสำหรับเข้าสู่ระบบของบัญชีคุณ"],
         gd: ["คู่มือการใช้งาน", "ขั้นตอนการใช้งาน OneChat สำหรับทีมแอดมิน"],
@@ -580,21 +587,24 @@
                 <Alert.Root data-tone="warning" role="status">
                     <TriangleAlert />
                     <Alert.Description class="text-foreground">
-                        {#if chan}
+                        {#if chan && !bcPool.length}
+                            <b>{chan.name} ยังไม่มีผู้ติดตามหรือห้องแชท</b> — ส่ง Broadcast ได้เมื่อมีลูกค้าเพิ่มเพื่อนหรือทักเข้ามาแล้ว
+                        {:else if chan}
                             ข้อความจะถูกส่ง<b class="inline-flex items-center gap-1 align-middle">ทาง <PlatformIcon p={chan.platform} label /></b> ของ <b>{chan.name}</b> หา
-                            <b>{bcN == null ? "ทุกห้องแชทของ Channel นี้" : bcN + " คนที่เลือก"}</b> ตามลำดับ part ด้านล่าง (ลากสลับลำดับได้) — ตรวจให้ชัดก่อนส่ง เพราะยกเลิกคนที่ส่งไปแล้วไม่ได้
+                            <b>{bcN == null ? "ทุกห้องแชทของ Channel นี้ (" + bcPool.length + " คน)" : bcN + " คนที่เลือก"}</b> ตามลำดับ part ด้านล่าง (ลากสลับลำดับได้) — ตรวจให้ชัดก่อนส่ง เพราะยกเลิกคนที่ส่งไปแล้วไม่ได้
                             {#if chan.platform === "telegram"}· ลูกค้า Telegram จะไม่ได้รับสติ๊กเกอร์ LINE{/if}
                         {:else}
                             <b>ยังไม่ได้เลือก Channel</b> — เปิด Broadcast จากปุ่มเฟืองของ Channel ในแผง "เลือกแชทที่แสดง" เพื่อให้รู้ว่าส่งทาง LINE หรือ Telegram
                         {/if}
                     </Alert.Description>
                 </Alert.Root>
+                <!-- ผู้รับ + ข้อความที่จะส่ง รวมเป็นการ์ดเดียว (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
                 <Card.Root>
-                    <Card.Header>
-                        <Card.Title>ผู้รับ</Card.Title>
-                        {#if bcN != null}<Card.Action class="text-muted-foreground self-center text-sm">เลือกแล้ว <b class="text-foreground tabular-nums">{bcN}</b> คน</Card.Action>{/if}
-                    </Card.Header>
                     <Card.Content class="gap-3">
+                        <div class="flex flex-wrap items-baseline gap-x-2">
+                            <h2 class="text-sm font-bold">ผู้รับ</h2>
+                            {#if bcN != null}<span class="text-muted-foreground ms-auto text-sm">เลือกแล้ว <b class="text-foreground tabular-nums">{bcN}</b> จาก <span class="tabular-nums">{bcPool.length}</span> คน</span>{/if}
+                        </div>
                         <ToggleGroup.Root type="single" variant="outline" class="self-start" aria-label="ผู้รับ Broadcast" bind:value={() => S.bcTo, (t) => t && settingsAct("bc-to", 0, { t })}>
                             <ToggleGroup.Item value="all"><Users />ทุกคน</ToggleGroup.Item>
                             <ToggleGroup.Item value="pick"><UserCheck />เลือกผู้รับ</ToggleGroup.Item>
@@ -612,18 +622,19 @@
                                     <label class="hover:bg-muted/50 flex cursor-pointer items-center gap-3 border-b px-3 py-2 text-sm last:border-b-0">
                                         <Checkbox checked={S.bcSel.indexOf(rc.id) >= 0} onCheckedChange={() => settingsAct("bc-pick", 0, { id: rc.id })} />
                                         <span class="min-w-0 flex-1 truncate">{rc.name}</span>
-                                        <span class="text-muted-foreground shrink-0 text-xs tabular-nums">{rc.user.username}</span>
+                                        <span class="text-muted-foreground shrink-0 text-xs tabular-nums">{rc.user}</span>
                                     </label>
                                 {:else}
-                                    <p class="text-muted-foreground px-3 py-4 text-center text-sm">ไม่พบรายชื่อ "{bcQ}"</p>
+                                    <p class="text-muted-foreground px-3 py-4 text-center text-sm">
+                                        {#if bcQ.trim()}ไม่พบรายชื่อ "{bcQ.trim()}" — ลองค้นด้วยชื่ออื่นหรือ chatId{:else}ยังไม่มีลูกค้าทักเข้ามาใน Channel นี้{/if}
+                                    </p>
                                 {/each}
                             </div>
                         {/if}
-                    </Card.Content>
-                </Card.Root>
-                <Card.Root>
-                    <Card.Header><Card.Title>ข้อความที่จะส่ง</Card.Title><Card.Description>{S.bc.length} part</Card.Description></Card.Header>
-                    <Card.Content class="gap-4">
+                        <div class="flex flex-wrap items-baseline gap-x-2 border-t pt-4">
+                            <h2 class="text-sm font-bold">ข้อความที่จะส่ง</h2>
+                            <span class="text-muted-foreground text-xs tabular-nums">{S.bc.length} part</span>
+                        </div>
                         {@render itemRows(S.bc, "bc")}
                         {@render addBtns("bc", 10, S.bc.length)}
                         <Field.Field orientation="horizontal" class="border-t pt-3">
@@ -645,7 +656,7 @@
                             </div>
                         {:else}
                             <!-- สีปุ่มตามช่องทาง: LINE = เขียวหลัก · Telegram = ฟ้า Telegram (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
-                            <Button class={"self-end " + (chan?.platform === "telegram" ? "bg-telegram text-telegram-foreground hover:bg-telegram/90" : "")} disabled={bcN === 0 || !chan} onclick={act("bc-send")}
+                            <Button class={"self-end " + (chan?.platform === "telegram" ? "bg-telegram text-telegram-foreground hover:bg-telegram/90" : "")} disabled={bcN === 0 || !chan || !bcPool.length} onclick={act("bc-send")}
                                 ><Megaphone data-icon="inline-start" />{S.bcSched ? "ตั้งเวลาส่ง" : "ส่ง"}{bcN == null ? "หาทุกคน" : "หา " + bcN + " คน"}{chan ? " ทาง " + via : ""}</Button
                             >
                         {/if}
@@ -681,7 +692,7 @@
                 </Card.Root>
             {:else if S.tab === "am"}
                 <Card.Root>
-                    {@render listHead("กฎทั้งหมด", S.am.length, "สร้างกฎใหม่", "am-new")}
+                    {@render listHead("รายการตอบกลับอัตโนมัติ", S.am.length, "เพิ่มการตอบกลับ", "am-new")}
                     <Card.Content>
                         <Item.Group class="gap-2">
                             {#each S.am as x, i (i)}
@@ -692,14 +703,14 @@
                                 {/snippet}
                                 {#snippet a()}
                                     <label class="flex min-h-8 items-center gap-2 pe-1 text-sm">
-                                        <Switch checked={x.on} onCheckedChange={act("am-tog", i)} aria-label={"เปิดใช้งานกฎ " + x.name} />{x.on ? "เปิด" : "ปิด"}
+                                        <Switch checked={x.on} onCheckedChange={act("am-tog", i)} aria-label={"เปิดใช้งานการตอบกลับ " + x.name} />{x.on ? "เปิด" : "ปิด"}
                                     </label>
                                     <Button variant="outline" size="sm" onclick={act("am-edit", i)}><Pencil data-icon="inline-start" />แก้ไข</Button>
                                     <Button variant="destructive" size="sm" onclick={act("am-del", i)}><Trash data-icon="inline-start" />ลบ</Button>
                                 {/snippet}
                                 {@render listRow(t, d, a, null, S.sheet === "am" && S.ed.am === i)}
                             {:else}
-                                <p class="text-muted-foreground text-sm">ยังไม่มีกฎ — กด "สร้างกฎใหม่"</p>
+                                <p class="text-muted-foreground text-sm">ยังไม่มีการตอบกลับอัตโนมัติ — กด "เพิ่มการตอบกลับ" เพื่อตั้งคำค้นและข้อความตอบกลับ</p>
                             {/each}
                         </Item.Group>
                     </Card.Content>
@@ -707,7 +718,7 @@
                 {#snippet amBody()}
                 <Field.Group class="gap-4">
                     <Field.Field>
-                        <Field.Label for="amName">ชื่อกฎ</Field.Label>
+                        <Field.Label for="amName">ชื่อรายการ</Field.Label>
                         <Input id="amName" autocomplete="off" bind:value={S.f.amName} />
                     </Field.Field>
                     <Field.Field>
@@ -727,12 +738,12 @@
                     </Field.Field>
                     <Field.Field orientation="horizontal">
                         <Checkbox id="amOn" checked={S.f.amOn !== false} onCheckedChange={(v) => (S.f.amOn = v)} />
-                        <Field.Label for="amOn" class="font-normal">เปิดใช้งานกฎนี้</Field.Label>
+                        <Field.Label for="amOn" class="font-normal">เปิดใช้งานรายการนี้</Field.Label>
                     </Field.Field>
                 </Field.Group>
                 {/snippet}
-                {@render formSheet("am", S.ed.am != null, "สร้างกฎใหม่", "แก้ไขกฎ: " + (S.ed.am != null ? S.am[S.ed.am]?.name : ""),
-                    "เมื่อลูกค้าพิมพ์ข้อความที่ตรงคำค้น ระบบจะตอบกลับด้วยข้อความที่กำหนด", amBody, "am-save", "บันทึกกฎ", "บันทึกการแก้ไข", "am-cancel")}
+                {@render formSheet("am", S.ed.am != null, "เพิ่มการตอบกลับ", "แก้ไขการตอบกลับ: " + (S.ed.am != null ? S.am[S.ed.am]?.name : ""),
+                    "เมื่อลูกค้าพิมพ์ข้อความที่ตรงคำค้น ระบบจะตอบกลับด้วยข้อความที่กำหนด", amBody, "am-save", "บันทึกการตอบกลับ", "บันทึกการแก้ไข", "am-cancel")}
             {:else if S.tab === "sk"}
                 <Card.Root>
                     <Card.Content class="gap-4">

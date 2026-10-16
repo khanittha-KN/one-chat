@@ -41,6 +41,8 @@ export const merchants = [
     { id: "99queenvip", name: "99Queen VIP", chats: 5982, platform: "line" },
     { id: "99queencs", name: "99Queen Support", chats: 18107, platform: "line" },
     { id: "99queentg", name: "99Queen Telegram", chats: 932, platform: "telegram" },
+    // OA ใหม่ที่ยังไม่มีใครทัก — ตัวอย่างผู้รับ Broadcast ว่าง (เจ้าของงานขอ 15 ต.ค. 2026)
+    { id: "99queenpromo", name: "99Queen โปรโมชั่น", chats: 0, platform: "line" },
     // ⚠ 2 ช่องนี้ไม่มีในต้นฉบับ — ทดสอบ Channel ที่ใช้ LINE LIFF เท่านั้น (ไม่มีแชต ⇒ ไม่แสดงในแผงซ้าย)
     { id: "99queenmember", name: "99Queen Member", chats: 0, platform: "line" },
     { id: "88kingpromo", name: "88King Promo", chats: 0, platform: "line" },
@@ -74,6 +76,7 @@ const CHANNEL_META = {
     "99queenvip": { agent: "agB", chat: true, liff: true },
     "99queencs": { agent: "agB", chat: true, liff: false },
     "99queentg": { agent: "agB", chat: true, liff: false },
+    "99queenpromo": { agent: "agB", chat: true, liff: false },
     "99queenmember": { agent: "agB", chat: false, liff: true },
     "88kingpromo": { agent: "agC", chat: false, liff: true }, // LSM88King ไม่มี Channel สำหรับแชต ⇒ ไม่แสดงทั้งกลุ่ม
 };
@@ -94,6 +97,20 @@ export const lineNo = { "55goal1": 11, "99queen1": 12, "99queenvip": 13, "55goal
 // โลโก้ธนาคาร: รูปโลโก้จริงจาก github.com/omise/banks-logo (MIT · static/banks/<code>.svg · เจ้าของงานให้ใช้ 14 ต.ค. 2026)
 // bg = สีประจำธนาคารตาม banks.json ของ omise · fg = สีโลโก้ (กรุงศรีพื้นเหลืองใช้โลโก้สีเข้ม)
 // TTB: banks.json ให้ #ECF0F1 (เทาอ่อน) โลโก้ขาวจะหาย ⇒ ใช้กรมท่า #002D63 ของ ttb แทน
+/* ผู้ติดตาม / ห้องแชทของ Channel สำหรับเลือกผู้รับ Broadcast (ข้อมูลจำลอง · เจ้าของงานขอ 15 ต.ค. 2026)
+   แสดงสถานการณ์ครบ: ว่าง (99Queen โปรโมชั่น 0 คน) · น้อย · เยอะ (55Goal VIP 150 คน · 99Queen 1 80 คน)
+   ระบบจริงดึงรายชื่อห้องแชทของ OA จาก API · id ไม่ซ้ำกับ id เคส (ขึ้นต้นด้วย id ของ Channel) */
+const FOLLOWERS = { "55goalvip": 150, "99queen1": 80, "55goal1": 36, "99queen2": 24, "99queenvip": 18, "55goal2": 12, "99queencs": 9, "55goalcs": 6, "55goaltg": 4, "99queentg": 3, "99queenpromo": 0 };
+const F_FIRST = ["สมชาย", "สุดา", "Nok", "Ton", "มานี", "ปิยะ", "Bee", "กิตติ", "Fah", "วิภา", "Mild", "อนันต์", "Pond", "ศิริ", "June", "ธนา", "Ploy", "ชาตรี", "Mint", "รัตนา"];
+const F_LAST = ["ใจดี", "S.", "รุ่งเรือง", "K.", "ทองคำ", "P.", "ศรีสุข", "W.", "บุญมา", "T."];
+export function followersOf(chId) {
+    const n = FOLLOWERS[chId] ?? 8;
+    return Array.from({ length: n }, (_, i) => {
+        const name = F_FIRST[(i * 7 + chId.length) % F_FIRST.length] + " " + F_LAST[(i * 3) % F_LAST.length];
+        return { id: chId + "-f" + i, name, user: "U" + (1000 + ((i * 7919 + chId.length * 31) % 9000)) };
+    });
+}
+
 export const BANKS = [
     { code: "KBANK", name: "กสิกรไทย", bg: "#138f2d", fg: "#ffffff" },
     { code: "SCB", name: "ไทยพาณิชย์", bg: "#4e2e7f", fg: "#ffffff" },
@@ -146,13 +163,13 @@ function mkUser(n) {
 export function makeHist(n, kind) {
     if (n === 6 || (n === 3 && kind === "wd")) return [];
     const amts = [100, 200, 253, 300, 500, 1000, 150, 400, 800];
-    const cnt = 3 + ((n + (kind === "wd" ? 2 : 0)) % 7);
+    const cnt = 6 + ((n * 3 + (kind === "wd" ? 2 : 0)) % 10); // อย่างละ 6–15 รายการ ⇒ ประวัติมีหลายหน้า (หน้าละ 10)
     const pad = (v) => ("0" + v).slice(-2);
     const out = [];
     for (let i = 0; i < cnt; i++) {
         out.push({
             amt: amts[(n * 3 + i * 2 + (kind === "wd" ? 1 : 0)) % amts.length],
-            time: 5 - Math.floor(i / 2) + " ต.ค. 2569 " + pad(9 + ((n + i * 3) % 12)) + ":" + pad((n * 7 + i * 13) % 60),
+            time: 14 - Math.floor(i / 2) + " ต.ค. 2569 " + pad(9 + ((n + i * 3) % 12)) + ":" + pad((n * 7 + i * 13) % 60),
             ok: kind === "dep" ? i % 4 !== 3 : i % 3 !== 2,
             ref: (kind === "dep" ? "D" : "W") + (100000 + n * 1111 + i * 37),
         });
@@ -231,7 +248,7 @@ export function seedCases() {
         mkSlipCase("c13", 13, "Teerapat M.", "deposit", "55goalvip", "open", "admin02", 30, "8 นาที", "kbank", "real", [["cust", "ฝาก {amt} ครับ"], ["admin", ACC, "admin02"], ["cust", "โอนแล้วครับ"]]),
         mkSlipCase("c14", 14, "Sorawit", "withdraw", "99queencs", "open", "admin03", 20, "10 นาที", "bbl", "real", [["cust", "ถอน {amt} ครับ"], ["cust", "ส่งสลิปให้ตรวจสอบครับ"]]),
         mkSlipCase("c15", 15, "จิรภัทร", "withdraw", "55goal1", "open", "admin01", 25, "12 นาที", "kbank", "fake", [["cust", "ขอถอน {amt} ค่ะ"], ["cust", "ส่งสลิปให้แล้วนะคะ"]]),
-        mkSlipCase("c16", 16, "Pongsak", "deposit", "55goalcs", "waiting", null, 15, "30 วินาที", "bbl", "fake", [["cust", "ฝาก {amt} ครับ"], ["cust", "โอนแล้วนะครับ"]]),
+        mkSlipCase("c16", 16, "Pongsak", "deposit", "55goaltg", "waiting", null, 15, "30 วินาที", "bbl", "fake", [["cust", "ฝาก {amt} ครับ"], ["cust", "โอนแล้วนะครับ"]]),
     );
     /* เคสสถานการณ์ใหม่จากเว็บต้นฉบับ (15 ต.ค. 2026) — ยูสโดนล็อก · ถอนติดเทิร์น · ลูกค้าใหม่ยังไม่ผูกสมาชิก */
     const line3 = (who, text, by) => ({ who, text, by });
@@ -267,10 +284,10 @@ export function seedCases() {
     byId("c12").extraDep = [{ amt: 350, time: "12:40", st: "รอตรวจสลิป" }, { amt: 100, time: "11:55", st: "รอเติมเงิน" }];
     byId("c15").extraWd = [{ amt: 300, time: "11:40", st: "รอทำรายการ" }];
     const now = Date.now();
-    // แสดงครบทุกสีในคำอธิบาย (เจ้าของงานสั่ง 15 ต.ค. 2026): ฝาก c1 c9 · ถอน c2 c18 c5 · เรื่องทั่วไป c3 c17 c6 c19 · ปิดเคส c4 c8 · c7 = ลูกค้าจาก Telegram
+    // แสดงครบทุกสีในคำอธิบาย (เจ้าของงานสั่ง 15 ต.ค. 2026): ฝาก c1 c9 · ถอน c2 c18 c5 · เรื่องทั่วไป c3 c17 c6 c19 · ปิดเคส c4 c8 · c7 · c16 = ลูกค้าจาก Telegram (99Queen · 55Goal)
     // c6 · c19 = ลูกค้าใหม่ยังไม่ผูกสมาชิก
     // เคสอื่นข้างบนเก็บไว้ ไม่แสดง — เพิ่ม id ใน SHOWN เพื่อเอากลับมา
-    const SHOWN = ["c1", "c9", "c2", "c18", "c3", "c17", "c6", "c19", "c5", "c4", "c8", "c7"];
+    const SHOWN = ["c1", "c9", "c2", "c18", "c3", "c17", "c6", "c19", "c5", "c4", "c8", "c7", "c16"];
     const shown = SHOWN.map(byId);
     shown.forEach((c) => {
         c.at = now - agoSecs(c.ago) * 1000; // เวลาข้อความล่าสุด (ms) — ใช้เรียงรายการแชท
@@ -409,7 +426,7 @@ export const GUIDE = [
         "โลโก้หน้าชื่อ Channel บอกช่องทาง: โลโก้ LINE (เขียว) = LINE · โลโก้ Telegram (ฟ้า เครื่องบินกระดาษ) = Telegram (มีในรายการสนทนาและหัวห้องแชทด้วย)",
     ]],
     [InboxIcon, "อ่านรายการสนทนา", [
-        "กรองรายการด้วยแท็บ All / Line / Payment ที่หัวรายการ",
+        "กรองรายการด้วยแท็บ ทั้งหมด / ทั่วไป / การเงิน ที่หัวรายการ (การเงิน = ฝากและถอน)",
         "สีพื้นและแถบสีหน้าแถวบอกประเภทเคส: เหลือง = ฝาก · ส้ม = ถอน · แดง = เรื่องทั่วไป · ขาว = ปิดเคสแล้ว",
         "ป้ายตัวเลขสีแดงท้ายแถว = ข้อความใหม่ที่ยังไม่ได้เปิดอ่าน · มีข้อความลูกค้าเข้าจะมีเสียงแจ้งเตือน (เปิด/ปิดที่ปุ่มกระดิ่งบนแถบบน)",
         "ป้าย \"รอแอดมินรับเคส\" = ยังไม่มีใครรับ · ป้ายชื่อแอดมิน = คนที่รับเคสอยู่ · กดที่แถวเพื่อเปิดห้องแชท",
@@ -425,7 +442,7 @@ export const GUIDE = [
         "ปุ่ม ◫ ที่หัวห้องแชทซ่อน/แสดงแผงข้อมูลลูกค้า (จอกว้าง)",
     ]],
     [UserSearchIcon, "ตรวจสอบข้อมูลสมาชิก", [
-        "แผงขวา: ปุ่ม \"ไปหน้า Auto fast\" อยู่บนสุด · สถานะไลน์ / ตรวจสอบสลิป / ประวัติฝาก-ถอน / สมัครสมาชิก เป็นปุ่ม กดแล้วเปิดหน้าต่าง (ไลน์หลุดหรือมีสลิปรอตรวจจะกางเป็นการ์ดให้เอง) · การ์ดที่เหลือกดหัวการ์ดเพื่อพับ/กาง",
+        "แถบบน: ปุ่ม \"กลับหน้า Smart Liff\" ข้างโลโก้ · ปุ่ม \"ไปหน้า Auto fast\" ฝั่งขวา · แผงขวา: สถานะไลน์ / ตรวจสอบสลิป / ประวัติฝาก-ถอน / สมัครสมาชิก เป็นปุ่ม กดแล้วเปิดหน้าต่าง (ไลน์หลุดหรือมีสลิปรอตรวจจะกางเป็นการ์ดให้เอง) · การ์ดที่เหลือกดหัวการ์ดเพื่อพับ/กาง",
         "การ์ด \"ตรวจสอบ\": พิมพ์ username แล้วกด \"ตรวจสอบ\" — แชทที่ยังไม่ผูกสมาชิกจะผูกกับสมาชิกที่พบ · \"เลิกผูก\" เพื่อยกเลิก",
         "ดูสถานะ เทิร์น และโปรโมชั่นของสมาชิกที่ผูกไว้ · การ์ด \"บัญชีธนาคาร\" แสดงบัญชีพร้อมสถานะ อนุมัติ / รออนุมัติ / ไม่อนุมัติ และผลตรวจชื่อ",
         "เปลี่ยนรหัสผ่านสมาชิกที่ปุ่ม \"เปลี่ยนรหัสผ่านลูกค้า\" — กรอกรหัสใหม่สองครั้ง แล้วแจ้งรหัสใหม่ให้ลูกค้าทางแชทเอง",

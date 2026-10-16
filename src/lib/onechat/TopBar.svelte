@@ -1,6 +1,8 @@
-<!-- แถบบน 64px — DESIGN-SYSTEM §9.1: ปุ่มเมนูเฉพาะมือถือ · โลโก้ · ชื่อหน้า · สลับโหมด · เมนู -->
+<!-- แถบบน 64px — DESIGN-SYSTEM §9.1: โลโก้ · กลับหน้า Smart Liff · (ว่าง) · ไปหน้า Auto fast · สลับธีม · เสียง · เมนู -->
 <script>
     import MenuIcon from "@lucide/svelte/icons/menu";
+    import ArrowLeft from "@lucide/svelte/icons/arrow-left";
+    import ExternalLink from "@lucide/svelte/icons/external-link";
     import MessageCircle from "@lucide/svelte/icons/message-circle";
     import Moon from "@lucide/svelte/icons/moon";
     import Sun from "@lucide/svelte/icons/sun";
@@ -13,7 +15,7 @@
     import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
     import { Separator } from "$lib/components/ui/separator/index.js";
     import { MENU_GROUPS } from "./data.js";
-    import { st, go, showPage, ME } from "./store.svelte.js";
+    import { st, go, showPage, ME, toast } from "./store.svelte.js";
     import { theme, setTheme, THEMES } from "$lib/theme.svelte.js";
 </script>
 
@@ -25,11 +27,18 @@
     >
         <MessageCircle class="size-6" aria-hidden="true" />OneChat
     </button>
+    <!-- ชื่อหน้า "• แชท" เอาออกจากจอ (เจ้าของงานสั่ง 15 ต.ค. 2026) — คงหัวข้อไว้ให้โปรแกรมอ่านหน้าจอ -->
+    <h1 class="sr-only">แชท (ออนไลน์)</h1>
     <Separator orientation="vertical" class="hidden h-5 sm:block" />
-    <h1 class="hidden items-center gap-2 text-base font-bold sm:flex">
-        <span class="bg-success size-2 rounded-full" aria-hidden="true"></span>แชท<span class="sr-only">(ออนไลน์)</span>
-    </h1>
+    <!-- กลับหน้า Smart Liff (ระบบหลักที่เปิด OneChat มา) · ถัดจากโลโก้ -->
+    <Button variant="outline" size="sm" aria-label="กลับหน้า Smart Liff" onclick={() => toast("กลับหน้า Smart Liff (ยังไม่มีลิงก์จริง)")}>
+        <ArrowLeft data-icon="inline-start" /><span class="hidden sm:inline">กลับหน้า Smart Liff</span>
+    </Button>
     <span class="flex-1"></span>
+    <!-- ไปหน้า Auto fast — ย้ายจากแผงลูกค้ามาไว้บนแถบบน (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
+    <Button data-tone="success" data-fill="solid" size="sm" aria-label="ไปหน้า Auto fast" onclick={() => toast("ไปยัง Auto fast (ยังไม่มีลิงก์จริง)")}>
+        <ExternalLink data-icon="inline-start" /><span class="hidden md:inline">ไปหน้า Auto fast</span>
+    </Button>
     <ToggleGroup.Root
         type="single"
         variant="outline"
