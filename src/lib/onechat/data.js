@@ -224,7 +224,9 @@ export function seedCases() {
         { id: "c3", name: "แนน กนกวรรณ", type: "general", merchant: "99queencs", status: "open", admin: "admin03", secs: 12, ago: "9 นาที", lineOk: false, wd: 0, user: mkUser(3),
             msgs: [{ who: "cust", text: "สอบถามโปรโมชั่นหน่อยค่ะ", t: "13:50" }, { who: "cust", text: "ทักไปหลายรอบแล้วไม่เห็นตอบเลยค่ะ", t: "13:51" }, { who: "sys", text: "ไลน์หลุด กรุณากด Verify ที่แผงขวา", t: "13:51" }] },
         { id: "c4", name: "Ploy", type: "deposit", merchant: "55goal1", status: "closed", admin: "admin02", secs: 210, ago: "36 นาที", lineOk: true, wd: 0, user: mkUser(4),
-            msgs: [{ who: "cust", text: "ฝาก " + said("kbank") + " ค่ะ", t: "13:10" }, { who: "admin", by: "admin02", text: ACC, t: "13:11" }, { who: "cust", text: "โอนแล้วค่ะ", t: "13:13" }, slipMsg("kbank", "13:13", { checked: true }), { who: "sys", text: "เติมเงิน " + money(SLIPS.kbank.amt) + " บาท ให้ " + usernameOf(4) + " เรียบร้อย", t: "13:14" }, { who: "cust", text: "ได้รับแล้วค่ะ ขอบคุณค่ะ", t: "13:15" }], closedBy: "admin02", closedAt: "13:19" },
+            msgs: [{ who: "cust", text: "ฝาก " + said("kbank") + " ค่ะ", t: "13:10" }, { who: "admin", by: "admin02", text: ACC, t: "13:11" }, { who: "cust", text: "โอนแล้วค่ะ", t: "13:13" }, slipMsg("kbank", "13:13", { checked: true }), { who: "sys", text: "เติมเงิน " + money(SLIPS.kbank.amt) + " บาท ให้ " + usernameOf(4) + " เรียบร้อย", t: "13:14" },
+                // ข้อความระบบลูกค้าไม่เห็น ⇒ แอดมินแจ้งลูกค้าก่อน ลูกค้าจึงตอบกลับได้ (เจ้าของงานทัก 16 ต.ค. 2026)
+                { who: "admin", by: "admin02", text: "เติมเงิน " + money(SLIPS.kbank.amt) + " บาท เข้ายูส " + usernameOf(4) + " เรียบร้อยแล้วค่ะ ตรวจสอบยอดในเกมได้เลยนะคะ", t: "13:14" }, { who: "cust", text: "ได้รับแล้วค่ะ ขอบคุณค่ะ", t: "13:15" }], closedBy: "admin02", closedAt: "13:19" },
         { id: "c5", name: "เบญ", type: "withdraw", merchant: "55goal2", status: "waiting", admin: null, secs: 64, ago: "1 นาที", lineOk: true, wd: 0, user: mkUser(5),
             msgs: [{ who: "cust", text: "ขอถอน 500 ค่ะ", t: "13:52" }, { who: "cust", text: "รอนานแล้วนะคะ ยังไม่เข้าเลย", t: "13:53" }] },
         { id: "c6", name: "Mintra S.", type: "general", merchant: "55goalcs", status: "waiting", admin: null, secs: 20, ago: "20 วินาที", lineOk: true, wd: 0, user: mkUser(6),
@@ -421,7 +423,7 @@ export const TYPE_LBL = { text: "ข้อความ", sticker: "สติ๊�
 export const GUIDE = [
     [BuildingIcon, "เลือกแชทที่แสดง", [
         "กดปุ่ม \"เลือกแชทที่แสดง\" ใต้หัวข้อการสนทนา — แผงจะเลื่อนออกมาจากด้านซ้าย ตัวเลขบนปุ่มคือจำนวน Channel ที่เลือกอยู่",
-        "ในแผงเรียงเป็น Organization → Agent → LINE Channel · ติ๊ก Channel ที่ต้องการดูแชท · ติ๊กที่ชื่อ Agent = เลือกทุก Channel ของ Agent นั้น · ติ๊ก \"ทั้งหมด\" = เลือกทุก Channel · ไม่ติ๊กเลย = ไม่แสดงแชท",
+        "ในแผงเรียงเป็น Agent → Channel · ติ๊ก Channel ที่ต้องการดูแชท · ติ๊กที่ชื่อ Agent = เลือกทุก Channel ของ Agent นั้น · ติ๊ก \"ทั้งหมด\" = เลือกทุก Channel · ไม่ติ๊กเลย = ไม่แสดงแชท",
         "ปุ่มเฟืองท้าย Channel เปิดหน้าตั้งค่าของ Channel นั้น",
         "โลโก้หน้าชื่อ Channel บอกช่องทาง: โลโก้ LINE (เขียว) = LINE · โลโก้ Telegram (ฟ้า เครื่องบินกระดาษ) = Telegram (มีในรายการสนทนาและหัวห้องแชทด้วย)",
     ]],

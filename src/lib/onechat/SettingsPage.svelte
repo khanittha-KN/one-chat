@@ -53,15 +53,26 @@
     import StickerField from "./ui/StickerField.svelte";
     import ImageField from "./ui/ImageField.svelte";
     import PasswordInput from "./ui/PasswordInput.svelte";
-    import { PACKS, TYPE_LBL, GUIDE, SET_TABS, stickerLabel, chanByName, PLATFORM, followersOf } from "./data.js";
+    import { PACKS, TG_PACKS, TYPE_LBL, GUIDE, SET_TABS, stickerLabel, chanByName, PLATFORM, followersOf } from "./data.js";
     import PlatformIcon from "./ui/PlatformIcon.svelte";
     import { S, db, showPage, setTab, settingsAct, simIncoming } from "./store.svelte.js";
     import { snd, setSound, playChime, TONES, VOLS } from "./sound.svelte.js";
 
     const act = (a, i, el) => () => settingsAct(a, i, el);
-    const pk = $derived(PACKS.filter((p) => p[0] === S.pack)[0]);
-    // ค้นหาชุดในคลังด้วยเลขชุด (packageId) — เว็บต้นฉบับ 15 ต.ค. 2026
-    const packsOf = (q) => PACKS.filter((p) => !(q || "").trim() || String(p[0]).indexOf(q.trim()) >= 0);
+    // คลังสติ๊กเกอร์ตามช่องทางของ Channel (16 ต.ค. 2026): LINE = ชุดพื้นฐานของ LINE · Telegram = ชุด Telegram (ต้นแบบ)
+    //   รูปแบบเดียวกัน { id, name, n, keys } · สติ๊กเกอร์โปรด/ชุดที่สร้างแสดงเฉพาะของช่องทางนั้น (คีย์ Telegram ขึ้นต้น "tg-")
+    const isTg = $derived(chan?.platform === "telegram");
+    const LIB = $derived(
+        isTg
+            ? TG_PACKS.map((p) => ({ id: p.id, name: p.name, n: p.codes.length, keys: p.codes.map((x) => "tg-" + x) }))
+            : PACKS.map((p) => ({ id: p[0], name: "ชุด " + p[0], n: p[1], keys: Array.from({ length: p[1] }, (_, i) => p[0] + "-" + i) })),
+    );
+    const ofPlat = (k) => (k.startsWith("tg-") ? isTg : !isTg);
+    const favs = $derived(S.fav.filter(ofPlat));
+    const setsShown = $derived(S.stk.map((x, i) => ({ x, i })).filter(({ x }) => !x.items || !x.items.length ? !isTg : ofPlat(x.items[0])));
+    const pk = $derived(LIB.filter((p) => p.id === S.pack)[0]);
+    // ค้นหาชุดในคลัง: LINE ด้วยเลขชุด (packageId — เว็บต้นฉบับ 15 ต.ค. 2026) · Telegram ด้วยชื่อชุด
+    const packsOf = (q) => LIB.filter((p) => !(q || "").trim() || String(p.id).indexOf(q.trim()) >= 0 || p.name.indexOf(q.trim()) >= 0);
     let favQ = $state("");
     // Broadcast › เลือกผู้รับ: รายชื่อแชท (ชื่อที่แสดงใน LINE) ค้นหาด้วยชื่อ / username / chatId
     let bcQ = $state("");
@@ -81,7 +92,7 @@
     const amMode = $derived(S.f.amMode || "มีคำนี้");
     // สติ๊กเกอร์โปรดเลือกชุดจากคลังแยกจากแผงสร้างชุด (ไม่ปนกัน)
     let favPack = $state(null);
-    const fpk = $derived(PACKS.filter((p) => p[0] === favPack)[0]);
+    const fpk = $derived(LIB.filter((p) => p.id === favPack)[0]);
     const editingName = $derived(S.ed.stk != null && S.stk[S.ed.stk] ? S.stk[S.ed.stk].name : "");
     // ลากจัดลำดับรายการ (คีย์ลัด · Broadcast)
     let armed = $state(null);
@@ -92,7 +103,7 @@
         gen: ["ตั้งค่าทั่วไป", "เสียงแจ้งเตือน · ส่งข้อความหลังปิดเคส"],
         flex: ["Flex Card → OA Manager", "เลือกการ์ดจาก OA Manager ให้ตรงกับ Flex Card ของ SmartLIFF เพื่อส่งผ่าน chat.line.biz (ไม่เสียโควต้า)"],
         mgr: ["Manager Session", "บันทึก session ของ manager.line.biz เพื่อให้ระบบสร้าง OA Manager Card อัตโนมัติได้"],
-        stk: ["ชุดสติ๊กเกอร์", "จัดเก็บชุดสติ๊กเกอร์ LINE ไว้ส่งให้ลูกค้าจากหน้าแชทได้อย่างรวดเร็ว"],
+        stk: ["ชุดสติ๊กเกอร์", "จัดเก็บชุดสติ๊กเกอร์ไว้ส่งให้ลูกค้าจากหน้าแชทได้อย่างรวดเร็ว — คลังตามช่องทางของ Channel (LINE / Telegram)"],
         qr: ["คีย์ลัด", "สร้างคำตอบสำเร็จรูปเป็นชุดรายการ — ข้อความ (แทรกอิโมจิได้) สติ๊กเกอร์ และรูปภาพ ส่งเรียงตามลำดับในคลิกเดียว"],
         bc: ["Broadcast — ยิงข้อความหาผู้ติดตาม", ""],
         am: ["ข้อความอัตโนมัติ", "เมื่อลูกค้าพิมพ์ข้อความที่มีคำค้นที่ตั้งไว้ ระบบจะตอบกลับอัตโนมัติด้วยข้อความที่กำหนด — รายการเหล่านี้ใช้กับไลน์เอเย่น (LINE OA) ของช่องนี้เท่านั้น"],
@@ -104,6 +115,27 @@
     // ข้อความหลังปิดเคสที่ใช้ได้จริง (ช่องว่างไม่นับ)
     const ccSet = $derived(S.cc.filter((x) => (x.t === "image" ? x.src : x.v.trim())));
 </script>
+
+{#snippet chanLabel()}
+    {#if chan}<PlatformIcon p={chan.platform} /><span class="min-w-0 truncate">{chan.name}</span>{:else}ตั้งค่ารวม{/if}
+{/snippet}
+
+{#snippet navList(after)}
+    <!-- tablet/มือถือ: แบบแท็บ (เจ้าของงานให้ลอง 16 ต.ค. 2026) — กรอบพื้นเทา หมวดที่เปิดอยู่เป็นแผ่นขาวยกขึ้น เหมือน Tabs ของ shadcn · ขึ้นบรรทัดใหม่เมื่อเต็ม (ลองแบบช่องเท่ากันแล้ว เจ้าของงานให้กลับแบบนี้)
+         จอคอมเป็นรายการแนวตั้งเหมือนเดิม -->
+    <nav aria-label="เมนูตั้งค่า" class="flex flex-wrap gap-1 max-lg:bg-muted max-lg:rounded-lg max-lg:p-1 lg:flex-col">
+        {#each SET_TABS as [k, Icon, label] (k)}
+            <Button
+                variant="ghost"
+                class={"stab h-10 justify-start max-lg:h-8 max-lg:px-2.5 " + (S.tab === k ? "bg-muted font-bold max-lg:bg-background max-lg:text-foreground max-lg:shadow-sm" : "max-lg:text-muted-foreground max-lg:hover:bg-background/60")}
+                aria-current={S.tab === k ? "page" : undefined}
+                onclick={() => (setTab(k), after?.())}><Icon data-icon="inline-start" aria-hidden="true" />{label}</Button
+            >
+        {/each}
+        <!-- ลิงก์ออกไปหน้า Line Liff (เว็บต้นฉบับ 15 ต.ค. 2026) -->
+        <Button variant="ghost" class="stab max-lg:text-muted-foreground max-lg:hover:bg-background/60 h-10 justify-start max-lg:h-8 max-lg:px-2.5" onclick={() => (settingsAct("liff"), after?.())}><ExternalLink data-icon="inline-start" aria-hidden="true" />ไปหน้า Line Liff</Button>
+    </nav>
+{/snippet}
 
 {#snippet smsg(k)}
     {#if S.msg[k]}
@@ -162,7 +194,7 @@
                 >
                 <Badge variant="secondary" class="tabular-nums">{i + 1}</Badge>
                 <span class="itype text-muted-foreground w-16 shrink-0 text-xs">{TYPE_LBL[x.t]}</span>
-                <Item.Content class="min-w-0">
+                <Item.Content class="min-w-44">
                     {#if x.t === "text"}
                         <Textarea class="min-h-9 py-1.5" rows="1" placeholder="ข้อความ" aria-label={"ข้อความ " + (i + 1)} bind:value={x.v} />
                     {:else if x.t === "sticker"}
@@ -190,11 +222,12 @@
 {#snippet listRow(title, desc, actions, media, editing = false)}
     <Item.Root variant="outline" size="sm" class={"lrow " + (editing ? "border-brand bg-brand/5" : "")}>
         {#if media}<Item.Media>{@render media()}</Item.Media>{/if}
-        <Item.Content class="min-w-0">
+        <Item.Content class="min-w-0 max-sm:basis-full">
             <Item.Title class="line-clamp-none">{@render title()}{#if editing}<Badge data-tone="primary">กำลังแก้ไข</Badge>{/if}</Item.Title>
             {@render desc()}
         </Item.Content>
-        <Item.Actions class="flex-wrap gap-1.5">{@render actions()}</Item.Actions>
+        <!-- มือถือ: ปุ่มลงแถวล่างเต็มกว้าง คั่นเส้น · สวิตช์ชิดซ้าย ปุ่มแก้ไข/ลบชิดขวา (เจ้าของงานสั่ง 16 ต.ค. 2026 ให้บาลานซ์) -->
+        <Item.Actions class="flex-wrap gap-1.5 max-sm:w-full max-sm:justify-end max-sm:border-t max-sm:pt-2 max-sm:[&>label]:me-auto">{@render actions()}</Item.Actions>
     </Item.Root>
 {/snippet}
 
@@ -204,7 +237,8 @@
         <Card.Title class="flex items-center gap-2">{title} <Badge variant="secondary" class="tabular-nums">{n}</Badge></Card.Title>
         <Card.Action>
             <!-- ปุ่มหลักของการ์ด = Button แบบ default (พื้น --primary #06C755 ตัวขาว ตามธีม LINE) -->
-            <Button size="sm" onclick={act(newAct)}><Plus data-icon="inline-start" />{btnLabel}</Button>
+            <!-- มือถือ: ปุ่มเหลือ "+ เพิ่ม" ให้หัวการ์ดอยู่บรรทัดเดียว (ชื่อเต็มอยู่ใน aria-label) -->
+            <Button size="sm" aria-label={btnLabel} onclick={act(newAct)}><Plus data-icon="inline-start" /><span class="sm:hidden">เพิ่ม</span><span class="max-sm:hidden">{btnLabel}</span></Button>
         </Card.Action>
     </Card.Header>
 {/snippet}
@@ -233,28 +267,18 @@
 
 <div id="settingsWrap" class="h-full overflow-y-auto">
     <div class="mx-auto grid w-full max-w-(--container-page) gap-3 px-3 pt-3 pb-8 lg:grid-cols-(--grid-settings) lg:items-start">
+        <!-- เมนูตั้งค่าแสดงในการ์ดเสมอ (เจ้าของงานสั่ง 16 ต.ค. 2026 — กลับแบบเดิม ไม่ซ่อนในแผงสไลด์)
+             จอคอม (≥1024): เมนูแนวตั้ง · ปุ่มกลับไปแชทเต็มกว้าง · tablet/มือถือ: ปุ่มกลับอยู่แถวเดียวกับหัว · เมนูเรียงต่อกันขึ้นบรรทัดใหม่ -->
         <Card.Root size="sm" class="snav lg:sticky lg:top-0">
             <Card.Header>
-                <Card.Title>Settings</Card.Title>
-                <!-- บอกแค่ว่าตั้งค่านี้ของ LINE หรือ Telegram ด้วยโลโก้ + ชื่อ Channel (เจ้าของงานสั่ง 15 ต.ค. 2026 — เอาช่องเลือก Channel และคำว่า LINE/Telegram ออก) · เปิดจากเฟืองของ Channel -->
-                <Card.Description class="flex min-w-0 items-center gap-1.5">
-                    {#if chan}<PlatformIcon p={chan.platform} /><span class="min-w-0 truncate">{chan.name}</span>{:else}ตั้งค่ารวม{/if}
-                </Card.Description>
+                <!-- ชื่อ Channel ต่อท้าย Settings แถวเดียวกัน (เจ้าของงานสั่ง 16 ต.ค. 2026) -->
+                <Card.Title class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">Settings
+                    <span class="text-muted-foreground flex min-w-0 items-center gap-1.5 text-sm font-normal">{@render chanLabel()}</span></Card.Title>
+                <Card.Action class="lg:hidden"><Button variant="outline" size="sm" onclick={() => showPage("console")}><ArrowLeft data-icon="inline-start" />กลับไปแชท</Button></Card.Action>
             </Card.Header>
             <Card.Content class="gap-3">
-                <Button variant="outline" size="sm" onclick={() => showPage("console")}><ArrowLeft data-icon="inline-start" />กลับไปแชท</Button>
-                <nav aria-label="เมนูตั้งค่า" class="flex flex-wrap gap-1 lg:flex-col">
-                    {#each SET_TABS as [k, Icon, label] (k)}
-                        <Button
-                            variant="ghost"
-                            class={"stab h-10 justify-start " + (S.tab === k ? "bg-muted font-bold" : "")}
-                            aria-current={S.tab === k ? "page" : undefined}
-                            onclick={() => setTab(k)}><Icon data-icon="inline-start" aria-hidden="true" />{label}</Button
-                        >
-                    {/each}
-                    <!-- ลิงก์ออกไปหน้า Line Liff (เว็บต้นฉบับ 15 ต.ค. 2026) -->
-                    <Button variant="ghost" class="stab h-10 justify-start" onclick={act("liff")}><ExternalLink data-icon="inline-start" aria-hidden="true" />ไปหน้า Line Liff</Button>
-                </nav>
+                <Button variant="outline" size="sm" class="hidden lg:inline-flex" onclick={() => showPage("console")}><ArrowLeft data-icon="inline-start" />กลับไปแชท</Button>
+                {@render navList()}
             </Card.Content>
         </Card.Root>
 
@@ -389,13 +413,13 @@
                 <Card.Root>
                     <Card.Header>
                         <Card.Title class="flex items-center gap-2"
-                            ><Star class="text-warning size-4" fill="currentColor" aria-hidden="true" />สติ๊กเกอร์โปรด <Badge variant="secondary" class="tabular-nums">{S.fav.length}</Badge></Card.Title
+                            ><Star class="text-warning size-4" fill="currentColor" aria-hidden="true" />สติ๊กเกอร์โปรด <Badge variant="secondary" class="tabular-nums">{favs.length}</Badge></Card.Title
                         >
                     </Card.Header>
                     <Card.Content class="gap-4">
-                        {#if S.fav.length}
+                        {#if favs.length}
                             <div class="flex flex-wrap gap-2" role="list" aria-label="สติ๊กเกอร์โปรด">
-                                {#each S.fav as k (k)}
+                                {#each favs as k (k)}
                                     <div class="bg-card relative rounded-lg border p-1" role="listitem" title={stickerLabel(k)}>
                                         <StickerImg {k} class="size-16" />
                                         <Button variant="secondary" size="icon-xs" class="absolute -top-1.5 -right-1.5 size-5 rounded-full border" aria-label={"เอาออกจากโปรด " + stickerLabel(k)} onclick={act("stk-fav", 0, { k })}><X /></Button>
@@ -405,29 +429,28 @@
                         {:else}
                             <p class="text-muted-foreground text-sm">ยังไม่มีสติ๊กเกอร์โปรด — เลือกชุดจากคลังด้านล่างแล้วกดที่สติ๊กเกอร์</p>
                         {/if}
-                        <section class="flex flex-col gap-2" aria-label="คลัง LINE สำหรับเลือกสติ๊กเกอร์โปรด">
+                        <section class="flex flex-col gap-2" aria-label={"คลัง " + via + " สำหรับเลือกสติ๊กเกอร์โปรด"}>
                             <div class="flex flex-wrap items-center justify-between gap-2">
-                                <span class="text-sm font-bold">คลัง LINE — กดที่สติ๊กเกอร์เพื่อติด/เอาดาวออก</span>
+                                <span class="text-sm font-bold">คลัง {isTg ? "Telegram" : "LINE"} — กดที่สติ๊กเกอร์เพื่อติด/เอาดาวออก</span>
                                 {#if fpk}
-                                    {@const keys = Array.from({ length: fpk[1] }, (_, i) => fpk[0] + "-" + i)}
+                                    {@const keys = fpk.keys}
                                     {@const allOn = keys.every((k) => S.fav.indexOf(k) >= 0)}
                                     <Button variant="outline" size="sm" onclick={act("stk-fav-all", 0, { keys, on: !allOn })}
-                                        ><Star data-icon="inline-start" fill={allOn ? "none" : "currentColor"} class={allOn ? "" : "text-warning"} />{allOn ? "เอาดาวออกทั้งชุด" : "ติดดาวทั้งชุด"} {fpk[0]}</Button
+                                        ><Star data-icon="inline-start" fill={allOn ? "none" : "currentColor"} class={allOn ? "" : "text-warning"} />{allOn ? "เอาดาวออกทั้งชุด" : "ติดดาวทั้งชุด"} {fpk.name}</Button
                                     >
                                 {/if}
                             </div>
-                            <Input bind:value={favQ} placeholder="ค้นหาด้วยเลขชุด (packageId)…" aria-label="ค้นหาชุดในคลังด้วยเลขชุด" inputmode="numeric" autocomplete="off" class="tabular-nums" />
+                            <Input bind:value={favQ} placeholder={isTg ? "ค้นหาชื่อชุด…" : "ค้นหาด้วยเลขชุด (packageId)…"} aria-label="ค้นหาชุดในคลัง" inputmode={isTg ? "text" : "numeric"} autocomplete="off" class="tabular-nums" />
                             <div class="grid grid-cols-(--grid-packs) gap-2">
-                                {#each packsOf(favQ) as p (p[0])}
-                                    <Toggle variant="outline" class="data-[state=on]:border-brand data-[state=on]:text-brand h-auto flex-col items-start gap-0 px-3 py-1.5" pressed={favPack === p[0]} onPressedChange={() => (favPack = favPack === p[0] ? null : p[0])}>
-                                        <span class="font-bold">ชุด {p[0]}</span><span class="text-muted-foreground text-xs">{p[1]} รูป</span>
+                                {#each packsOf(favQ) as p (p.id)}
+                                    <Toggle variant="outline" class="data-[state=on]:border-brand data-[state=on]:text-brand h-auto flex-col items-start gap-0 px-3 py-1.5" pressed={favPack === p.id} onPressedChange={() => (favPack = favPack === p.id ? null : p.id)}>
+                                        <span class="font-bold">{p.name}</span><span class="text-muted-foreground text-xs">{p.n} รูป</span>
                                     </Toggle>
                                 {/each}
                             </div>
                             {#if fpk}
                                 <div class="grid grid-cols-(--grid-tiles) gap-1.5">
-                                    {#each Array.from({ length: fpk[1] }) as _, i (i)}
-                                        {@const k = fpk[0] + "-" + i}
+                                    {#each fpk.keys as k, i (k)}
                                         {@const fv = S.fav.indexOf(k) >= 0}
                                         <Toggle variant="outline" class="data-[state=on]:border-warning data-[state=on]:bg-warning/10 relative aspect-square h-auto w-full p-1" pressed={fv} onPressedChange={act("stk-fav", 0, { k })}
                                             aria-label={(fv ? "เอาดาวออก" : "ติดดาว") + " สติ๊กเกอร์ " + (i + 1)}>
@@ -442,10 +465,10 @@
                 </Card.Root>
 
                 <Card.Root>
-                    {@render listHead("ชุดสติ๊กเกอร์", S.stk.length, "สร้างชุดใหม่", "stk-new")}
+                    {@render listHead("ชุดสติ๊กเกอร์", setsShown.length, "สร้างชุดใหม่", "stk-new")}
                     <Card.Content>
                         <Item.Group class="gap-2">
-                            {#each S.stk as x, i (i)}
+                            {#each setsShown as { x, i } (i)}
                                 {@const editing = S.sheet === "stk" && S.ed.stk === i}
                                 <Item.Root variant="outline" size="sm" class={"lrow " + (editing ? "border-brand bg-brand/5" : "")}>
                                     <Item.Content class="min-w-0">
@@ -474,31 +497,32 @@
                 </Field.Field>
                 <section class="flex flex-col gap-2" aria-label="เลือกจากคลัง LINE">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-sm font-bold">เลือกจากคลัง LINE</span>
+                        <span class="text-sm font-bold">เลือกจากคลัง {isTg ? "Telegram" : "LINE"}</span>
                         {#if pk}
-                            {@const keys = Array.from({ length: pk[1] }, (_, i) => pk[0] + "-" + i)}
+                            {@const keys = pk.keys}
                             {@const allOn = keys.every((k) => S.picked.indexOf(k) >= 0)}
-                            <Button variant="outline" size="sm" onclick={act("stk-pick-all", 0, { keys, on: !allOn })}>{allOn ? "ยกเลิกทั้งชุด" : "เลือกทั้งชุด"} {pk[0]}</Button>
+                            <Button variant="outline" size="sm" onclick={act("stk-pick-all", 0, { keys, on: !allOn })}>{allOn ? "ยกเลิกทั้งชุด" : "เลือกทั้งชุด"} {pk.name}</Button>
                         {/if}
                     </div>
-                    <Input bind:value={S.f.packQ} placeholder="ค้นหาด้วยเลขชุด (packageId)…" aria-label="ค้นหาชุดในคลังด้วยเลขชุด" inputmode="numeric" autocomplete="off" class="tabular-nums" />
+                    <Input bind:value={S.f.packQ} placeholder={isTg ? "ค้นหาชื่อชุด…" : "ค้นหาด้วยเลขชุด (packageId)…"} aria-label="ค้นหาชุดในคลัง" inputmode={isTg ? "text" : "numeric"} autocomplete="off" class="tabular-nums" />
                     <div class="packs grid grid-cols-(--grid-packs) gap-2">
-                        {#each packsOf(S.f.packQ) as p (p[0])}
-                            <Toggle variant="outline" class="pack data-[state=on]:border-brand data-[state=on]:text-brand h-auto flex-col items-start gap-0 px-3 py-1.5" pressed={S.pack === p[0]} onPressedChange={act("stk-pack", p[0])}>
-                                <span class="font-bold">ชุด {p[0]}</span><span class="text-muted-foreground text-xs">{p[1]} รูป</span>
+                        {#each packsOf(S.f.packQ) as p (p.id)}
+                            <Toggle variant="outline" class="pack data-[state=on]:border-brand data-[state=on]:text-brand h-auto flex-col items-start gap-0 px-3 py-1.5" pressed={S.pack === p.id} onPressedChange={act("stk-pack", p.id)}>
+                                <span class="font-bold">{p.name}</span><span class="text-muted-foreground text-xs">{p.n} รูป</span>
                             </Toggle>
                         {/each}
                     </div>
                     {#if pk}
                         <div class="tiles grid grid-cols-(--grid-tiles) gap-1.5">
-                            {#each Array.from({ length: pk[1] }) as _, i (i)}
-                                {@const k = pk[0] + "-" + i}
+                            {#each pk.keys as k, i (k)}
                                 <Toggle variant="outline" class="tile data-[state=on]:border-brand data-[state=on]:bg-brand/10 aspect-square h-auto w-full p-1" pressed={S.picked.indexOf(k) >= 0} onPressedChange={act("stk-pick", 0, { k })}
                                     aria-label={"เลือกสติ๊กเกอร์ " + (i + 1)}><StickerImg {k} class="size-full" /></Toggle>
                             {/each}
                         </div>
                     {/if}
                 </section>
+                <!-- เพิ่มด้วย packageId + stickerId เป็นของ LINE เท่านั้น -->
+                {#if !isTg}
                 <Field.Field>
                     <Field.Label for="stkPkg">เพิ่มด้วย ID (สำหรับสติ๊กเกอร์นอกคลัง)</Field.Label>
                     <div class="flex gap-2">
@@ -507,6 +531,7 @@
                         <Button data-tone="primary" class="shrink-0" onclick={act("stk-addid")}><Plus data-icon="inline-start" />เพิ่ม</Button>
                     </div>
                 </Field.Field>
+                {/if}
                 <section class="flex flex-col gap-2" aria-label="สติ๊กเกอร์ในชุด">
                     <div class="flex items-center gap-2 text-sm font-bold">สติ๊กเกอร์ในชุด <Badge variant="secondary" class="tabular-nums">เลือกแล้ว {S.picked.length}</Badge></div>
                     {#if S.picked.length}
@@ -652,7 +677,7 @@
                             </Alert.Root>
                             <div class="flex flex-wrap justify-end gap-2">
                                 <Button variant="outline" onclick={act("bc-no")}><X data-icon="inline-start" />ยกเลิก</Button>
-                                <Button data-tone="destructive" data-fill="solid" onclick={act("bc-yes")}><Send data-icon="inline-start" />ยืนยัน</Button>
+                                <Button data-tone="success" data-fill="solid" onclick={act("bc-yes")}><Send data-icon="inline-start" />ยืนยัน</Button>
                             </div>
                         {:else}
                             <!-- สีปุ่มตามช่องทาง: LINE = เขียวหลัก · Telegram = ฟ้า Telegram (เจ้าของงานสั่ง 15 ต.ค. 2026) -->

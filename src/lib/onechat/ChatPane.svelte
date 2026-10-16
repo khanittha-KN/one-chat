@@ -3,6 +3,7 @@
      แถว 2: LINE Channel · ป้ายสถานะ · ปุ่มเปลี่ยนประเภท ฝาก / ถอน / เรื่องทั่วไป · ช่องโน้ต + รายการโน้ต
      ข้อความ: วันเวลาใต้ฟอง · ช่องพิมพ์: แถบเครื่องมือ คีย์ลัด · การ์ดข้อความ · สติ๊กเกอร์ · ส่งรูปภาพ -->
 <script>
+    import Info from "@lucide/svelte/icons/info";
     import Check from "@lucide/svelte/icons/check";
     import { tick } from "svelte";
     import X from "@lucide/svelte/icons/x";
@@ -11,7 +12,6 @@
     import Pencil from "@lucide/svelte/icons/pencil";
     import ScanSearch from "@lucide/svelte/icons/scan-search";
     import StickyNote from "@lucide/svelte/icons/sticky-note";
-    import Info from "@lucide/svelte/icons/info";
     import UserRound from "@lucide/svelte/icons/user-round";
     import Zap from "@lucide/svelte/icons/zap";
     import CreditCard from "@lucide/svelte/icons/credit-card";
@@ -279,6 +279,8 @@
                         {/each}
                     </Popover.Content>
                 </Popover.Root>
+                <!-- การ์ดข้อความ = Flex Card ของ LINE ⇒ ไม่มีในห้องแชท Telegram (16 ต.ค. 2026) -->
+                {#if m.platform !== "telegram"}
                 <Popover.Root bind:open={cardOpen}>
                     <Popover.Trigger disabled={done} class={toolBtn} aria-label="การ์ดข้อความ" title="การ์ดข้อความ"><CreditCard /></Popover.Trigger>
                     <Popover.Content align="start" side="top" class="w-80 gap-2 p-2">
@@ -301,6 +303,7 @@
                         {/each}
                     </Popover.Content>
                 </Popover.Root>
+                {/if}
                 <StickerPicker {c} disabled={done} />
                 <input bind:this={imgIn} type="file" accept="image/jpeg,image/png" class="sr-only" tabindex="-1" aria-hidden="true" onchange={pickImage} />
                 <Button variant="ghost" size="icon" disabled={done} aria-label="ส่งรูปภาพ" title="ส่งรูปภาพ (JPG / PNG ไม่เกิน 10 MB)" onclick={() => imgIn.click()}><ImageIcon /></Button>

@@ -14,7 +14,7 @@
 <InputGroup.Root class={className}>
     <InputGroup.Input type={show ? "text" : "password"} {autocomplete} bind:value {...rest} />
     <InputGroup.Addon align="inline-end">
-        <InputGroup.Button size="icon-xs" aria-label={show ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"} aria-pressed={show} onclick={() => (show = !show)}>
+        <InputGroup.Button size="icon-sm" aria-label={show ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"} aria-pressed={show} onclick={() => (show = !show)}>
             {#if show}<EyeOff />{:else}<Eye />{/if}
         </InputGroup.Button>
     </InputGroup.Addon>

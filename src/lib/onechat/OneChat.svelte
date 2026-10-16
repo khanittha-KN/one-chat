@@ -31,7 +31,7 @@
     const listCls = $derived(v === "list" ? "flex" : "hidden md:flex");
     const chatCls = $derived(v === "chat" ? "flex" : "hidden md:flex");
     const panelCls = $derived((v === "panel" ? "flex" : "hidden") + (panelOff ? " md:hidden" : " md:flex"));
-    const gridCls = $derived(panelOff ? "md:grid-cols-(--grid-console-md)" : "md:grid-cols-(--grid-console-tab) xl:grid-cols-(--grid-console-xl)");
+    const gridCls = $derived(panelOff ? "md:grid-cols-(--grid-console-md)" : "md:grid-cols-(--grid-console-tab) lg:grid-cols-(--grid-console-lg) xl:grid-cols-(--grid-console-xl)");
 
     // แชทที่เปิดอยู่ยังอยู่ใน Channel ที่ติ๊กหรือไม่ — ไม่อยู่ ⇒ ไม่แสดงห้องแชทและข้อมูลลูกค้า
     const shown = $derived(visible().some((c) => c.id === st.cur));

@@ -169,7 +169,7 @@
     --popover: #22262d;
     --popover-foreground: #ffffff;
     --primary: #06c755; /* ปุ่มหลักพื้น #06C755 เหมือนโหมดสว่าง */
-    --primary-foreground: #ffffff; /* เหมือนโหมดสว่าง (⚠ 2.26:1) */
+    --primary-foreground: #111111; /* ตัวเข้มบนเขียว #06C755 8.4:1 ผ่าน AA (16 ต.ค. 2026 · เดิมขาว 2.26:1) */
     --secondary: #2a2f37;
     --secondary-foreground: #ffffff;
     --muted: #2a2f37;
@@ -190,7 +190,7 @@
     --sidebar: #15181d;
     --sidebar-foreground: #ffffff;
     --sidebar-primary: #06c755;
-    --sidebar-primary-foreground: #ffffff;
+    --sidebar-primary-foreground: #111111;
     --sidebar-accent: #22262d;
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: #3a3f49;
@@ -213,7 +213,7 @@
     --chat-meta: var(--muted-foreground);
     /* ฟองลูกค้าโหมดมืด = น้ำเงินเข้ม #2B3550 แบบต้นฉบับ (ตัวขาว 12:1) · ฟองแอดมินเขียวเดียวกับโหมดสว่าง */
     --bubble-admin: var(--brand); /* ฟองแอดมินเขียว LINE แบบเดิม (เจ้าของงานสั่ง 15 ต.ค. 2026) · ตัว #111111 บน #06C755 8.37:1 */
-    --bubble-admin-foreground: #ffffff; /* ตัวขาวตามเจ้าของงาน (15 ต.ค. 2026) — ⚠ 2.26:1 บน #06C755 เท่าปุ่มหลักโหมดมืด */
+    --bubble-admin-foreground: #111111; /* ตัวเข้มบนเขียว 8.4:1 ผ่าน AA (เจ้าของงานเลือก 16 ต.ค. 2026 · เดิมขาว 2.26:1) */
     --bubble-cust: #2b3550;
     /* แผงซ้ายโหมดมืด = เข้มที่สุดของหน้า แบ่งส่วนแบบ LINE (เจ้าของงานสั่ง 14 ต.ค. 2026)
        LINE: ราง #1F1F1F กับรายการ #2C2E2F ต่างกัน L* 7.0 ⇒ ของเรา #080808 กับรายการ #1A1A1A ต่างกัน L* 7.1
@@ -472,6 +472,7 @@
         /* ผังของ OneChat (DESIGN-SYSTEM §8 · ขนาดโครงหน้าเป็นชื่อ ไม่ใช่ค่าตายตัวในคลาส) */
         --grid-console-md: 17rem minmax(0, 1fr); /* รายการแชท + ห้องแชท */
         --grid-console-tab: 12rem minmax(0, 1fr) 17.5rem; /* tablet แนวตั้ง 768–1279: รายการ · แชท · ลูกค้า ครบ 3 ช่อง (เจ้าของงานสั่ง 15 ต.ค. 2026) · ช่องลูกค้ากว้างขึ้น 15→17.5rem รายการ 13→12rem */
+        --grid-console-lg: 15rem minmax(0, 1fr) 18rem; /* 1024–1279 (iPad แนวตั้งใหญ่ · จอเล็ก): รายการกว้างขึ้นให้ป้ายไม่ถูกตัด (16 ต.ค. 2026) */
         --grid-console-xl: 18rem minmax(0, 1fr) 25rem; /* + แผงลูกค้า 25rem (เดิม 20rem · เจ้าของงานว่าเบียด 14 ต.ค. 2026 ⇒ 333px ที่ย่อ 83% · ต้นฉบับ 360px) · ห้องแชทได้ที่ที่เหลือ */
         --grid-settings: 15rem minmax(0, 1fr); /* เมนูตั้งค่า + เนื้อหา */
         --grid-kv: 5.5rem minmax(0, 1fr); /* ตารางชื่อ–ค่าในการ์ด */
@@ -1060,4 +1061,15 @@ textarea::placeholder {
 }
 :is(input, textarea)[placeholder][placeholder]:not(:placeholder-shown) {
     font-weight: 500;
+}
+
+/* เป้ากดขั้นต่ำ 24px (WCAG 2.5.8) — จอคอมย่อ 83% ทำให้ปุ่มเล็ก (xs 24px · ปุ่มสลับ/แท็บ 28px) เหลือ 20–22px ⇒ ล็อกความสูงขั้นต่ำเป็น px ไม่ย่อตาม (ตรวจ 16 ต.ค. 2026) */
+[data-slot="toggle-group-item"],
+[data-slot="tabs-trigger"],
+[data-slot="button"],
+button[aria-controls^="fold-"] {
+    min-height: 24px;
+}
+[data-slot="button"] {
+    min-width: 24px;
 }

@@ -11,7 +11,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import { isFolded, setFold } from "../store.svelte.js";
 
-    let { c, title, def = false, action, children, contentClass = "", cardClass = "", icon: Icon = null, hint = "", dot = "" } = $props();
+    let { c, title, def = false, action, children, contentClass = "", cardClass = "", icon: Icon = null, hint = "", dot = "", showHint = false } = $props();
     // ปุ่ม: hint = สถานะ (บอกโปรแกรมอ่านหน้าจอ + tooltip) · dot = จุดสีสถานะ success | warning | destructive
     const DOT = { success: "bg-success", warning: "bg-warning", destructive: "bg-destructive" };
     const folded = $derived(isFolded(c, title, def));
@@ -33,6 +33,8 @@
         {#if Icon}<Icon data-icon="inline-start" aria-hidden="true" />{/if}
         {title}
         {#if dot}<span class={"size-2 shrink-0 rounded-full ring-2 ring-background " + DOT[dot]} aria-hidden="true"></span>{/if}
+        <!-- สถานะเป็นคำด้วย ไม่บอกด้วยสีอย่างเดียว (WCAG 1.4.1 · 16 ต.ค. 2026) -->
+        {#if showHint && hint}<span class="text-muted-foreground font-normal" aria-hidden="true">· {hint}</span>{/if}
     </Button>
     <Dialog.Root bind:open>
         <Dialog.Content class="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-md">
@@ -48,7 +50,7 @@
             <Card.Title>
                 <button
                     type="button"
-                    class="hover:text-foreground/80 -mx-1 flex w-full items-center gap-1.5 rounded-md px-1 text-start"
+                    class="hover:text-foreground/80 -mx-1 flex min-h-7 w-full items-center gap-1.5 rounded-md px-1 text-start"
                     aria-expanded={!folded}
                     aria-controls={id}
                     onclick={() => setFold(c, title, !folded)}

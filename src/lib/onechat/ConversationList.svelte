@@ -65,7 +65,8 @@
     </Card.Header>
     <!-- relative: ข้อความ sr-only (position:absolute) ในแถวล่าง ๆ ต้องอยู่ในกล่องเลื่อนนี้ ไม่งั้นดันหน้าทั้งหน้าให้เลื่อนได้
          เส้นคั่นแถว foreground/15 ให้เห็นชัดบนพื้นสีเคสทุกสี ทั้งสองโหมด (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
-    <div id="caseList" class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+    <!-- @container: รายการแคบ (tablet แนวตั้ง < 16rem) ป้าย "รอแอดมินรับเคส" ย่อเป็น "รอรับ" ไม่ให้ตัวเลขถูกตัด -->
+    <div id="caseList" class="@container relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         {#each shown as c (c.id)}
             {@const k = kindOf(c)}
             {@const last = c.msgs.length ? msgPreview(c.msgs[c.msgs.length - 1]) : ""}
@@ -91,11 +92,11 @@
                                 <Badge variant="outline" class="max-w-full ps-1" title={merch(c.merchant).name}><PlatformIcon p={merch(c.merchant).platform} /><span class="truncate">{merch(c.merchant).name}</span></Badge>
                                 {#if c.status === "waiting"}
                                     <Badge variant="secondary" data-tone="warning"
-                                        ><Clock aria-hidden="true" />รอแอดมินรับเคส <span class="tabular-nums">({c.secs})</span></Badge
+                                        ><Clock aria-hidden="true" /><span class="@max-3xs:hidden">รอแอดมินรับเคส</span><span class="hidden @max-3xs:inline">รอรับ</span> <span class="tabular-nums">({c.secs})</span></Badge
                                     >
                                 {:else}
-                                    <Badge variant="secondary"
-                                        ><UserRound aria-hidden="true" />{c.admin} <span class="tabular-nums">({c.secs})</span></Badge
+                                    <Badge variant="secondary" class="max-w-full"
+                                        ><UserRound aria-hidden="true" /><span class="truncate">{c.admin}</span> <span class="tabular-nums">({c.secs})</span></Badge
                                     >
                                 {/if}
                                 <span class="sr-only">ประเภท {k.label}</span>

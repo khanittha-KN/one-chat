@@ -2,7 +2,7 @@
 import { toast as sonner } from "svelte-sonner";
 import { playChime } from "./sound.svelte.js";
 import {
-    ME, merchants, chatChannels, canChat, BANKS, COACC, CARDS, bankOf, seedCases, seedAnnounces, nowT, slipData, tabOf,
+    ME, merchants, money, chatChannels, canChat, BANKS, COACC, CARDS, bankOf, seedCases, seedAnnounces, nowT, slipData, tabOf,
     SETMAP, SET_TABS, TODAY, typeLabel, pingOf, chanByName, PLATFORM,
 } from "./data.js";
 
@@ -353,6 +353,13 @@ export function saveCredit(c) {
         c.credit = Math.round((c.credit + (cadd ? camt : -camt)) * 100) / 100;
         (cadd ? c.histDep : c.histWd).unshift({ amt: camt, time: "5 ต.ค. 2569 " + nowT(), ok: true, ref: "CR" + String(Date.now()).slice(-6) });
         push(c, "sys", (cadd ? "เติมเครดิต " : "ถอนเครดิต ") + camt.toFixed(2) + " บาท " + (cadd ? "ให้ " : "ของ ") + c.user.username + (cr.note ? " (" + cr.note + ")" : "") + " เรียบร้อย");
+        // ข้อความระบบลูกค้าไม่เห็น ⇒ ส่งข้อความแจ้งลูกค้าในชื่อแอดมินด้วย (เจ้าของงานสั่ง 16 ต.ค. 2026) · เคสปิดแล้วไม่ส่ง
+        if (c.status !== "closed") {
+            accept(c);
+            push(c, "admin", cadd
+                ? "เติมเครดิต " + money(camt) + " บาท เข้ายูส " + c.user.username + " เรียบร้อยแล้วค่ะ ตรวจสอบยอดในเกมได้เลยนะคะ"
+                : "ถอนเครดิต " + money(camt) + " บาท จากยูส " + c.user.username + " เรียบร้อยแล้วค่ะ");
+        }
         st.credit = { ...blankCredit(cr.type), msg: (cadd ? "เติมเครดิต " : "ถอนเครดิต ") + camt.toFixed(2) + " บาท แล้ว" };
         ok("บันทึกเครดิตแล้ว");
     }
@@ -746,9 +753,10 @@ export { ME, BANKS, SET_TABS };
    สุ่มแชทที่แสดงอยู่และยังไม่ปิด · ทุก ~45 วินาทีหลังล็อกอิน · ไม่มี toast · ปุ่ม "จำลองข้อความเข้า" ในตั้งค่าทั่วไปเรียกทันที */
 const SIM_LINES = ["สอบถามหน่อยค่ะ", "แอดมินอยู่ไหมคะ", "รอนานแล้วนะครับ", "โอนแล้วค่ะ รบกวนเช็คให้หน่อย", "ขอบคุณครับ", "ยอดยังไม่เข้าเลยค่ะ"];
 export function simIncoming() {
-    const pool = visible().filter((c) => c.status !== "closed");
+    // ไม่จำลองข้อความต่อจากข้อความระบบ (ลูกค้าไม่เห็นข้อความระบบ จึงตอบกลับข้อความนั้นไม่ได้ · เจ้าของงานสั่ง 16 ต.ค. 2026)
+    const pool = visible().filter((c) => c.status !== "closed" && (c.msgs[c.msgs.length - 1] || {}).who !== "sys");
     if (!pool.length) {
-        toast("ไม่มีแชทที่เปิดอยู่ให้จำลอง — ติ๊ก Channel ใน \"เลือกแชทที่แสดง\" ก่อน");
+        toast("ไม่มีแชทให้จำลองข้อความเข้า — ติ๊ก Channel ใน \"เลือกแชทที่แสดง\" หรือให้แอดมินตอบต่อจากข้อความระบบก่อน");
         return;
     }
     const c = pool[Math.floor(Math.random() * pool.length)];
