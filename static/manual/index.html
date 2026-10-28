@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>คู่มือการใช้งาน SmartCHAT</title>
+<meta name="description" content="คู่มือการใช้งาน SmartCHAT — ตั้งค่า Channel เชื่อมต่อ Telegram และวิธีแก้ปัญหาที่พบบ่อย" />
+<script>
+  // ตั้งธีมก่อนวาดหน้า ไม่ให้กะพริบ (จำค่าในเบราว์เซอร์นี้ · ครั้งแรกตามเครื่อง)
+  try {
+    const t = localStorage.getItem("onechat-manual-theme");
+    document.documentElement.dataset.theme = t || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  } catch { document.documentElement.dataset.theme = "light"; }
+</script>
+<style>
+  /* ฟอนต์ LINE Seed Sans TH (ไฟล์เดียวกับระบบ SmartCHAT) */
+  @font-face { font-family: "LINE Seed Sans TH"; src: url("fonts/LINESeedSansTH_W_Rg.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "LINE Seed Sans TH"; src: url("fonts/LINESeedSansTH_W_Bd.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+
+  /* ธีม: shadcn-theme-kit ของ SmartLiff (Vega · zinc · สีหลัก indigo) — ค่าจาก theme.css ของชุดธีม
+     ตัวอักษร 4.5:1 · ขอบ/ไอคอน 3:1 ทั้งสองโหมด · ความสว่างแยกด้วย data-theme="dark" เหมือนในชุดธีม */
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.141 0.005 285.823);
+    --card: oklch(1 0 0);
+    --muted: oklch(0.967 0.001 286.375);
+    --muted-foreground: oklch(0.52 0.016 285.938);
+    --border: oklch(0.92 0.004 286.32);
+    --surface-page: oklch(0.985 0 0);          /* = --sidebar ของชุดธีม: พื้นหน้า */
+    --brand: oklch(0.457 0.24 277.023);
+    --brand-foreground: oklch(0.985 0 0);
+    --ring: var(--brand);
+    --warning: oklch(0.5 0.13 52);
+    --destructive: oklch(0.48 0.2 27.325);
+    --success: oklch(0.465 0.15 152);
+    --brand-soft: color-mix(in oklab, var(--brand) 10%, var(--card));
+    --tip-bg: color-mix(in oklab, var(--warning) 8%, var(--card));
+    --tip-border: color-mix(in oklab, var(--warning) 35%, var(--card));
+    --tip-fg: var(--warning);
+    --warn-bg: color-mix(in oklab, var(--destructive) 8%, var(--card));
+    --warn-border: color-mix(in oklab, var(--destructive) 35%, var(--card));
+    --warn-fg: var(--destructive);
+    --shadow: 0 1px 2px oklch(0 0 0 / 0.05);
+    --radius: 0.625rem;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --background: oklch(0.141 0.005 285.823);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.21 0.006 285.885);
+    --muted: oklch(0.274 0.006 286.033);
+    --muted-foreground: oklch(0.705 0.015 286.067);
+    --border: oklch(1 0 0 / 10%);
+    --surface-page: var(--background);
+    --brand: oklch(0.72 0.15 277);
+    --brand-foreground: oklch(0.141 0.005 285.823);
+    --warning: oklch(0.78 0.14 70);
+    --destructive: oklch(0.8 0.14 22.216);
+    --success: oklch(0.76 0.15 152);
+    --brand-soft: color-mix(in oklab, var(--brand) 16%, var(--card));
+    --tip-bg: color-mix(in oklab, var(--warning) 12%, var(--card));
+    --tip-border: color-mix(in oklab, var(--warning) 35%, var(--card));
+    --warn-bg: color-mix(in oklab, var(--destructive) 12%, var(--card));
+    --warn-border: color-mix(in oklab, var(--destructive) 35%, var(--card));
+    --shadow: none;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 6rem; }
+  body {
+    margin: 0;
+    background: var(--surface-page);
+    color: var(--foreground);
+    font-family: "LINE Seed Sans TH", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; height: auto; display: block; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 6px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .skip { position: absolute; left: 1rem; top: -3rem; background: var(--foreground); color: var(--background); padding: .5rem .75rem; border-radius: 8px; z-index: 50; }
+  .skip:focus { top: .75rem; }
+
+  /* ── แถบบน ── */
+  .top { position: sticky; top: 0; z-index: 20; background: color-mix(in oklab, var(--card) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .top-in { max-width: 96rem; margin: 0 auto; height: 4.5rem; padding: 0 1.5rem; display: flex; align-items: center; gap: 1rem; }
+  .logo { display: inline-flex; align-items: center; gap: .55rem; color: var(--brand); }
+  .logo img { display: block; height: 1.9rem; width: auto; }
+  .logo .dk, [data-theme="dark"] .logo .lt { display: none; }
+  [data-theme="dark"] .logo .dk { display: block; }
+  .logo small { display: block; margin: .1rem 0 0 2.35rem; font-size: .7rem; letter-spacing: .12em; color: var(--muted-foreground); }
+  .crumb { padding-left: 1rem; border-left: 1px solid var(--border); font-weight: 700; font-size: 1rem; line-height: 2rem; }
+  .spacer { flex: 1; }
+  .logo, .crumb { white-space: nowrap; }
+  .theme { display: inline-flex; padding: 3px; gap: 2px; background: var(--muted); border-radius: 999px; }
+  .theme button { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border: 0; border-radius: 999px; background: transparent; color: var(--muted-foreground); cursor: pointer; }
+  .theme button[aria-pressed="true"] { background: var(--card); color: var(--foreground); box-shadow: var(--shadow); }
+  .theme svg { width: 1rem; height: 1rem; }
+
+  /* ── หน้ารวม ── */
+  .wrap { max-width: 96rem; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  .hero h1 { font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.25rem); line-height: 1.3; margin: 0 0 .35rem; }
+  .hero p { margin: 0; color: var(--muted-foreground); max-width: 65ch; }
+  .sec { margin-top: 2.5rem; }
+  .sec h2 { font-size: 1.4rem; margin: 0 0 1rem; }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+  .card {
+    display: flex; gap: .9rem; align-items: flex-start;
+    padding: 1.25rem; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow); min-height: 8.5rem;
+    transition: border-color .15s, background-color .15s;
+  }
+  .card:hover { border-color: var(--brand); background: color-mix(in oklab, var(--brand-soft) 45%, var(--card)); }
+  .card h3 { margin: 0 0 .4rem; font-size: 1rem; line-height: 1.4; }
+  .card p { margin: 0; color: var(--muted-foreground); font-size: .9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tile { flex: none; width: 2.25rem; height: 2.25rem; border-radius: .6rem; display: grid; place-items: center; background: var(--muted); color: var(--muted-foreground); }
+  .tile svg { width: 1.15rem; height: 1.15rem; }
+  .tile img { width: 2.25rem; height: 2.25rem; }
+  .tile.warn { background: var(--warn-bg); color: var(--warn-fg); }
+  .note { margin-top: 3rem; color: var(--muted-foreground); font-size: .85rem; }
+
+  /* ── หน้าหัวข้อ ── */
+  .doc { max-width: 96rem; margin: 0 auto; padding: 0 1.5rem; display: grid; grid-template-columns: 1fr; gap: 3rem; }
+  @media (min-width: 64rem) { .doc { grid-template-columns: 19rem minmax(0, 1fr); } }
+  .side { display: none; }
+  @media (min-width: 64rem) {
+    /* เมนูข้างเลื่อนแยกจากเนื้อหา แถบเลื่อนแสดงตลอดแบบคู่มือ SmartHub */
+    .side { display: block; position: sticky; top: 4.5rem; align-self: start; max-height: calc(100vh - 4.5rem); overflow-y: scroll; padding: 2rem 1rem 2.5rem 0; scrollbar-width: thin; }
+  }
+  .side h2 { font-size: 1rem; margin: 2rem 0 .75rem; }
+  .side h2:first-child { margin-top: 0; }
+  .side .grp { border-left: 1px solid var(--border); }
+  .side a { display: block; margin-left: -1px; padding: .5rem 0 .5rem 1.25rem; border-left: 2px solid transparent; color: var(--muted-foreground); font-size: .95rem; line-height: 1.5; }
+  .side a:hover { color: var(--foreground); border-left-color: var(--muted-foreground); }
+  .side a[aria-current="page"] { color: var(--brand); border-left-color: var(--brand); font-weight: 700; }
+  .main { padding: 2.5rem 0 5rem; max-width: 68rem; }
+  .back { display: inline-flex; align-items: center; gap: .35rem; font-size: .95rem; color: var(--muted-foreground); margin-bottom: 1rem; }
+  .back:hover { color: var(--foreground); }
+  @media (min-width: 64rem) { .back { display: none; } }
+  .eyebrow { color: var(--brand); font-size: 1rem; font-weight: 700; }
+  .main h1 { font-size: clamp(1.6rem, 1.1rem + 1.6vw, 2.25rem); line-height: 1.25; margin: .5rem 0 .75rem; }
+  .lead { color: var(--muted-foreground); font-size: 1.1rem; margin: 0 0 3rem; }
+  ol.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 3rem; }
+  .step { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 1.25rem; }
+  .num { width: 3rem; height: 3rem; border-radius: 999px; display: grid; place-items: center; font-weight: 700; font-size: 1.1rem; background: var(--brand-soft); color: var(--brand); }
+  .step h3 { margin: .55rem 0 .35rem; font-size: 1.3rem; line-height: 1.4; }
+  .step p { margin: 0; color: var(--muted-foreground); font-size: 1.05rem; }
+  .step p + p { margin-top: .35rem; }
+  .step .pts { margin: .35rem 0 0; padding: 0; list-style: none; display: grid; gap: .3rem; color: var(--muted-foreground); font-size: 1.05rem; }
+  .step p + .pts { margin-top: .5rem; }
+  .step .pts.dot { padding-left: 1.25rem; list-style: disc; }
+  .ico { display: inline-block; height: 1.6em; width: auto; vertical-align: middle; margin: -.2em .1em 0; border-radius: 6px; box-shadow: 0 0 0 1px var(--border); }
+  .step p a, .callout a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+  .shot { margin: 1.25rem 0 0; padding: .4rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); box-shadow: var(--shadow); }
+  .shot img { border-radius: .7rem; margin: 0 auto; }
+  .shot figcaption { margin-top: .5rem; font-size: .85rem; color: var(--muted-foreground); text-align: center; }
+  .kv { display: grid; gap: .35rem; margin-top: .35rem; }
+  .kv div { display: grid; grid-template-columns: 4.5rem minmax(0,1fr); gap: .5rem; }
+  .kv b { font-size: .95rem; }
+  .kv span { color: var(--muted-foreground); font-size: 1.05rem; }
+  .kv div > b:last-of-type { color: var(--foreground); }
+  kbd, code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85em; background: var(--muted); border: 1px solid var(--border); border-radius: .35rem; padding: .05rem .35rem; color: var(--foreground); }
+  .only { display: inline-flex; align-items: center; gap: .3rem; margin-left: .5rem; padding: .1rem .55rem; border-radius: 999px; background: var(--muted); color: var(--foreground); font-size: .8rem; font-weight: 700; vertical-align: .15em; white-space: nowrap; }
+  .only img { width: 1rem; height: 1rem; }
+  .card .only { margin: 0 0 .4rem; }
+  .lead-only { margin: -2.25rem 0 2.5rem; }
+  .lead-only .only { margin-left: 0; }
+  .cmp { margin-top: 3rem; }
+  .cmp h2 { font-size: 1.3rem; margin: 0 0 1rem; }
+  .tbl { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+  .tbl table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+  .tbl th, .tbl td { padding: .8rem 1rem; border-bottom: 1px solid var(--border); text-align: left; }
+  .tbl tr:last-child > * { border-bottom: 0; }
+  .tbl thead th { background: var(--muted); color: var(--muted-foreground); font-size: .9rem; white-space: nowrap; }
+  .tbl thead img { display: inline-block; width: 1.1rem; height: 1.1rem; margin-right: .4rem; vertical-align: -.2em; }
+  .tbl thead th + th { text-align: center; }
+  .tbl tbody th { font-weight: 400; }
+  .tbl tbody th small { display: block; color: var(--muted-foreground); font-size: .85rem; }
+  .tbl td { width: 7.5rem; text-align: center; font-weight: 700; }
+  .yes { color: var(--success); }
+  .no { color: var(--muted-foreground); }
+  .copy { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 2.5rem 0 0; color: var(--muted-foreground); font-size: .95rem; }
+  .copy code { font-family: inherit; font-weight: 700; font-size: .9rem; padding: .25rem .6rem; border-radius: .45rem; }
+  .ext { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.25rem; margin-top: 1.5rem; padding: 0 .9rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); font-size: .95rem; }
+  .ext:hover { background: var(--muted); }
+  .ext svg { width: 1rem; height: 1rem; }
+  .callout { display: flex; width: fit-content; max-width: 100%; gap: .6rem; align-items: flex-start; margin: 2rem 0 0; padding: .8rem 1rem; border-radius: .6rem; border: 1px solid var(--tip-border); background: var(--tip-bg); color: var(--tip-fg); font-size: .95rem; }
+  .copy + .callout { margin-top: 1.5rem; }
+  .callout.warn { border-color: var(--warn-border); background: var(--warn-bg); color: var(--warn-fg); }
+  .callout svg { flex: none; width: 1.1rem; height: 1.1rem; margin-top: .15rem; }
+  .next { margin-top: 3.5rem; padding-top: 2.5rem; border-top: 1px solid var(--border); }
+  .next h2 { font-size: 1.4rem; margin: 0 0 1rem; }
+  .pair { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+  .link { display: flex; flex-direction: column; gap: .25rem; padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: .65rem; background: var(--card); transition: border-color .15s; }
+  .link:hover { border-color: var(--brand); }
+  .link b { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: 1rem; }
+  .link span { color: var(--muted-foreground); font-size: .9rem; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .link small { color: var(--muted-foreground); font-size: .85rem; }
+  .pn { margin-top: 2.5rem; padding-top: 2.5rem; border-top: 1px solid var(--border); }
+  .pn .r { text-align: right; align-items: flex-end; }
+  /* จอแคบ: ระยะขอบ 16px · ตัดบรรทัด System Manual · เลขขั้นเล็กลงให้ภาพกว้างพอ */
+  @media (max-width: 40rem) {
+    .top-in, .wrap, .doc { padding-left: 1rem; padding-right: 1rem; }
+    .top-in { gap: .75rem; }
+    .logo small { display: none; }
+    .logo img { height: 1.6rem; }
+    .crumb { padding-left: .75rem; }
+    .step { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .75rem; }
+    .num { width: 2.25rem; height: 2.25rem; font-size: 1rem; }
+    .step h3 { margin-top: .25rem; font-size: 1.15rem; }
+    .step p, .step .pts { font-size: 1rem; }
+    .shot { margin-left: -3rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#content">ข้ามไปที่เนื้อหา</a>
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="#/" aria-label="SmartCHAT คู่มือการใช้งาน — หน้ารวมคู่มือ">
+      <span><img class="lt" src="../brand/smartchat-light.png" width="480" height="120" alt="" /><img class="dk" src="../brand/smartchat-dark.png" width="480" height="120" alt="" /><small>System Manual</small></span>
+    </a>
+    <span class="crumb">คู่มือการใช้งาน</span>
+    <span class="spacer"></span>
+    <div class="theme" role="group" aria-label="ธีม">
+      <button type="button" data-t="light" aria-label="โหมดสว่าง"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+      <button type="button" data-t="dark" aria-label="โหมดมืด"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+    </div>
+  </div>
+</header>
+<main id="content" tabindex="-1"></main>
+
+<script>
+/* ---------- เนื้อหาคู่มือ ----------
+   ภาพหน้าจอ: ตั้งค่า/ปัญหาที่พบบ่อย จากระบบ staging (22/10/2026) · Telegram จากแอป Telegram (ปิดโทเคนในภาพแล้ว)
+   แต่ละหัวข้อ: id · title · desc (การ์ด/คำนำ) · icon · steps [{ t หัวข้อขั้น, d รายละเอียด (HTML), img + alt หรือ imgs [[src, alt]…] }] 
+   · copy [ค่าที่ต้องคัดลอก] · tip / warn · ext [ชื่อปุ่ม, ลิงก์ภายนอก] · next [id] */
+const TITLE = "เริ่มต้นใช้งาน SmartCHAT";
+const SECTIONS = [
+  { id: "start", title: TITLE, topics: [
+    { id: "start", icon: "rocket", title: "เริ่มต้นใช้งานและรู้จักหน้าจอ",
+      desc: "ดูว่าหน้าจอแต่ละส่วนและเมนูแต่ละจุดใช้ทำอะไร และเลือก Channel ที่จะดูแล",
+      steps: [
+        { t: "หน้าจอหลัก 3 ส่วน", d: "เปิด SmartCHAT แล้วจะเข้าหน้าหลักทันที โดยไม่ต้องเข้าสู่ระบบ <b>①</b> ด้านซ้ายคือรายการสนทนา แต่ละแถวคือ 1 เคส (การสนทนาหนึ่งรอบกับลูกค้า ตั้งแต่ลูกค้าส่งข้อความเข้ามาจนแอดมินปิดเคส) <b>②</b> ตรงกลางคือห้องแชท จะว่างอยู่จนกว่าจะเลือกแชท <b>③</b> แผงขวาแสดงข้อมูลสมาชิกและรายการเงิน เมื่อเปิดแชทหรือค้นหาลูกค้า", img: "img/app/first-home.webp", alt: "หน้าหลักของ SmartCHAT วง 1 รายการสนทนา 2 ห้องแชทที่ยังว่าง 3 แผงข้อมูลลูกค้า" },
+        { t: "แถบด้านบน", d: "<b>①</b> ปุ่ม <b>กลับหน้า SmartHub</b> กลับไปยังระบบหลังบ้าน SmartHub <b>②</b> ปุ่ม <b>ไปหน้า Auto fast</b> เปิดระบบ Auto fast ของ Channel ในแท็บใหม่ <b>③</b> เลือกธีมสีของหน้าจอ มีสว่าง มืด ทีล สเลท และเนวี่ <b>④</b> ปุ่มลำโพง เปิดหรือปิดเสียงแจ้งเตือนเมื่อมีข้อความใหม่ หลังเปิดเสียงให้คลิกที่หน้าเว็บ 1 ครั้ง เบราว์เซอร์จึงจะเล่นเสียงได้ <b>⑤</b> ปุ่มเมนูเบอร์เกอร์ <img class=\"ico\" src=\"img/icons/menu.png\" alt=\"ปุ่มเมนูเบอร์เกอร์\"> มุมขวาบนสุด กดแล้วจะขยายเป็นรายการเมนู บรรทัดบนสุดคือชื่อบัญชีที่ใช้อยู่ ตามด้วย <b>หน้าหลัก</b> สำหรับกลับหน้าแชท และ <b>ออกจากระบบ</b> เมื่อเลิกใช้งาน", imgs: [["img/app/topbar.webp", "แถบบน วงหมายเลข 1 ถึง 5"], ["img/app/menu.webp", "เมนูเบอร์เกอร์ที่ขยายแล้ว วงรายการเมนู ชื่อบัญชี หน้าหลัก และออกจากระบบ"]] },
+        { t: "เลือก Channel ที่จะดูแล", d: "Channel คือบัญชี LINE OA (LINE Official Account บัญชีทางการของร้าน) หรือบัญชี Telegram ที่ลูกค้าส่งข้อความเข้ามา บัญชีแอดมินหนึ่งบัญชีดูแลได้หลาย Channel กดปุ่ม <b>เลือกแชทที่แสดง</b> ใต้หัวข้อการสนทนา เพื่อเลือกว่าจะแสดงแชทของ Channel ใด ตัวเลขบนปุ่มคือจำนวน Channel ที่เลือกอยู่ ครั้งแรกระบบเลือกทุก Channel ไว้ให้", img: "img/app/filter-btn.webp", alt: "วงปุ่มเลือกแชทที่แสดง" },
+        { t: "เลือก Channel ที่ต้องการ", d: "Channel ถูกจัดเป็นกลุ่มตาม Agent (เว็บไซต์ที่ Channel นั้นสังกัด) <b>①</b> เลือก <b>ทั้งหมด</b> เพื่อเลือกทุก Channel <b>②</b> เลือกชื่อ Agent เพื่อเลือกทุก Channel ของ Agent นั้น ถ้าไม่ได้เลือก Channel ใด จะไม่มีแชทแสดง ตัวเลขท้ายชื่อ Channel คือจำนวนแชททั้งหมด ระบบจำที่เลือกไว้ในเบราว์เซอร์นี้", img: "img/app/filter.webp", alt: "แผงเลือกแชทที่แสดง วงช่องทั้งหมดและชื่อ Agent" },
+        { t: "ดูช่องทางจากโลโก้", d: "<b>①</b> โลโก้สีเขียวคือ LINE <b>②</b> โลโก้สีฟ้าคือ Telegram โลโก้เดียวกันนี้แสดงในรายการสนทนาและหัวห้องแชทด้วย", img: "img/app/filter-logos.webp", alt: "วงโลโก้ LINE และโลโก้ Telegram หน้าชื่อ Channel" },
+        { t: "รายการสนทนา", d: "<b>①</b> ปุ่มรีเซ็ต <img class=\"ico\" src=\"img/icons/refresh.png\" alt=\"ปุ่มรีเซ็ต\"> ดึงรายการล่าสุด <b>②</b> ปุ่ม <b>เลือกแชทที่แสดง</b> เลือก Channel ที่จะดู และเปิดหน้าตั้งค่าของ Channel <b>③</b> ช่องค้นหาลูกค้าด้วยชื่อ ยูสเซอร์ หรือเบอร์โทร <b>④</b> แท็บกรองเคส ทั้งหมด ทั่วไป และการเงิน <b>⑤</b> คำอธิบายสีของเคส ที่ด้านล่างสุดของรายการ", img: "img/app/menu-list.webp", alt: "รายการสนทนา วงหมายเลข 1 ถึง 5" },
+        { t: "หัวห้องแชท", d: "<b>①</b> ปุ่มแก้ไข <img class=\"ico\" src=\"img/icons/edit.png\" alt=\"ปุ่มแก้ไข\"> แก้ชื่อลูกค้า <b>②</b> ป้ายผู้รับเคส แสดงชื่อแอดมินที่ดูแลเคสนี้ <b>③</b> ปุ่ม <b>ปิดเคส [F4]</b> <b>④</b> ปุ่มซ่อนแผง <img class=\"ico\" src=\"img/icons/panel.png\" alt=\"ปุ่มซ่อนแผง\"> ซ่อนหรือแสดงแผงข้อมูลลูกค้า กดเมื่อต้องการให้ห้องแชทกว้างขึ้น <b>⑤</b> ช่องทาง (LINE หรือ Telegram) ชื่อ Channel และ @id ของ LINE OA ที่ลูกค้าติดต่อเข้ามา <b>⑥</b> ปุ่มประเภทเคส ฝาก ถอน และเรื่องทั่วไป <b>⑦</b> ช่องเพิ่มโน้ตเกี่ยวกับลูกค้า", img: "img/app/menu-chathead.webp", alt: "หัวห้องแชท วงหมายเลข 1 ถึง 7" },
+        { t: "ช่องพิมพ์ข้อความ", d: "<b>①</b> แถวคีย์ลัดที่ติดดาว คีย์ลัดคือข้อความสำเร็จรูปที่บันทึกไว้ล่วงหน้า <b>②</b> ปุ่มเครื่องมือ เรียงจากซ้าย ปุ่มคีย์ลัด <img class=\"ico\" src=\"img/icons/quick.png\" alt=\"ปุ่มคีย์ลัด\"> เปิดรายการคีย์ลัดทั้งหมด ปุ่มสติ๊กเกอร์และอิโมจิ (แชท Telegram เป็นปุ่มอิโมจิ) และปุ่มส่งรูปภาพ <b>③</b> ช่องพิมพ์ข้อความ <b>④</b> ปุ่ม <b>ส่ง</b>", img: "img/app/menu-composer.webp", alt: "ช่องพิมพ์ข้อความ วงหมายเลข 1 ถึง 4" },
+        { t: "แชท Telegram ต่างจาก LINE อย่างไร", d: "<b>①</b> หัวห้องแชทมีโลโก้ Telegram <b>②</b> แถบเครื่องมือมีปุ่มอิโมจิแทนปุ่มสติ๊กเกอร์ และหน้าตั้งค่าไม่มีเมนูชุดสติ๊กเกอร์ ส่วนที่ต่างกันอื่นๆ ดูในตารางด้านล่าง", img: "img/app/tg-chat.webp", alt: "ห้องแชท Telegram วงหัวห้องแชทและแถบเครื่องมือ" },
+        { t: "แผงขวา: ปุ่มแถวบนและการ์ดตรวจสอบ", d: "<b>①</b> ปุ่ม <b>LINE และผู้ช่วย (OA)</b> ดูสถานะการเชื่อมต่อของ LINE OA และบัญชีผู้ช่วยที่ใช้ส่งข้อความ <b>②</b> ปุ่ม <b>ตรวจสอบสลิป</b> ดูผลตรวจสลิปโอนเงิน <b>③</b> ปุ่ม <b>ประวัติฝากถอน</b> ดูรายการฝากและถอนย้อนหลัง <b>④</b> ปุ่ม <b>สมัครสมาชิก Player</b> สมัครสมาชิกใหม่ให้ลูกค้า ปุ่มเหล่านี้เปิดเป็นหน้าต่าง และจะกางเป็นการ์ดโดยอัตโนมัติเมื่อมีเรื่องที่ต้องตรวจสอบ เช่น LINE ขาดการเชื่อมต่อ <b>⑤</b> การ์ด <b>ตรวจสอบ</b> ใช้ค้นหาและผูกสมาชิก ดูข้อมูลสมาชิก และเปลี่ยนรหัสผ่านลูกค้า", img: "img/app/menu-panel.webp", alt: "แผงขวา วงหมายเลข 1 ถึง 5" },
+        { t: "แผงขวา: บัญชี ยอดค้าง และเครดิต", d: "<b>①</b> การ์ด <b>บัญชีธนาคาร</b> บัญชีธนาคารของสมาชิกและผลตรวจชื่อบัญชี <b>②</b> การ์ด <b>สถานะยอดค้าง</b> รายการฝากหรือถอนที่ยังดำเนินการไม่เสร็จ <b>③</b> การ์ด <b>จัดการเครดิต</b> เติมหรือถอนเครดิต (ยอดเงินคงเหลือในบัญชีสมาชิก) กดหัวการ์ดเพื่อพับหรือกางการ์ดได้", img: "img/app/menu-panel2.webp", alt: "แผงขวา วงหมายเลข 1 ถึง 3" },
+        { t: "เมนูตั้งค่าของ Channel", d: "เปิดจากปุ่มตั้งค่า <img class=\"ico\" src=\"img/icons/gear.png\" alt=\"ปุ่มตั้งค่า\"> ท้ายชื่อ Channel ในแผงเลือกแชทที่แสดง <b>①</b> <a href=\"#/general\">ตั้งค่าทั่วไป</a> <b>②</b> <a href=\"#/stickers\">ชุดสติ๊กเกอร์</a> (เฉพาะ LINE) <b>③</b> <a href=\"#/quick\">คีย์ลัด</a> <b>④</b> <a href=\"#/auto\">ข้อความอัตโนมัติ</a> <b>⑤</b> คู่มือการใช้งานแบบย่อในระบบ <b>⑥</b> ลิงก์ไปหน้า Line Liff ปุ่ม <b>กลับไปแชท</b> ด้านบนพากลับหน้าแชท", img: "img/app/menu-settings.webp", alt: "หน้าตั้งค่า วงเมนูหมายเลข 1 ถึง 6 และปุ่มกลับไปแชท" },
+      ],
+      compare: [
+        ["ส่งข้อความและรูปภาพ", true, true],
+        ["คีย์ลัด", true, true, "Telegram ส่งสติ๊กเกอร์ในคีย์ลัดไม่ได้"],
+        ["สติ๊กเกอร์ (ส่งในแชทและชุดสติ๊กเกอร์)", true, false, "Telegram ใช้ปุ่มอิโมจิแทน"],
+        ["ข้อความหลังปิดเคส", true, true, "ลูกค้า Telegram ไม่ได้รับสติ๊กเกอร์"],
+        ["ข้อความอัตโนมัติ (คำค้น)", true, true],
+        ["สถานะ LINE OA", true, false],
+        ["ผู้ช่วย (OA)", true, true],
+        ["ตรวจสลิป เครดิต และสมาชิก", true, true],
+      ],
+      tip: "ก่อนเริ่มตอบลูกค้า ให้ดูว่าเลือกชุดข้อความหลังปิดเคสไว้แล้วใน <a href=\"#/general\">ตั้งค่าทั่วไป</a> และมีคีย์ลัดที่ติดดาวไว้ใช้ใน <a href=\"#/quick\">ตั้งค่าคีย์ลัด</a>",
+      warn: "ใช้บัญชีของตนเองเท่านั้น ระบบบันทึกชื่อแอดมินทุกครั้งที่รับเคส ปิดเคส ปรับเครดิต และเปลี่ยนรหัสผ่านลูกค้า",
+      next: ["list", "reply"] },
+    { id: "list", icon: "inbox", title: "ดูรายการสนทนา",
+      desc: "กรองแชทตามประเภท อ่านสีของเคส ดูเวลาที่ลูกค้ารอ และค้นหาลูกค้า",
+      steps: [
+        { t: "กรองด้วยแท็บ", d: "แท็บ <b>ทั่วไป</b> แสดงเรื่องทั่วไป แท็บ <b>การเงิน</b> แสดงเคสฝากและถอน ส่วน <b>ทั้งหมด</b> แสดงทุกเคส จุดเขียวหลังคำว่า \"การสนทนา\" แสดงว่าระบบเชื่อมต่ออยู่ และข้อความใหม่จะเข้ามาโดยอัตโนมัติ", img: "img/app/list-tabs.webp", alt: "วงแท็บ ทั้งหมด ทั่วไป การเงิน" },
+        { t: "อ่านประเภทเคสจากสี", d: "สีของแถวแสดงประเภทเคส เหลืองคือฝาก ส้มคือถอน แดงคือเรื่องทั่วไป และขาวคือปิดเคสแล้ว เคสที่ปิดแล้วอยู่ท้ายรายการ คำอธิบายสีอยู่ล่างสุดของรายการ", img: "img/app/list-colors.webp", alt: "รายการสนทนา วงแถวฝาก ถอน ทั่วไป ปิดเคส และคำอธิบายสี" },
+        { t: "ดูผู้รับเคสและเวลาที่ลูกค้ารอ", d: "ป้าย <b>รอแอดมินรับเคส</b> หมายความว่ายังไม่มีแอดมินรับเคส ถ้ามีผู้รับเคสแล้วจะแสดงชื่อแอดมินแทน ตัวเลขในวงเล็บคือเวลาที่ลูกค้ารอ ระบบนับไปจนแอดมินเปิดแชท แล้วค้างตัวเลขนั้นไว้จนปิดเคส", img: "img/app/list-status.webp", alt: "วงป้ายรอแอดมินรับเคสและป้ายชื่อแอดมินพร้อมเวลารอ" },
+        { t: "ค้นหาลูกค้า", d: "พิมพ์ชื่อ ยูสเซอร์ของลูกค้า หรือเบอร์โทรในช่องค้นหา แล้วกดเลือกจากผลค้นหา ระบบจะเปิดแชทของลูกค้าคนนั้น และแสดงข้อมูลลูกค้าที่แผงขวา", img: "img/app/list-search.webp", alt: "วงช่องค้นหาลูกค้าและผลการค้นหา" },
+      ],
+      next: ["reply", "close"] },
+    { id: "reply", icon: "message", title: "หน้าตอบแชท",
+      desc: "เปิดห้องแชท พิมพ์ตอบ ส่งรูปภาพ เปลี่ยนประเภทเคส แก้ชื่อลูกค้า และบันทึกโน้ตเกี่ยวกับลูกค้า",
+      steps: [
+        { t: "เปิดห้องแชท", d: "<b>①</b> กดที่แถวในรายการสนทนา <b>②</b> หัวห้องแชทแสดงชื่อลูกค้า ผู้รับเคส ชื่อ Channel พร้อม @id ของ LINE OA (ชื่อบัญชี LINE ที่ขึ้นต้นด้วย @) และปุ่มปิดเคส", img: "img/app/reply-open.webp", alt: "วงแถวที่เลือกและหัวห้องแชท" },
+        { t: "พิมพ์แล้วกด Enter", d: "ข้อความแรกที่ส่งจะรับเคสให้อัตโนมัติ และแสดงชื่อคุณเป็นผู้รับเคส กดปุ่ม <kbd>Esc</kbd> (มุมซ้ายบนของคีย์บอร์ด) เพื่อปิดห้องแชท ซึ่งไม่ใช่การปิดเคส ข้อความที่พิมพ์ค้างไว้จะยังอยู่เมื่อกลับมาเปิดแชทนั้น", img: "img/app/reply-send.webp", alt: "วงช่องพิมพ์ข้อความและปุ่มส่ง" },
+        { t: "ส่งรูปภาพ", d: "ส่งรูปให้ลูกค้าได้ 2 วิธี <b>①</b> กดปุ่มส่งรูปภาพแล้วเลือกไฟล์รูปจากเครื่อง <b>②</b> คัดลอกรูปจากที่อื่นแล้ววางในช่องพิมพ์ จากนั้นกดส่ง", img: "img/app/image-btn.webp", alt: "วงปุ่มส่งรูปภาพ" },
+        { t: "เปลี่ยนประเภทเคส", d: "กดปุ่ม <b>ฝาก</b> <b>ถอน</b> หรือ <b>เรื่องทั่วไป</b> ที่หัวห้องแชท ปุ่มที่เลือกอยู่จะมีสีและเครื่องหมาย ✓", img: "img/app/reply-type.webp", alt: "วงปุ่มประเภทเคส ฝาก ถอน เรื่องทั่วไป" },
+        { t: "แก้ชื่อลูกค้า", d: "กดปุ่มแก้ไข <img class=\"ico\" src=\"img/icons/edit.png\" alt=\"ปุ่มแก้ไข\"> ข้างชื่อ ชื่อจะกลายเป็นช่องให้แก้ กด <kbd>Enter</kbd> เพื่อบันทึก หรือ <kbd>Esc</kbd> เพื่อยกเลิก ถ้าเว้นว่างไว้ ระบบจะใช้ชื่อ LINE เดิม", img: "img/app/reply-name.webp", alt: "วงหัวห้องแชทตอนแก้ชื่อ ชื่อกลายเป็นช่องพิมพ์" },
+        { t: "บันทึกโน้ตลูกค้า", d: "พิมพ์ในช่อง <b>เพิ่มโน้ต…</b> ใต้หัวห้องแชท แล้วกด Enter โน้ตจะแสดงพร้อมเวลาและชื่อแอดมินที่บันทึก ทุกคนในทีมเห็นโน้ตเดียวกัน แต่ลูกค้าจะไม่เห็นโน้ตที่เพิ่มไว้ ลบโน้ตได้ด้วยปุ่มลบ <img class=\"ico\" src=\"img/icons/delete.png\" alt=\"ปุ่มลบ\"> ท้ายโน้ต", img: "img/app/note.webp", alt: "วงช่องเพิ่มโน้ตและโน้ตที่บันทึกไว้" },
+      ],
+      next: ["send", "close"] },
+    { id: "send", icon: "smile", title: "ส่งคีย์ลัด สติ๊กเกอร์ และอิโมจิ",
+      desc: "ตอบเร็วขึ้นด้วยคีย์ลัดที่เตรียมไว้ ส่งสติ๊กเกอร์ในแชท LINE และใส่อิโมจิในแชท Telegram",
+      steps: [
+        { t: "ส่งคีย์ลัด", d: "คีย์ลัดคือชุดข้อความสำเร็จรูปที่บันทึกไว้ล่วงหน้า <b>①</b> ปุ่มที่มีดาว <img class=\"ico\" src=\"img/icons/star.png\" alt=\"ดาว\"> ในแถว \"คีย์ลัด\" เหนือช่องพิมพ์ คือคีย์ลัดที่ติดดาวไว้ <b>②</b> ปุ่มคีย์ลัด <img class=\"ico\" src=\"img/icons/quick.png\" alt=\"ปุ่มคีย์ลัด\"> เปิดรายการคีย์ลัดทั้งหมด หรือพิมพ์เครื่องหมาย <kbd>/</kbd> ในช่องพิมพ์ ระบบส่งทุกรายการในคีย์ลัดตามลำดับ",
+          imgs: [["img/app/quick-row.webp", "วงแถวคีย์ลัดที่ติดดาวและปุ่มคีย์ลัด"], ["img/app/quick-pop.webp", "รายการคีย์ลัดทั้งหมดที่เปิดจากปุ่มคีย์ลัด"]] },
+        { t: "ส่งสติ๊กเกอร์", only: "line", d: "<b>①</b> กดปุ่มสติ๊กเกอร์ในแถบเครื่องมือใต้ห้องแชท <b>②</b> แผงสติ๊กเกอร์จะเปิดขึ้น มีแท็บบันทึกไว้ <img class=\"ico\" src=\"img/icons/star.png\" alt=\"ดาว\"> (สติ๊กเกอร์โปรดกับชุดที่บันทึก) แท็บของแต่ละชุดในคลัง LINE และแท็บอิโมจิ กดสติ๊กเกอร์แล้วส่งทันที", img: "img/app/stickers-pop.webp", alt: "วงปุ่มสติ๊กเกอร์และแผงสติ๊กเกอร์" },
+        { t: "ใส่อิโมจิ (Telegram)", d: "<b>①</b> ห้องแชท Telegram มีปุ่มอิโมจิแทนปุ่มสติ๊กเกอร์ <b>②</b> อิโมจิแบ่งเป็น 4 หมวด คือ ยิ้ม สนทนา การเงิน และอารมณ์ หมวดละ 26 ตัว กดแล้วอิโมจิจะไปอยู่ในช่องพิมพ์ ยังไม่ส่งจนกว่าจะกดส่ง", img: "img/app/emoji.webp", alt: "วงปุ่มอิโมจิและแผงอิโมจิ 4 หมวด" },
+      ],
+      tip: "สร้างคีย์ลัดและชุดสติ๊กเกอร์ได้ที่หน้าตั้งค่า โดยกดปุ่มตั้งค่า <img class=\"ico\" src=\"img/icons/gear.png\" alt=\"ปุ่มตั้งค่า\"> ท้ายชื่อ Channel ในแผง <b>เลือกแชทที่แสดง</b> ดูวิธีได้ที่ <a href=\"#/quick\">ตั้งค่าคีย์ลัด</a> และ <a href=\"#/stickers\">ตั้งค่าชุดสติ๊กเกอร์</a>",
+      next: ["quick", "stickers"] },
+    { id: "close", icon: "check", title: "ปิดเคส",
+      desc: "ปิดเคสเมื่อการสนทนาเสร็จสิ้น ระบบบันทึกชื่อผู้รับเคสและผู้ปิดเคส แล้วส่งข้อความหลังปิดเคสให้ลูกค้า",
+      steps: [
+        { t: "กด ปิดเคส หรือ F4", d: "กดปุ่มสีแดง <b>ปิดเคส [F4]</b> ที่หัวห้องแชท หรือกดปุ่ม <kbd>F4</kbd> ในแถวบนสุดของคีย์บอร์ด", img: "img/app/close-btn.webp", alt: "วงปุ่มปิดเคส F4" },
+        { t: "หลังปิดเคส", d: "<b>①</b> แถบ \"ปิดเคส โดย …\" แสดงในห้องแชท ณ เวลาที่ปิด แล้วระบบส่งชุดข้อความที่เลือกไว้ใน <a href=\"#/general\">ตั้งค่าทั่วไป</a> <b>②</b> แถวในรายการสนทนาเปลี่ยนเป็นสีขาว หลังปิดเคสยังพิมพ์ตอบลูกค้าได้ตามปกติ หากลูกค้าส่งข้อความเข้ามาใหม่จะนับเป็นเคสใหม่ และเวลารอเริ่มนับจาก 0", img: "img/app/closed.webp", alt: "วงแถบปิดเคสโดยแอดมินและแถวสีขาวในรายการ" },
+        { t: "เคสของแอดมินคนอื่น", d: "ปิดเคสได้เฉพาะคนที่รับเคสไว้ <b>①</b> ป้าย \"รับโดย …\" แสดงชื่อผู้รับเคส <b>②</b> ปุ่มปิดเคสจะกดไม่ได้ แต่ยังเปิดอ่านแชทและพิมพ์ตอบลูกค้าแทนแอดมินที่รับเคสได้", img: "img/app/close-other.webp", alt: "วงป้ายรับโดย admin02 และปุ่มปิดเคสที่กดไม่ได้" },
+      ],
+      next: ["general", "faq"] },
+    { id: "member", icon: "usersearch", title: "ค้นหาและผูกสมาชิก",
+      desc: "ผูกแชทกับบัญชีสมาชิก (เชื่อมแชทเข้ากับบัญชีสมาชิก เพื่อให้แผงขวาแสดงข้อมูลและรายการเงินของสมาชิกคนนั้น) ดูข้อมูลสมาชิก และตรวจบัญชีธนาคาร",
+      steps: [
+        { t: "ค้นหาสมาชิก", d: "เมื่อลูกค้าที่เป็นสมาชิกอยู่แล้วติดต่อมาจากบัญชี LINE ใหม่ แชทจะยังไม่ผูกกับสมาชิก ให้สอบถามชื่อผู้ใช้หรือเบอร์โทรจากลูกค้า แล้วพิมพ์ในการ์ด <b>ตรวจสอบ</b> จากนั้นกด <b>ตรวจสอบ</b>", img: "img/app/member-search.webp", alt: "วงการ์ดตรวจสอบที่พิมพ์ชื่อผู้ใช้ของลูกค้าไว้" },
+        { t: "กดชื่อเพื่อผูกกับแชทนี้", d: "กดชื่อในผลค้นหา ระบบผูกแชทนี้กับสมาชิกทันที ถ้าแชทนี้ผูกกับสมาชิกคนอื่นอยู่แล้ว ระบบจะถามว่า <b>เปลี่ยนสมาชิกที่ผูกกับแชทนี้?</b> กด <b>เปลี่ยนการผูก</b> เพื่อยืนยัน", img: "img/app/member-results.webp", alt: "วงผลการค้นหาสมาชิก" },
+        { t: "อ่านข้อมูลสมาชิก", d: "<b>①</b> ข้อมูลสมาชิกมี Username (ชื่อผู้ใช้ กดไอคอนคัดลอกได้) Fullname (ชื่อ-นามสกุล) Bank (ธนาคาร) Number (เลขบัญชี) Mobile (เบอร์โทร) เทิร์น (บอกว่าลูกค้าติดเทิร์นอยู่หรือไม่) และโปรโมชั่น (บอกว่าลูกค้าติดโปรอยู่หรือไม่) <b>②</b> กด <b>เลิกผูก</b> เพื่อยกเลิกการผูกแชทกับสมาชิก หรือกดปุ่มรีเซ็ต <img class=\"ico\" src=\"img/icons/refresh.png\" alt=\"ปุ่มรีเซ็ต\"> เพื่อดึงข้อมูลล่าสุด", img: "img/app/member.webp", alt: "วงข้อมูลสมาชิกและปุ่มเลิกผูก" },
+        { t: "ตรวจบัญชีธนาคาร", d: "การ์ด <b>บัญชีธนาคาร</b> แสดงบัญชีของสมาชิก พร้อมสถานะอนุมัติ รออนุมัติ หรือไม่อนุมัติ และผลตรวจว่าชื่อบัญชีตรงกับชื่อสมาชิกหรือไม่", img: "img/app/bank.webp", alt: "วงการ์ดบัญชีธนาคาร" },
+      ],
+      tip: "ถ้าค้นหาแล้วไม่พบ และลูกค้ายังไม่เป็นสมาชิก ให้สมัครให้ลูกค้าตามหัวข้อ <a href=\"#/register\">สมัครสมาชิก</a>",
+      next: ["register", "password"] },
+    { id: "register", icon: "userplus", title: "สมัครสมาชิก",
+      desc: "ขอเลขบัญชีจากลูกค้า กรอกข้อมูลสมัคร ตรวจเลขบัญชีและผู้แนะนำ แล้วส่งชื่อผู้ใช้กับรหัสผ่านให้ลูกค้า",
+      steps: [
+        { t: "ขอข้อมูลจากลูกค้า", d: "<b>①</b> กด <b>ขอเลขบัญชีลูกค้า</b> <b>②</b> ระบบใส่ข้อความขอเลขบัญชีและชื่อบัญชีไว้ในช่องพิมพ์ ให้พิมพ์ขอเบอร์โทร และรหัสผ่านที่ลูกค้าต้องการใช้สมัคร เพิ่มในข้อความเดียวกัน แล้วกดส่ง", img: "img/app/register-ask.webp", alt: "วงปุ่มขอเลขบัญชีลูกค้าและข้อความในช่องพิมพ์" },
+        { t: "กรอกข้อมูลตามที่ลูกค้าส่งมา", d: "<b>①</b> ลูกค้าตอบข้อมูลกลับมาในแชท <b>②</b> กรอกลงฟอร์ม <b>สมัครสมาชิก Player</b> ข้อมูลแต่ละช่องมาจาก", img: "img/app/register-form.webp", alt: "วงข้อความที่ลูกค้าส่งข้อมูลมา และช่องกรอกข้อมูลสมัครสมาชิก",
+          list: ["<b>เบอร์</b> เบอร์โทรของลูกค้า ใช้เป็นชื่อผู้ใช้", "<b>ธนาคาร เลขที่บัญชี และชื่อบัญชีธนาคาร</b> บัญชีที่ลูกค้าจะใช้ฝากถอน ชื่อต้องตรงกับชื่อ-สกุลของบัญชี", "<b>รหัสผ่าน</b> รหัสที่ลูกค้าต้องการ 6-30 ตัวอักษร ไม่มีช่องว่าง ระบบจะส่งให้ลูกค้าอีกครั้งในขั้นสุดท้าย", "<b>ช่องทางการตลาด</b> ลูกค้ารู้จักเว็บจากช่องทางไหน ถ้าเพื่อนแนะนำมาให้เลือก \"เพื่อนแนะนำ\"", "<b>ผู้แนะนำ</b> เพื่อนที่ชวนลูกค้ามาสมัคร ไม่บังคับ", "<b>รหัสพันธมิตร</b> รหัสที่ลูกค้าได้มาจากพันธมิตร ไม่บังคับ"] },
+        { t: "ตรวจเลขบัญชี ผู้แนะนำ และพันธมิตร", d: "<b>①</b> กด <b>Check เลข</b> เพื่อตรวจว่าเลขบัญชีนี้เคยสมัครไว้แล้วหรือไม่ <b>②</b> ถ้ามีผู้แนะนำ พิมพ์ชื่อหรือชื่อผู้ใช้ของผู้แนะนำในช่อง <b>ผู้แนะนำ</b> แล้วกด <b>ค้นหา</b> จากนั้นกดชื่อที่พบ <b>③</b> ถ้ามีรหัสพันธมิตร (รหัสของร้านค้าหรือเพจที่แนะนำลูกค้ามา) พิมพ์ในช่อง <b>รหัสพันธมิตร</b> แล้วกด <b>ดูชื่อ</b> ระบบจะแสดงชื่อพันธมิตรให้ตรวจ", img: "img/app/register-extra.webp", alt: "วงปุ่ม Check เลข ผลค้นหาผู้แนะนำ และชื่อพันธมิตร" },
+        { t: "กดสมัครสมาชิก", d: "<b>①</b> กด <b>สมัครสมาชิก</b> ระบบผูกสมาชิกใหม่กับแชทนี้ทันที แล้วแสดงข้อความว่าสมัครสำเร็จ <b>②</b> ปุ่ม <b>ส่งข้อมูลให้ลูกค้า</b> จะกดได้", img: "img/app/register-done.webp", alt: "วงข้อความสมัครสำเร็จและปุ่มส่งข้อมูลให้ลูกค้า" },
+        { t: "ส่งชื่อผู้ใช้และรหัสผ่านให้ลูกค้า", d: "กด <b>ส่งข้อมูลให้ลูกค้า</b> ระบบส่งชื่อผู้ใช้ (เบอร์โทร) และรหัสผ่านให้ลูกค้าในแชท แล้วล้างฟอร์มให้พร้อมสมัครรายต่อไป", img: "img/app/register-sent.webp", alt: "วงข้อความชื่อผู้ใช้และรหัสผ่านที่ส่งให้ลูกค้าในแชท" },
+      ],
+      next: ["member", "credit"] },
+    { id: "password", icon: "key", title: "เปลี่ยนรหัสผ่านสมาชิก",
+      desc: "ตั้งรหัสผ่านใหม่ให้สมาชิกที่ลืมรหัส แล้วแจ้งลูกค้าในแชทว่าเปลี่ยนรหัสเรียบร้อย",
+      steps: [
+        { t: "กรอกรหัสใหม่", d: "ยืนยันตัวตนลูกค้าในแชทก่อน แล้วในการ์ด <b>ตรวจสอบ</b> กด <b>เปลี่ยนรหัสผ่านลูกค้า</b> กรอกรหัสใหม่ 2 ครั้งและรหัสผ่านแอดมินของคุณ แล้วกด <b>บันทึกรหัสผ่านใหม่</b> เมื่อระบบถามว่า \"เปลี่ยนรหัสผ่านสมาชิก?\" ให้กด <b>เปลี่ยนรหัสผ่าน</b> เปลี่ยนเสร็จแล้ว ให้แจ้งลูกค้าในแชทว่าเปลี่ยนรหัสเรียบร้อย", img: "img/app/password.webp", alt: "วงฟอร์มเปลี่ยนรหัสผ่านลูกค้า" },
+      ],
+      warn: "ยืนยันตัวตนลูกค้าก่อนเปลี่ยนรหัสทุกครั้ง เช่น ถามชื่อบัญชีธนาคารแล้วดูว่าตรงกับที่ผูกไว้",
+      next: ["member", "faq"] },
+    { id: "slip", icon: "receipt", title: "ตรวจสอบสลิปโอนเงิน",
+      desc: "ตรวจว่าสลิปที่ลูกค้าส่งมาในแชทเป็นสลิปจริงหรือไม่ และยอดโอนเท่าไร",
+      steps: [
+        { t: "กด ตรวจสอบสลิป ใต้รูป", d: "<b>①</b> กดปุ่มสีเขียว <b>ตรวจสอบสลิป</b> ใต้รูปที่ลูกค้าส่ง <b>②</b> ปุ่ม <b>ตรวจสอบสลิป</b> ในแถวบนของแผงขวามีจุดสีส้ม เมื่อมีรูปที่ยังไม่ได้ตรวจ", img: "img/app/slip-button.webp", alt: "วงปุ่มตรวจสอบสลิปใต้รูปและปุ่มตรวจสอบสลิปในแผงขวา" },
+        { t: "สลิปจริง", d: "การ์ดผลตรวจแสดงเป็นการ์ดแรกในกรอบสีเขียว ระบุยอดโอน วันเวลา ผู้โอน ผู้รับ และชื่อแอดมินที่ตรวจ", img: "img/app/slip-real.webp", alt: "วงการ์ดผลตรวจสลิปจริง" },
+        { t: "สลิปปลอม / สลิปซ้ำ", d: "ถ้าผลเป็นสลิปปลอมหรือสลิปซ้ำ แสดงว่าสลิปไม่ถูกต้องหรือเคยใช้ไปแล้ว ผลตรวจแสดงในกรอบสีแดง ห้ามเติมเครดิต ถ้าเป็นสลิปซ้ำ ระบบแสดงเวลาที่เคยมีการส่งสลิปใบนี้", img: "img/app/slip-fake.webp", alt: "วงการ์ดผลตรวจสลิปปลอม" },
+        { t: "ยังไม่พบรายการ / รอผลตรวจ / ตรวจไม่สำเร็จ", d: "<b>①</b> อ่านคำแนะนำในกรอบ <b>②</b> รอสักครู่แล้วกด <b>ตรวจอีกครั้ง</b> ถ้าแสดงข้อความว่า <b>อ่าน QR ไม่ได้</b> ให้ขอรูปสลิปที่เห็น QR ชัดจากลูกค้า", img: "img/app/slip-notfound.webp", alt: "วงผลตรวจยังไม่พบรายการและปุ่มตรวจอีกครั้ง" },
+        { t: "ปิดผลตรวจ", d: "กดที่หัวการ์ด <b>ตรวจสอบสลิป</b> เพื่อพับการ์ดผลตรวจ", img: "img/app/slip-dismiss.webp", alt: "วงหัวการ์ดตรวจสอบสลิป" },
+      ],
+      warn: "สลิปปลอมหรือสลิปซ้ำ ห้ามเติมเครดิต แจ้งหัวหน้าทีมทันที",
+      next: ["credit", "member"] },
+    { id: "credit", icon: "wallet", title: "เครดิตและประวัติฝากถอน",
+      desc: "เติมหรือถอนเครดิตของสมาชิก ดูประวัติฝากถอนย้อนหลัง และรายการที่ยังค้างอยู่",
+      steps: [
+        { t: "ดูเครดิตคงเหลือ", d: "เครดิตคือยอดเงินคงเหลือในบัญชีสมาชิก การ์ด <b>จัดการเครดิต</b> แสดงชื่อผู้ใช้และเครดิตคงเหลือ กดปุ่มรีเซ็ต <img class=\"ico\" src=\"img/icons/refresh.png\" alt=\"ปุ่มรีเซ็ต\"> ข้างยอดเพื่อดึงยอดล่าสุด", img: "img/app/credit.webp", alt: "วงชื่อผู้ใช้และเครดิตคงเหลือ" },
+        { t: "กรอกรายการ", d: "เลือก <b>เติมเครดิต</b> หรือ <b>ถอนเครดิต</b> (ถ้าเลือกถอน ปุ่มบันทึกจะเป็นสีแดง) ใส่จำนวนเงินตามยอดในสลิปที่ตรวจแล้ว ใส่หมายเหตุถ้ามี กรอกรหัสผ่านแอดมินของคุณ แล้วกด <b>บันทึก</b>", img: "img/app/credit-fill.webp", alt: "วงช่องกรอกประเภท จำนวนเงิน หมายเหตุ รหัสผ่านแอดมิน และปุ่มบันทึก" },
+        { t: "ตรวจแล้วยืนยัน", d: "ระบบสรุปรายการให้ตรวจอีกรอบ กด <b>ยืนยันเติมเครดิต</b> หรือ <b>ยืนยันถอนเครดิต</b> ระบบปรับเครดิตทันที", img: "img/app/credit-confirm.webp", alt: "วงขั้นยืนยันเติมเครดิต" },
+        { t: "หลังยืนยัน", d: "<b>①</b> เครดิตคงเหลือเพิ่มขึ้นทันที <b>②</b> การ์ดแสดงข้อความว่าเติมเครดิตแล้ว และฟอร์มว่างพร้อมทำรายการต่อไป <b>③</b> ในห้องแชทมีข้อความระบบบันทึกชื่อแอดมินและจำนวนเงินที่เติม ลูกค้าไม่เห็นข้อความนี้ จึงต้องพิมพ์แจ้งลูกค้าด้วยตนเอง", img: "img/app/credit-done.webp", alt: "วงเครดิตคงเหลือที่เพิ่มขึ้น ข้อความเติมเครดิตแล้ว และข้อความระบบในห้องแชท" },
+        { t: "ดูประวัติฝากถอน", d: "กดปุ่ม <b>ประวัติฝากถอน</b> ในแถวบนของแผงขวา <b>①</b> เลือกแท็บ ทั้งหมด ฝาก หรือถอน <b>②</b> หน้าหนึ่งมี 10 รายการ กดปุ่ม <img class=\"ico\" src=\"img/icons/prev.png\" alt=\"หน้าก่อนหน้า\"> หรือ <img class=\"ico\" src=\"img/icons/next.png\" alt=\"หน้าถัดไป\"> เพื่อไปหน้าก่อนหน้าหรือถัดไป", img: "img/app/history.webp", alt: "หน้าต่างประวัติฝากถอน วงแท็บและเลขหน้า" },
+        { t: "ดูยอดค้าง", d: "ยอดค้างคือรายการฝากหรือถอนที่ยังดำเนินการไม่เสร็จ การ์ด <b>สถานะยอดค้าง</b> แยกค้างฝากกับค้างถอน พร้อมยอดรวมและสถานะของแต่ละรายการ", img: "img/app/pending.webp", alt: "วงการ์ดสถานะยอดค้าง" },
+      ],
+      warn: "หลังปรับเครดิต ต้องแจ้งลูกค้าด้วยตนเอง ถอนเกินเครดิตคงเหลือไม่ได้ และสมาชิกที่ติดโปรโมชั่นปรับเครดิตด้วยมือไม่ได้",
+      next: ["slip", "faq"] },
+    { id: "general", icon: "gear", title: "ตั้งค่าทั่วไป",
+      desc: "เปิดหน้าตั้งค่าของ Channel ตั้งเสียงแจ้งเตือน และเลือกชุดข้อความที่ส่งให้ลูกค้าเมื่อปิดเคส",
+      steps: [
+        { t: "เปิดหน้าตั้งค่า", d: "กดปุ่ม <b>เลือกแชทที่แสดง</b> แล้วกดปุ่มตั้งค่า <img class=\"ico\" src=\"img/icons/gear.png\" alt=\"ปุ่มตั้งค่า\"> ท้ายชื่อ Channel ที่จะตั้งค่า", img: "img/app/filter-gear.webp", alt: "วงปุ่มเฟืองตั้งค่าท้ายชื่อ Channel" },
+        { t: "เมนูตั้งค่า", d: "หน้าตั้งค่าเปิดที่เมนู <b>ตั้งค่าทั่วไป</b> เมนูอื่นทางซ้ายมี ชุดสติ๊กเกอร์ (เฉพาะ LINE) คีย์ลัด ข้อความอัตโนมัติ คู่มือการใช้งาน และลิงก์ไปหน้า Line Liff", img: "img/app/set-general.webp", alt: "หน้าตั้งค่า วงเมนูตั้งค่าทั่วไป" },
+        { t: "เสียงแจ้งเตือน", d: "เปิดหรือปิดเสียง เลือกเสียง (กริ๊ง ป๊อป หรือระฆัง) และความดัง แล้วกด <b>ทดสอบเสียง</b> เพื่อฟัง ปุ่มลำโพงบนแถบบนก็เปิดหรือปิดเสียงได้เหมือนกัน", img: "img/app/set-sound.webp", alt: "วงการ์ดเสียงแจ้งเตือน" },
+        { t: "สร้างชุดข้อความหลังปิดเคส", d: "กด <b>สร้างชุดข้อความใหม่</b> แผงสร้างชุดจะเปิดทางขวา <b>①</b> ตั้งชื่อชุด <b>②</b> กดปุ่ม + ข้อความ + สติ๊กเกอร์ หรือ + รูปภาพ เพื่อเพิ่มรายการ ชุดละไม่เกิน 5 รายการ <b>③</b> กด <b>บันทึกชุดข้อความ</b>", img: "img/app/set-closeset-new.webp", alt: "แผงสร้างชุดข้อความ วงช่องชื่อชุด รายการ และปุ่มบันทึก" },
+        { t: "เลือกชุดที่ใช้เมื่อปิดเคส", d: "<b>①</b> เลือกชุดในช่อง <b>ชุดข้อความที่ใช้เมื่อปิดเคส</b> <b>②</b> หรือกด <b>ใช้ชุดนี้</b> ที่ชุดนั้น ถ้าไม่ต้องการส่งข้อความ เลือก \"ไม่ส่งข้อความ\" ชุดที่บันทึกไว้แต่ไม่ได้เลือกจะไม่ถูกส่ง", img: "img/app/set-closeset.webp", alt: "วงช่องเลือกชุดข้อความและปุ่มใช้ชุดนี้" },
+      ],
+      tip: "ทุกอย่างในหน้าตั้งค่าเป็นของ Channel ทุกคนในทีมใช้ร่วมกัน หากต้องการเปลี่ยน ให้แจ้งทีมก่อน",
+      next: ["stickers", "quick"] },
+    { id: "stickers", icon: "smile", only: "line", title: "ตั้งค่าชุดสติ๊กเกอร์",
+      desc: "เลือกสติ๊กเกอร์โปรดของ Channel และจัดชุดสติ๊กเกอร์ไว้ส่งในแชท LINE",
+      steps: [
+        { t: "เปิดเมนูชุดสติ๊กเกอร์", d: "ในหน้าตั้งค่า กด <b>ชุดสติ๊กเกอร์</b> เมนูนี้มีเฉพาะ Channel LINE", img: "img/app/set-nav-stk.webp", alt: "หน้าตั้งค่า วงเมนูชุดสติ๊กเกอร์" },
+        { t: "ปุ่มบนหน้าชุดสติ๊กเกอร์", d: "<b>①</b> <b>เพิ่มสติ๊กเกอร์โปรด</b> เปิดคลัง LINE เพื่อติดดาวสติ๊กเกอร์ <b>②</b> <b>สร้างชุดใหม่</b> จัดสติ๊กเกอร์เป็นชุดตามต้องการ", img: "img/app/set-stickers.webp", alt: "วงปุ่มเพิ่มสติ๊กเกอร์โปรดและปุ่มสร้างชุดใหม่" },
+        { t: "ติดดาวสติ๊กเกอร์โปรด", d: "หลังกด <b>เพิ่มสติ๊กเกอร์โปรด</b> คลัง LINE จะเปิดในการ์ด เลือกชุด แล้วกดที่สติ๊กเกอร์เพื่อติดดาวหรือเอาดาวออก ติดดาวได้สูงสุด 200 รูป สติ๊กเกอร์โปรดแสดงเป็นกลุ่มแรกในปุ่มสติ๊กเกอร์ของหน้าแชท เสร็จแล้วกด <b>ปิดคลัง</b>", img: "img/app/set-stickers-lib.webp", alt: "วงคลังสติ๊กเกอร์ที่เปิดอยู่ ชุด 446" },
+        { t: "สร้างชุดใหม่", d: "กด <b>สร้างชุดใหม่</b> แผงสร้างชุดจะเปิดทางขวา <b>①</b> ตั้งชื่อชุด <b>②</b> เลือกชุดในคลัง แล้วกดสติ๊กเกอร์ที่ต้องการ หรือกด <b>เลือกทั้งชุด</b> ค้นหาชุดได้ด้วย packageId (เลขชุดสติ๊กเกอร์ของ LINE ที่อยู่ท้ายลิงก์หน้าร้านสติ๊กเกอร์) <b>③</b> สติ๊กเกอร์ที่เลือกจะมาอยู่ในชุด กดปุ่มลบ <img class=\"ico\" src=\"img/icons/delete.png\" alt=\"ปุ่มลบ\"> มุมสติ๊กเกอร์เพื่อเอาออก เสร็จแล้วกด <b>สร้างชุด</b>", img: "img/app/set-stickers-new.webp", alt: "แผงสร้างชุดสติ๊กเกอร์ใหม่ วงช่องชื่อชุด คลัง LINE และสติ๊กเกอร์ในชุด" },
+      ],
+      tip: "หน้าตั้งค่าของ Channel Telegram ไม่มีเมนูนี้ เพราะลูกค้า Telegram รับสติ๊กเกอร์ไม่ได้",
+      next: ["quick", "send"] },
+    { id: "quick", icon: "zap", title: "ตั้งค่าคีย์ลัด",
+      desc: "เตรียมคำตอบสำเร็จรูปเป็นชุด ส่งได้ในคลิกเดียวจากห้องแชท",
+      steps: [
+        { t: "เปิดเมนูคีย์ลัด", d: "ในหน้าตั้งค่า กด <b>คีย์ลัด</b> แต่ละคีย์ลัดแสดงชื่อ จำนวนรายการ และตัวอย่างข้อความ มีปุ่มติดดาว แก้ไข และลบ", img: "img/app/set-nav-quick.webp", alt: "หน้าตั้งค่า วงเมนูคีย์ลัด" },
+        { t: "สร้างและติดดาว", d: "<b>①</b> กด <b>สร้างคีย์ลัดใหม่</b> <b>②</b> กด <b>ติ๊กดาว</b> เพื่อติดดาวคีย์ลัด คีย์ลัดที่ติดดาวจะแสดงเป็นปุ่มในแถว \"คีย์ลัด\" ใต้ห้องแชท กดได้ทันทีโดยไม่ต้องเปิดรายการ", img: "img/app/set-quick.webp", alt: "วงปุ่มสร้างคีย์ลัดใหม่และปุ่มติดดาว" },
+        { t: "กรอกคีย์ลัด", d: "หลังกด <b>สร้างคีย์ลัดใหม่</b> แผงสร้างคีย์ลัดจะเปิดทางขวา <b>①</b> ตั้งชื่อคีย์ลัด <b>②</b> กดปุ่ม <b>+ ข้อความ</b> (แทรกอิโมจิได้) <b>+ สติ๊กเกอร์</b> หรือ <b>+ รูปภาพ</b> เพื่อเพิ่มรายการ สูงสุด 20 รายการ ลากที่ปุ่มจับ <img class=\"ico\" src=\"img/icons/grip.png\" alt=\"ปุ่มจับ\"> หน้าแถวเพื่อเรียงลำดับ <b>③</b> ดูตัวอย่างว่าลูกค้าจะได้รับอย่างไร <b>④</b> กด <b>บันทึกคีย์ลัด</b> Channel Telegram เพิ่มได้เฉพาะข้อความและรูปภาพ", img: "img/app/set-quick-new.webp", alt: "แผงสร้างคีย์ลัด วงช่องชื่อ รายการ ตัวอย่างในแชท และปุ่มบันทึก" },
+      ],
+      next: ["auto", "send"] },
+    { id: "auto", icon: "bot", title: "ตั้งค่าข้อความอัตโนมัติ",
+      desc: "ตั้งให้ระบบตอบลูกค้าโดยอัตโนมัติเมื่อมีข้อความที่กำหนด ใช้ได้ทั้ง LINE และ Telegram",
+      steps: [
+        { t: "เปิดเมนูข้อความอัตโนมัติ", d: "ในหน้าตั้งค่า กด <b>ข้อความอัตโนมัติ</b> ข้อความอัตโนมัติที่ตั้งไว้ใช้กับ Channel นี้", img: "img/app/set-nav-auto.webp", alt: "หน้าตั้งค่า วงเมนูข้อความอัตโนมัติ" },
+        { t: "เพิ่มและเปิดปิด", d: "<b>①</b> กด <b>เพิ่มการตอบกลับ</b> <b>②</b> ใช้สวิตช์เปิดหรือปิดแต่ละรายการ", img: "img/app/set-auto.webp", alt: "วงปุ่มเพิ่มการตอบกลับและสวิตช์เปิดปิด" },
+        { t: "ตั้งคำค้นและข้อความตอบ", d: "หลังกด <b>เพิ่มการตอบกลับ</b> แผงเพิ่มการตอบกลับจะเปิดทางขวา <b>①</b> ตั้งชื่อรายการ <b>②</b> ใส่คำค้น บรรทัดละคำ หรือคั่นด้วยจุลภาค <b>③</b> เลือกประเภทการจับคู่ แบบ \"มีคำนี้\" ตอบเมื่อข้อความลูกค้ามีคำค้นอยู่ในส่วนใดส่วนหนึ่งของข้อความ แบบ \"ตรงทั้งข้อความ\" ตอบเมื่อลูกค้าพิมพ์ตรงกับคำค้นทั้งหมด <b>④</b> พิมพ์ข้อความที่จะตอบกลับ <b>⑤</b> ทำเครื่องหมายที่ช่องเปิดใช้งานรายการนี้ <b>⑥</b> กดบันทึก", img: "img/app/set-auto-new.webp", alt: "แผงเพิ่มการตอบกลับ วงช่องชื่อรายการ คำค้น ประเภทการจับคู่ ข้อความตอบกลับ เปิดใช้งาน และปุ่มบันทึก" },
+      ],
+      next: ["faq", "quick"] },
+    { id: "linestatus", icon: "wifi", title: "ตรวจสอบสถานะ LINE และผู้ช่วย (OA)",
+      desc: "ตรวจการเชื่อมต่อ LINE OA และผู้ช่วย (OA) เมื่อส่งข้อความหาลูกค้าไม่ได้ ผู้ช่วย (OA) คือบัญชีผู้ช่วยที่เข้าสู่ระบบ LINE OA ไว้ ระบบใช้บัญชีเหล่านี้ส่งข้อความถึงลูกค้า",
+      steps: [
+        { t: "เปิดดูสถานะ", d: "กดปุ่ม <b>LINE และผู้ช่วย (OA)</b> ในแถวบนของแผงขวา จุดสีเขียวบนปุ่มหมายความว่าการเชื่อมต่อปกติ ในแชท Telegram ปุ่มนี้ชื่อ <b>ผู้ช่วย (OA)</b>", img: "img/app/lineoa-pill.webp", alt: "วงปุ่ม LINE และผู้ช่วย (OA)" },
+        { t: "สถานะปกติ", d: "หน้าต่าง LINE และผู้ช่วย (OA) จะเปิดขึ้น สถานะ LINE OA เป็นออนไลน์ และแสดงข้อความว่า \"ผู้ช่วยทุกคนออนไลน์อยู่\" กด <b>รีเฟรช</b> เพื่อดึงข้อมูลล่าสุด หรือ <b>เช็คทั้งหมด</b> เพื่อตรวจผู้ช่วยทุกคน", img: "img/app/lineoa.webp", alt: "วงหน้าต่าง LINE และผู้ช่วย (OA) สถานะออนไลน์" },
+        { t: "LINE ขาดการเชื่อมต่อ", only: "line", d: "การ์ดจะกางออกโดยอัตโนมัติ <b>①</b> พร้อมป้าย \"LINE หลุด\" <b>②</b> กด <b>Verify</b> เพื่อยืนยันตัวตนและเข้าสู่ระบบ LINE OA ใหม่ ปุ่ม <b>Ping</b> ใช้ทดสอบว่าการเชื่อมต่อตอบสนองหรือไม่ ส่วนปุ่ม <b>Update สถานะ</b> ใช้ตรวจสถานะการเชื่อมต่ออีกครั้ง", img: "img/app/lineoa-down.webp", alt: "วงป้าย LINE หลุด และปุ่ม Verify" },
+        { t: "ผู้ช่วยหมดอายุ", d: "<b>①</b> ผู้ช่วยที่การเข้าสู่ระบบหมดอายุจะมีปุ่ม <b>Verify</b> (เข้าสู่ระบบใหม่ด้วยอีเมลที่บันทึกไว้) หรือ <b>QR Login</b> (สแกน QR ด้วยแอป LINE บนมือถือ) ถ้ามีแอดมินคนอื่นกำลัง verify อยู่ จะแสดงชื่อผู้นั้น <b>②</b> กด <b>เช็คทั้งหมด</b> เพื่อตรวจผู้ช่วยทุกคนพร้อมกัน", img: "img/app/assist-expired.webp", alt: "วงรายชื่อผู้ช่วยหมดอายุและปุ่มเช็คทั้งหมด" },
+        { t: "ผลการตรวจสอบผู้ช่วย", d: "<b>①</b> ระบบใช้เวลาตรวจสอบสักครู่ แล้วแจ้งผลที่มุมจอ ถ้ายังมีผู้ช่วยหมดอายุ จะแจ้งจำนวนผู้ช่วยและให้กด Verify ถ้าทุกคนปกติจะแสดงข้อความว่า \"ผู้ช่วยทุกคนออนไลน์อยู่\" <b>②</b> ผู้ช่วยที่ยังหมดอายุอยู่ในรายการ กด <b>Verify</b> หรือ <b>QR Login</b> ที่ชื่อนั้นเพื่อ login ใหม่", img: "img/app/assist-checked.webp", alt: "วงข้อความแจ้งผลการตรวจสอบที่มุมจอ และรายชื่อผู้ช่วยที่หมดอายุ" },
+      ],
+      tip: "ทุกแชทเห็นการ์ดนี้ รวมถึงแชท Telegram จึง verify ผู้ช่วยได้จากทุกแชท",
+      next: ["faq", "reply"] },
+    { id: "faq", icon: "help", title: "ปัญหาที่พบบ่อย",
+      desc: "สาเหตุและวิธีแก้ของปัญหาที่แอดมินเจอบ่อย",
+      steps: [
+        { t: "ส่งข้อความหาลูกค้าไม่ได้", img: "img/app/lineoa-down.webp", alt: "การ์ด LINE ขาดการเชื่อมต่อ วงป้ายและปุ่ม Verify",
+          cause: "LINE ขาดการเชื่อมต่อหรือผู้ช่วย (OA) หมดอายุ การ์ด LINE และผู้ช่วย (OA) จะกางออกโดยอัตโนมัติพร้อมป้ายสีแดง",
+          fix: "กด <b>Verify</b> หรือ <b>QR Login</b> แล้ว login ใหม่ กด <b>เช็คทั้งหมด</b> เพื่อตรวจผู้ช่วยทุกคน" },
+        { t: "ไม่เห็นแชทของบาง Channel", img: "img/app/filter.webp", alt: "แผงเลือกแชทที่แสดง วงช่องทั้งหมด",
+          cause: "ไม่ได้เลือก Channel นั้นในแผง \"เลือกแชทที่แสดง\"",
+          fix: "กด <b>เลือกแชทที่แสดง</b> แล้วเลือก Channel ที่ต้องการ หรือเลือก \"ทั้งหมด\"" },
+        { t: "ไม่มีเสียงแจ้งเตือนเมื่อลูกค้าส่งข้อความ", img: "img/app/set-sound.webp", alt: "วงการ์ดเสียงแจ้งเตือน",
+          cause: "ปิดเสียงไว้ หรือเบราว์เซอร์ยังไม่อนุญาตให้เล่นเสียง",
+          fix: "ตรวจสอบปุ่มลำโพงบนแถบบน ในตั้งค่าทั่วไปให้เปิดเสียงแล้วกด <b>ทดสอบเสียง</b> ถ้าเพิ่งเปิดหน้าใหม่ ให้คลิกที่หน้าเว็บ 1 ครั้งก่อน" },
+        { t: "ปิดเคสแล้วลูกค้าไม่ได้ข้อความปิดเคส", img: "img/app/set-closeset.webp", alt: "วงช่องชุดข้อความที่ใช้เมื่อปิดเคส",
+          cause: "บันทึกชุดข้อความไว้แต่ยังไม่ได้เลือกใช้ หรือเลือก \"ไม่ส่งข้อความ\" ไว้",
+          fix: "ในตั้งค่าทั่วไป เลือกชุดในช่อง <b>ชุดข้อความที่ใช้เมื่อปิดเคส</b> หรือกด <b>ใช้ชุดนี้</b>" },
+        { t: "ปุ่ม \"ปิดเคส\" กดไม่ได้", img: "img/app/close-other.webp", alt: "วงป้ายรับโดยแอดมินคนอื่นและปุ่มปิดเคส",
+          cause: "แอดมินคนอื่นรับเคสนี้ไว้ ดูชื่อได้ที่ป้าย \"รับโดย …\" บนหัวห้องแชท",
+          fix: "ให้คนที่รับเคสเป็นคนปิด" },
+        { t: "ไม่มีปุ่มคีย์ลัดใต้ห้องแชท", img: "img/app/set-quick.webp", alt: "วงปุ่มติดดาวคีย์ลัด",
+          cause: "ยังไม่ได้ติดดาวคีย์ลัด",
+          fix: "ไปที่ตั้งค่า เลือกคีย์ลัด แล้วกด <b>ติ๊กดาว</b> ที่คีย์ลัดที่ต้องการ" },
+        { t: "ข้อความอัตโนมัติไม่ตอบ", img: "img/app/set-auto.webp", alt: "วงสวิตช์เปิดปิดข้อความอัตโนมัติ",
+          cause: "รายการนั้นถูกปิดอยู่ ตั้งเป็น \"ตรงทั้งข้อความ\" แต่ลูกค้าพิมพ์คำอื่นปนมา",
+          fix: "ตรวจสอบว่าสวิตช์ <b>เปิด</b> อยู่ หรือเปลี่ยนเป็นแบบ \"มีคำนี้\"" },
+        { t: "ตรวจสลิปแล้วแสดง \"ยังไม่พบรายการ\" หรือ \"รอผลตรวจ\"", img: "img/app/slip-notfound.webp", alt: "วงผลตรวจยังไม่พบรายการและปุ่มตรวจอีกครั้ง",
+          cause: "ธนาคารยังไม่มีรายการนี้ หรือผู้ให้บริการยังตรวจไม่เสร็จ",
+          fix: "รอสักครู่แล้วกด <b>ตรวจอีกครั้ง</b> ถ้าแสดงข้อความว่า \"อ่าน QR ไม่ได้\" ให้ขอรูปสลิปที่เห็น QR ชัดจากลูกค้า" },
+        { t: "ค้นหาสมาชิกไม่พบ", img: "img/app/member-notfound.webp", alt: "วงช่องค้นหาและข้อความไม่พบสมาชิก",
+          cause: "พิมพ์ผิด หรือลูกค้ายังไม่ได้สมัคร",
+          fix: "ตรวจตัวสะกดและเบอร์ ถ้าลูกค้ายังไม่เป็นสมาชิก สมัครให้ที่การ์ด <b>สมัครสมาชิก Player</b>" },
+        { t: "รูปหรือวิดีโอที่ลูกค้าส่งมาไม่แสดง", img: "img/app/media-reload.webp", alt: "วงกรอบรูปภาพที่มีปุ่มโหลดรูปใหม่ และกรอบวิดีโอที่มีปุ่มโหลดวิดีโอใหม่",
+          cause: "ไฟล์ยังโหลดไม่เสร็จ หรือโหลดไม่สำเร็จ ห้องแชทจะแสดงเป็นกรอบ <b>①</b> รูปภาพ หรือ <b>②</b> วิดีโอ แทนตัวไฟล์",
+          fix: "กด <b>โหลดรูปใหม่</b> หรือ <b>โหลดวิดีโอใหม่</b> ในกรอบนั้น" },
+        { t: "ปรับเครดิตไม่ได้", img: "img/app/credit-error.webp", alt: "วงข้อความสมาชิกกำลังติดโปรโมชั่น",
+          cause: "สมาชิกติดโปรโมชั่น ถอนเกินเครดิตคงเหลือ หรือรหัสผ่านแอดมินไม่ถูกต้อง",
+          fix: "อ่านข้อความสีแดงใต้ช่อง ถ้าสมาชิกติดโปรโมชั่น ต้องรอให้สิ้นสุดโปรโมชั่นก่อน หรือแจ้งหัวหน้าทีม" },
+      ],
+      next: ["linestatus", "close"] },
+  ] },
+];
+const ALL = SECTIONS.flatMap((s) => s.topics.map((t) => ({ ...t, sec: s })));
+const byId = (id) => ALL.find((t) => t.id === id);
+
+const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON = {
+  rocket: svg('<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>'),
+  login: svg('<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/>'),
+  layout: svg('<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18M15 3v18"/>'),
+  filter: svg('<path d="M22 3H2l8 9.46V19l4 2v-8.54z"/>'),
+  inbox: svg('<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>'),
+  message: svg('<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>'),
+  smile: svg('<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>'),
+  note: svg('<path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5z"/><path d="M15 3v6h6"/>'),
+  check: svg('<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>'),
+  usersearch: svg('<circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/>'),
+  userplus: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'),
+  key: svg('<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>'),
+  receipt: svg('<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 17.5v-11"/>'),
+  wallet: svg('<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>'),
+  bank: svg('<path d="M3 22h18M6 18v-7M10 18v-7M14 18v-7M18 18v-7M12 2l8 5H4z"/>'),
+  history: svg('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/>'),
+  wifi: svg('<path d="M12 20h.01M2 8.82a15 15 0 0 1 20 0M5 12.86a10 10 0 0 1 14 0M8.5 16.43a5 5 0 0 1 7 0"/>'),
+  volume: svg('<path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6M19.4 18.4a9 9 0 0 0 0-12.8"/>'),
+  bell: svg('<path d="M10.27 21a2 2 0 0 0 3.46 0M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"/>'),
+  zap: svg('<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>'),
+  bot: svg('<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>'),
+  megaphone: svg('<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>'),
+  compare: svg('<path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/>'),
+  help: svg('<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>'),
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.67 4.14a2.34 2.34 0 0 1 4.66 0 2.34 2.34 0 0 0 3.32 1.91 2.34 2.34 0 0 1 2.33 4.03 2.34 2.34 0 0 0 0 3.84 2.34 2.34 0 0 1-2.33 4.03 2.34 2.34 0 0 0-3.32 1.91 2.34 2.34 0 0 1-4.66 0 2.34 2.34 0 0 0-3.32-1.91 2.34 2.34 0 0 1-2.33-4.03 2.34 2.34 0 0 0 0-3.84 2.34 2.34 0 0 1 2.33-4.03 2.34 2.34 0 0 0 3.32-1.91"/><circle cx="12" cy="12" r="3"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>',
+  line: '<img src="../platform/line.svg" alt="" />',
+  telegram: '<img src="../platform/telegram.svg" alt="" />',
+  tip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></svg>',
+  arrowR: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>',
+  ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+  arrowL: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>',
+};
+const only = (o) => o === "line" ? `<span class="only"><img src="../platform/line.svg" alt="" />เฉพาะ LINE</span>` : "";
+const yes = (v) => v ? `<span class="yes">✓<span class="sr-only"> ใช้ได้</span></span>` : `<span class="no">—<span class="sr-only"> ใช้ไม่ได้</span></span>`;
+const compareHtml = (rows) => `<div class="tbl"><table><thead><tr><th scope="col">ฟีเจอร์</th><th scope="col"><img src="../platform/line.svg" alt="" />LINE</th><th scope="col"><img src="../platform/telegram.svg" alt="" />Telegram</th></tr></thead>
+  <tbody>${rows.map(([f, l, g, n]) => `<tr><th scope="row">${f}${n ? `<small>${n}</small>` : ""}</th><td>${yes(l)}</td><td>${yes(g)}</td></tr>`).join("")}</tbody></table></div>`;
+const tile = (t) => `<span class="tile${t.icon === "warn" ? " warn" : ""}">${ICON[t.icon]}</span>`;
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+function indexPage() {
+  return `<div class="wrap">
+    <div class="hero"><h1>คู่มือการใช้งาน SmartCHAT</h1>
+      <p>วิธีใช้ SmartCHAT สำหรับแอดมิน ตั้งแต่เข้าสู่ระบบ ตอบแชท ตรวจสลิป ปรับเครดิต จนถึงตั้งค่า Channel เลือกหัวข้อที่ต้องการได้จากรายการด้านล่าง</p></div>
+    ${SECTIONS.map((s) => `<section class="sec" aria-labelledby="h-${s.id}">
+      <h2 id="h-${s.id}">${s.title}</h2>
+      <div class="grid">${s.topics.map((t) => `<a class="card" href="#/${t.id}">${tile(t)}<span><h3>${t.title}</h3>${only(t.only)}<p>${t.desc}</p></span></a>`).join("")}</div>
+    </section>`).join("")}
+    <p class="note">ภาพหน้าจอจากระบบต้นแบบที่ใช้ข้อมูลสมมติ เมื่อ 27/10/2026 ปุ่มและข้อความในระบบจริงอาจเปลี่ยนตามเวอร์ชัน</p>
+  </div>`;
+}
+
+// เลขรุ่นของภาพหน้าจอ — เปลี่ยนทุกครั้งที่แคปใหม่ ให้เบราว์เซอร์โหลดภาพใหม่ ไม่ใช้ภาพเก่าที่จำไว้
+const IMG_V = "20261029f";
+
+// ①②③ ในคำอธิบาย ⇒ บรรทัดละข้อ (ข้อความก่อนข้อแรกเป็นย่อหน้านำ)
+function para(d) {
+  const parts = d.split(/(?=<b>[①-⑳]<\/b>)/).map((x) => x.trim()).filter(Boolean);
+  const isItem = (x) => /^<b>[①-⑳]<\/b>/.test(x);
+  if (!parts.some(isItem)) return `<p>${d}</p>`;
+  return parts.filter((x) => !isItem(x)).map((x) => `<p>${x}</p>`).join("") + `<ul class="pts">${parts.filter(isItem).map((x) => `<li>${x}</li>`).join("")}</ul>`;
+}
+
+function stepHtml(s, i) {
+  return `<li class="step"><span class="num" aria-hidden="true">${i + 1}</span><div>
+    <h3><span class="sr-only">ขั้นที่ ${i + 1}: </span>${s.t}${only(s.only)}</h3>${s.cause ? `<div class="kv"><div><b>สาเหตุ</b><span>${s.cause}</span></div><div><b>วิธีแก้</b><span>${s.fix}</span></div></div>` : para(s.d)}${s.list ? `<ul class="pts dot">${s.list.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
+    ${(s.imgs || (s.img ? [[s.img, s.alt || ""]] : [])).map(([src, alt]) => `<figure class="shot"><img src="${src}?v=${IMG_V}" alt="${esc(alt)}" loading="lazy" /></figure>`).join("")}
+  </div></li>`;
+}
+
+function topicPage(t) {
+  const i = ALL.indexOf(t), prev = ALL[i - 1], next = ALL[i + 1];
+  const cmp = t.compare ? `<section class="cmp" aria-labelledby="h-cmp"><h2 id="h-cmp">LINE กับ Telegram ต่างกันอย่างไร</h2>${compareHtml(t.compare)}</section>` : "";
+  const body = cmp && !t.steps ? cmp : t.steps
+    ? `<ol class="steps">${t.steps.map(stepHtml).join("")}</ol>` + cmp
+    : `<figure class="shot" style="margin-top:0"><img src="${t.img}?v=${IMG_V}" alt="${esc(t.alt)}" /></figure>
+       <ol class="steps" style="margin-top:2rem">
+         <li class="step"><span class="num" aria-hidden="true">!</span><div><h3>สาเหตุ</h3><p>${t.cause}</p></div></li>
+         <li class="step"><span class="num" aria-hidden="true">✓</span><div><h3>วิธีแก้</h3><p>${t.fix}</p></div></li>
+       </ol>`;
+  return `<div class="doc">
+    <nav class="side" aria-label="หัวข้อคู่มือ">${SECTIONS.map((s) => `<h2>${s.title}</h2><div class="grp">${s.topics.map((x) => `<a href="#/${x.id}"${x.id === t.id ? ' aria-current="page"' : ""}>${x.title}</a>`).join("")}</div>`).join("")}</nav>
+    <article class="main">
+      <a class="back" href="#/">${ICON.arrowL}คู่มือทั้งหมด</a>
+      <div class="eyebrow">${t.sec.title}</div>
+      <h1 id="title" tabindex="-1">${t.title}</h1>
+      <p class="lead">${t.desc}</p>${t.only ? `<p class="lead-only">${only(t.only)}</p>` : ""}
+      ${body}
+      ${t.copy ? `<p class="copy">ค่าที่ต้องคัดลอก ${t.copy.map((c) => `<code>${c}</code>`).join("")}</p>` : ""}
+      ${t.tip ? `<div class="callout">${ICON.tip}<span>${t.tip}</span></div>` : ""}
+      ${t.warn ? `<div class="callout warn" role="note">${ICON.warn}<span>${t.warn}</span></div>` : ""}
+      ${t.ext ? `<a class="ext" href="${t.ext[1]}" target="_blank" rel="noopener">${t.ext[0]}${ICON.ext}<span class="sr-only"> (เปิดในแท็บใหม่)</span></a>` : ""}
+      ${t.next && t.next.length ? `<section class="next" aria-labelledby="h-next"><h2 id="h-next">ขั้นต่อไป</h2><div class="pair">
+        ${t.next.map(byId).filter(Boolean).map((n) => `<a class="link" href="#/${n.id}"><b>${n.title}${ICON.arrowR}</b><span>${n.desc}</span></a>`).join("")}
+      </div></section>` : ""}
+      <nav class="pair pn" aria-label="หัวข้อก่อนหน้าและถัดไป">
+        ${prev ? `<a class="link" href="#/${prev.id}"><small>← ก่อนหน้า · ${prev.sec.title}</small><b>${prev.title}</b></a>` : "<span></span>"}
+        ${next ? `<a class="link r" href="#/${next.id}"><small>ถัดไป · ${next.sec.title} →</small><b>${next.title}</b></a>` : ""}
+      </nav>
+    </article>
+  </div>`;
+}
+
+const main = document.getElementById("content");
+function render() {
+  const id = location.hash.replace(/^#\/?/, "");
+  const t = id && byId(id);
+  main.innerHTML = t ? topicPage(t) : indexPage();
+  // ภาพหน้าจอจากต้นแบบแคปที่ 2 เท่า ⇒ แสดงที่ครึ่งหนึ่งของความกว้างจริง (คมบนจอ retina · ขนาดเท่าจอจริง) แต่ไม่เกินความกว้างของเนื้อหา
+  main.querySelectorAll('img[src*="img/app/"]').forEach((im) => {
+    const fit = () => (im.style.width = im.naturalWidth / 2 + "px");
+    im.complete && im.naturalWidth ? fit() : im.addEventListener("load", fit, { once: true });
+  });
+  document.title = t ? t.title + " · คู่มือการใช้งาน SmartCHAT" : "คู่มือการใช้งาน SmartCHAT";
+  window.scrollTo(0, 0);
+  if (t) document.getElementById("title")?.focus({ preventScroll: true });
+}
+addEventListener("hashchange", render);
+render();
+
+// ธีมสว่าง / มืด
+const btns = document.querySelectorAll(".theme button");
+function setTheme(v) {
+  document.documentElement.dataset.theme = v;
+  btns.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.t === v)));
+  try { localStorage.setItem("onechat-manual-theme", v); } catch {}
+}
+btns.forEach((b) => b.addEventListener("click", () => setTheme(b.dataset.t)));
+setTheme(document.documentElement.dataset.theme);
+</script>
+</body>
+</html>
