@@ -1,14 +1,14 @@
-<!-- แถบบน 64px — DESIGN-SYSTEM §9.1: โลโก้ · กลับหน้า Smart Liff · (ว่าง) · ไปหน้า Auto fast · สลับธีม · เสียง · เมนู -->
+<!-- แถบบน 64px — DESIGN-SYSTEM §9.1: โลโก้ · กลับหน้า SmartHub · (ว่าง) · ไปหน้า Auto fast · สลับธีม · เสียง · เมนู -->
 <script>
     import MenuIcon from "@lucide/svelte/icons/menu";
     import ArrowLeft from "@lucide/svelte/icons/arrow-left";
     import ExternalLink from "@lucide/svelte/icons/external-link";
-    import MessageCircle from "@lucide/svelte/icons/message-circle";
+    import BrandLogo from "./ui/BrandLogo.svelte";
     import Moon from "@lucide/svelte/icons/moon";
     import Sun from "@lucide/svelte/icons/sun";
     import ChevronDown from "@lucide/svelte/icons/chevron-down";
-    import Bell from "@lucide/svelte/icons/bell";
-    import BellOff from "@lucide/svelte/icons/bell-off";
+    import Volume2 from "@lucide/svelte/icons/volume-2";
+    import VolumeX from "@lucide/svelte/icons/volume-x";
     import { snd, setSound } from "./sound.svelte.js";
     import UserRound from "@lucide/svelte/icons/user-round";
     import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
@@ -32,17 +32,18 @@
 <header class="bg-surface-chrome sticky top-0 z-10 flex h-(--header-height) w-full min-w-0 shrink-0 items-center gap-2 border-b px-3 sm:gap-3 md:px-6">
     <button
         type="button"
-        class="text-brand inline-flex min-h-6 items-center gap-2 rounded-md text-lg font-bold"
+        class="inline-flex min-h-6 shrink-0 items-center rounded-md"
+        aria-label="SmartCHAT — หน้าหลัก"
         onclick={() => showPage("console")}
     >
-        <MessageCircle class="size-6" aria-hidden="true" />OneChat
+        <BrandLogo class="h-7" />
     </button>
     <!-- ชื่อหน้า "• แชท" เอาออกจากจอ (เจ้าของงานสั่ง 15 ต.ค. 2026) — คงหัวข้อไว้ให้โปรแกรมอ่านหน้าจอ -->
     <h1 class="sr-only">แชท (ออนไลน์)</h1>
     <Separator orientation="vertical" class="hidden h-5 sm:block" />
-    <!-- กลับหน้า Smart Liff (ระบบหลักที่เปิด OneChat มา) · ถัดจากโลโก้ -->
-    <Button variant="outline" size="sm" aria-label="กลับหน้า Smart Liff" onclick={() => toast("กลับหน้า Smart Liff (ยังไม่มีลิงก์จริง)")}>
-        <ArrowLeft data-icon="inline-start" /><span class="hidden sm:inline">กลับหน้า Smart Liff</span>
+    <!-- กลับหน้า SmartHub (ระบบหลักที่เปิด OneChat มา) · ถัดจากโลโก้ -->
+    <Button variant="outline" size="sm" aria-label="กลับหน้า SmartHub" onclick={() => toast("กลับหน้า SmartHub (ยังไม่มีลิงก์จริง)")}>
+        <ArrowLeft data-icon="inline-start" /><span class="hidden sm:inline">กลับหน้า SmartHub</span>
     </Button>
     <span class="flex-1"></span>
     <!-- ไปหน้า Auto fast — ย้ายจากแผงลูกค้ามาไว้บนแถบบน (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
@@ -90,7 +91,7 @@
         title={snd.on ? "ปิดเสียงแจ้งเตือน" : "เปิดเสียงแจ้งเตือน"}
         onclick={() => setSound({ on: !snd.on }, true)}
     >
-        {#if snd.on}<Bell />{:else}<BellOff class="text-muted-foreground" />{/if}
+        {#if snd.on}<Volume2 />{:else}<VolumeX class="text-muted-foreground" />{/if}
     </Button>
     <DropdownMenu.Root bind:open={st.menu}>
         <DropdownMenu.Trigger id="burger" aria-label="เมนู" class={buttonVariants({ variant: "outline", size: "icon" })}>

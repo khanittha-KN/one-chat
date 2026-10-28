@@ -50,6 +50,17 @@
                         />
                         <span class="min-w-0 flex-1 truncate px-2 text-sm font-bold" title={g.agent.name}>{g.agent.name}</span>
                         <span class="text-muted-foreground text-xs tabular-nums">{n}/{ids.length}</span>
+                        <!-- ตั้งค่าระดับ Agent: ตั้งครั้งเดียว ใช้กับทุก Channel ใน Agent (เจ้าของงานสั่ง 29 ต.ค. 2026) -->
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={"ตั้งค่า Agent " + g.agent.name}
+                            title={"ตั้งค่า Agent " + g.agent.name + " (ใช้กับทุก Channel)"}
+                            onclick={() => {
+                                st.chanOpen = false;
+                                openSettings("gen", "", false, g.agent.id);
+                            }}><SettingsIcon /></Button
+                        >
                         <Collapsible.Trigger class={buttonVariants({ variant: "ghost", size: "icon-sm" }) + " text-muted-foreground aria-expanded:bg-transparent"} aria-label={"พับ/ขยาย " + g.agent.name}>
                             <ChevronRight class="transition-transform group-data-[state=open]/agent:rotate-90" />
                         </Collapsible.Trigger>
@@ -74,7 +85,7 @@
                                         title={"ตั้งค่า " + m.name}
                                         onclick={() => {
                                             st.chanOpen = false;
-                                            openSettings("stk", m.name);
+                                            openSettings("gen", m.name);
                                         }}><SettingsIcon /></Button
                                     >
                                 </li>

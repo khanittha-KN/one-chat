@@ -1,6 +1,8 @@
 <script>
     import MessageCircle from "@lucide/svelte/icons/message-circle";
     import X from "@lucide/svelte/icons/x";
+    import UserRound from "@lucide/svelte/icons/user-round";
+    import * as Empty from "$lib/components/ui/empty/index.js";
     import * as Item from "$lib/components/ui/item/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
     import { merch, platformOf } from "./data.js";
@@ -19,9 +21,10 @@
     // ลูกค้าที่แสดง = เลือกจากช่องค้นหา/ตรวจสอบ หรือของแชทที่เปิดอยู่ · ยังไม่มี ⇒ เหลือแค่เครื่องมือ (ค้นหา · ตรวจสอบ · สมัครสมาชิก)
     const c = $derived(panelCase());
     // บล็อกที่พับไว้ตั้งแต่แรก (= def ของ FoldCard ในแต่ละบล็อก) แสดงเป็นปุ่มเปิดหน้าต่าง เรียงเป็นปุ่มเล็กแถวเดียว
-    const isLine = $derived(!!c && platformOf(c.merchant) === "line"); // ลูกค้า Telegram ไม่มีการ์ดสถานะไลน์ (OA)
-    const oaBtn = $derived(isLine && !c.unbound && c.lineOk);
-    const slipBtn = $derived(!!c && !c.unbound && !(c.slip && (c.slip.state === "reading" || c.slip.state === "ready")));
+    // เว็บจริง 27 ต.ค. 2026: การ์ด "LINE และผู้ช่วย (OA)" มีทุกแชท (Telegram ชื่อ "ผู้ช่วย (OA)" ไม่มีส่วนสถานะ LINE) · ตรวจสอบสลิปมีทั้งแชทที่ผูกและยังไม่ผูกสมาชิก
+    const oaOk = $derived(!!c && (platformOf(c.merchant) !== "line" || c.lineOk) && st.assist.every((a) => a.ok));
+    const oaBtn = $derived(oaOk);
+    const slipBtn = $derived(!!c && !(c.slip && !c.slip.hidden && (c.slip.state === "reading" || c.slip.state === "ready")));
     const histBtn = $derived(!!c && !c.unbound);
     const regBtn = $derived(!!c && !c.justReg && !c.unbound);
 </script>
@@ -43,6 +46,16 @@
             </Item.Actions>
         </Item.Root>
     {/if}
+    {#if !c}
+        <!-- ยังไม่เปิดแชท / ยังไม่เลือกลูกค้า (เว็บจริง 27 ต.ค. 2026) -->
+        <Empty.Root class="justify-start p-6">
+            <Empty.Header>
+                <Empty.Media variant="icon"><UserRound /></Empty.Media>
+                <Empty.Title>ข้อมูลลูกค้า</Empty.Title>
+                <Empty.Description>เปิดแชท หรือค้นหาลูกค้าจากช่องค้นหาในรายการสนทนา เพื่อดูข้อมูลสมาชิกและรายการเงิน</Empty.Description>
+            </Empty.Header>
+        </Empty.Root>
+    {:else}
     <h2 class="px-0.5 text-sm font-bold">สมาชิกและรายการเงิน</h2>
     <!-- ข้อมูลที่ไม่แสดงตั้งแต่แรก = ปุ่มเล็กแถวเดียว (ขึ้นบรรทัดใหม่เมื่อเต็ม) กดแล้วเปิดหน้าต่าง (สถานะไลน์ปกติ · สลิปยังไม่มี · ประวัติ · สมัครสมาชิก) -->
     {#if oaBtn || slipBtn || histBtn || regBtn}
@@ -54,9 +67,9 @@
         </div>
     {/if}
     <!-- กดตรวจสอบสลิปแล้ว ⇒ การ์ดผลตรวจขึ้นเป็นการ์ดแรก เหนือการ์ดตรวจสอบ (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
-    {#if c && !c.unbound && !slipBtn}<SlipBlock {c} />{/if}
+    {#if c && !slipBtn}<SlipBlock {c} />{/if}
     <!-- ข้อมูลที่แสดงอยู่ = การ์ดเดิม · ไลน์หลุด / มีสลิปรอตรวจ / ลูกค้าใหม่ ⇒ การ์ดนั้นกางขึ้นมาในลำดับนี้ -->
-    {#if isLine && !c.unbound && !oaBtn}<LineStatusBlock {c} />{/if}
+    {#if c && !oaBtn}<LineStatusBlock {c} />{/if}
     <LookupBlock {c} />
     {#if c && !c.unbound}
         <BankAccountsBlock {c} />
@@ -64,4 +77,5 @@
         <CreditBlock {c} />
     {/if}
     {#if !regBtn}<RegisterBlock {c} />{/if}
+    {/if}
 </section>

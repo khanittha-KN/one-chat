@@ -8,7 +8,7 @@
         <div class="flex min-w-0 flex-1 basis-72 flex-col gap-1">
             <h1 class="text-2xl font-bold">{title}</h1>
             {#if description}
-                <p class="text-muted-foreground max-w-prose text-sm">{@html description}</p>
+                <p class="text-muted-foreground text-sm">{@html description}</p>
             {/if}
         </div>
         {#if actions}

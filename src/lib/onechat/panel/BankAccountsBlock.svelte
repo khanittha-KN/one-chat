@@ -5,7 +5,7 @@
     import Status from "../ui/Status.svelte";
     import BankLogo from "../ui/BankLogo.svelte";
     import FoldCard from "../ui/FoldCard.svelte";
-    import { accountsOf, bankOf, maskNo } from "../data.js";
+    import { accountsOf, bankOf } from "../data.js";
     import { st } from "../store.svelte.js";
     let { c } = $props();
     const accs = $derived(accountsOf(c));
@@ -19,11 +19,11 @@
         <Item.Media><BankLogo code={a0.bank} /></Item.Media>
         <Item.Content class="min-w-0 gap-1">
             <Item.Title>ธนาคาร{bankOf(a0.bank).name}</Item.Title>
-            <Item.Description class="tabular-nums">{maskNo(a0.no)}</Item.Description>
+            <Item.Description class="tabular-nums">{a0.no}</Item.Description>
             <Item.Description>{c.user.fullname}</Item.Description>
             <span class="flex flex-wrap gap-1 pt-0.5">
                 <Status tone={a0.st === "อนุมัติ" ? "success" : a0.st === "รออนุมัติ" ? "warning" : "destructive"}>{a0.st}</Status>
-                {#if a0.nm}<Status tone="success">ยืนยันชื่อแล้ว</Status>{:else}<Status tone="destructive">ชื่อไม่ตรง</Status>{/if}
+                {#if a0.nm}<Status tone="success">ยืนยันชื่อแล้ว</Status>{:else}<Status tone="destructive">ตรวจชื่อไม่ผ่าน</Status>{/if}
             </span>
         </Item.Content>
     </Item.Root>

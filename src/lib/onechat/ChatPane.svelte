@@ -27,14 +27,16 @@
     import { Badge } from "$lib/components/ui/badge/index.js";
     import Status from "./ui/Status.svelte";
     import StickerPicker from "./StickerPicker.svelte";
+    import Star from "@lucide/svelte/icons/star";
     import StickerImg from "./ui/StickerImg.svelte";
     import CustomerAvatar from "./ui/CustomerAvatar.svelte";
     import PlatformIcon from "./ui/PlatformIcon.svelte";
-    import { merch, slipOf, bankOf, money, TODAY, CARDS, PLATFORM } from "./data.js";
+    import { merch, slipOf, bankOf, money, TODAY, PLATFORM, VERDICT, DAY_SHORT } from "./data.js";
     import { kindOf, TYPE_BTNS } from "./kinds.js";
     import {
         db, st, S, cur, ME, toast, closeCase, saveName, sendText, quickSend, askAcc, slipCheck,
-        setType, addNote, delNote, sendQuickSet, sendCard, sendImage, openSettings,
+        setType, addNote, delNote, sendQuickSet, sendImage, openSettings,
+        eff,
     } from "./store.svelte.js";
 
     let { class: className = "" } = $props();
@@ -42,16 +44,18 @@
     const m = $derived(merch(c.merchant));
     const k = $derived(kindOf(c));
     const done = $derived(c.status === "closed");
-    const quick = $derived(db.announces.filter((a) => a.status === "ใช้งาน" && a.text));
+    // แถว "คีย์ลัด" ใต้ห้องแชท = คีย์ลัดที่ติดดาวใน ตั้งค่า › คีย์ลัด (เว็บจริง 27 ต.ค. 2026 · แทนข้อความจากหน้า Announce)
+    // คีย์ลัดของ Channel ที่แชทนี้ทักเข้ามา (Channel ตั้งเอง หรือใช้ของ Agent)
+    const qrs = $derived(c ? eff(c.merchant).qr : []);
+    const starred = $derived(qrs.map((q, i) => ({ q, i })).filter((x) => x.q.star));
 
     let msgsEl = $state(null);
     let eName = $state(null);
     let eUser = $state(null);
     let imgIn = $state(null);
-    let draft = $state(""); // ค่าที่พิมพ์ค้างอยู่คงไว้ข้ามการสลับเคส เหมือนต้นฉบับ
+    // ค่าที่พิมพ์ค้างอยู่คงไว้ข้ามการสลับเคส เหมือนต้นฉบับ · อยู่ใน store ให้ปุ่ม "ขอเลขบัญชีลูกค้า" ใส่ข้อความให้ได้ (เว็บจริง 27 ต.ค. 2026)
     let note = $state("");
     let qrOpen = $state(false);
-    let cardOpen = $state(false);
 
     // scrollMsgs() ของต้นฉบับ — เลื่อนลงล่างสุดหลังมีข้อความใหม่ / เลือกเคส / ปิดเคส
     $effect(() => {
@@ -62,8 +66,7 @@
     });
 
     function send() {
-        if (done) return;
-        if (sendText(c, draft)) draft = "";
+        if (sendText(c, st.draft)) st.draft = "";
     }
     function pickImage(e) {
         const f = e.currentTarget.files && e.currentTarget.files[0];
@@ -82,6 +85,24 @@
         <!-- แถว 1: ตัวตนลูกค้า · ผู้รับเคส · ปิดเคส · ซ่อนแผงลูกค้า -->
         <div class="col-span-full flex min-w-0 flex-wrap items-center gap-2">
             <CustomerAvatar {c} class="size-8" />
+            {#if st.editName}
+                <!-- แก้ชื่อลูกค้า (เว็บจริง 27 ต.ค. 2026): ช่องเดียวแทนที่ชื่อ · Enter บันทึก · Esc ยกเลิก · เว้นว่าง = ใช้ชื่อ LINE เดิม -->
+                <Input
+                    bind:ref={eName}
+                    value={c.name}
+                    placeholder={c.lineName || c.name}
+                    aria-label="ชื่อลูกค้า — Enter บันทึก · Esc ยกเลิก"
+                    class="bg-muted h-8 max-w-sm flex-1 rounded-none border-0 border-b-2 text-base shadow-none focus-visible:ring-0"
+                    onkeydown={(e) => {
+                        if (e.key === "Enter") saveName(c, eName.value, c.user.username);
+                        else if (e.key === "Escape") {
+                            e.stopPropagation();
+                            st.editName = false;
+                        }
+                    }}
+                    onblur={() => st.editName && saveName(c, eName.value, c.user.username)}
+                />
+            {:else}
             <Card.Title class={"truncate text-base font-bold " + k.name}>{c.name}</Card.Title>
             <Button
                 variant="ghost"
@@ -95,14 +116,20 @@
                     eName?.focus();
                 }}><Pencil /></Button
             >
+            {/if}
             <span class="flex-1"></span>
-            {#if c.admin}
+            {#if c.admin && !st.editName}
                 <Badge variant="secondary" data-tone="info" class="h-7 gap-1 px-2.5" title="ผู้รับเคส"><UserRound aria-hidden="true" />รับโดย {c.admin}</Badge>
-            {:else}
+            {:else if !st.editName}
                 <Badge variant="secondary" class="h-7 px-2.5 font-normal">รอแอดมินรับเคส</Badge>
             {/if}
-            {#if !done}
-                <Button data-tone="destructive" data-fill="solid" size="sm" onclick={() => closeCase(c)}><X data-icon="inline-start" />ปิดเคส [F4]</Button>
+            {#if !done && !st.editName}
+                <!-- ปิดได้เฉพาะคนที่รับเคสไว้ หรือเคสที่ยังไม่มีใครรับ (เว็บจริง 27 ต.ค. 2026) — เคสของแอดมินคนอื่นเปิดอ่านได้ แต่ปิดแทนไม่ได้ -->
+                {@const mine = !c.admin || c.admin === ME}
+                <span title={mine ? "ปิดเคส (กด F4 ก็ได้)" : c.admin + " รับผิดชอบอยู่ — ปิดแทนไม่ได้"}>
+                    <Button data-tone="destructive" data-fill="solid" size="sm" disabled={!mine} aria-describedby={mine ? undefined : "closeWhy"} onclick={() => closeCase(c)}><X data-icon="inline-start" />ปิดเคส [F4]</Button>
+                </span>
+                {#if !mine}<span id="closeWhy" class="sr-only">{c.admin} รับผิดชอบอยู่ — ปิดแทนไม่ได้</span>{/if}
             {/if}
             <!-- ซ่อน/แสดงแผงข้อมูลลูกค้า — จอ ≥768 (tablet ขึ้นไป) ที่แผงลูกค้าอยู่ข้างห้องแชท -->
             <Button
@@ -139,13 +166,6 @@
                 </div>
             {/if}
         </div>
-        {#if st.editName}
-            <div class="col-span-full flex flex-wrap gap-2">
-                <Input bind:ref={eName} value={c.name} aria-label="ชื่อลูกค้า" class="h-7 min-w-24 flex-1" />
-                <Input bind:ref={eUser} value={c.user.username} aria-label="ไอดีลูกค้า" class="h-7 min-w-24 flex-1" />
-                <Button size="sm" class="h-7" onclick={() => saveName(c, eName.value, eUser.value)}><Save data-icon="inline-start" />Save</Button>
-            </div>
-        {/if}
         <InputGroup.Root class="col-span-full h-7">
             <InputGroup.Addon><StickyNote /></InputGroup.Addon>
             <InputGroup.Input
@@ -184,6 +204,11 @@
             aria-label={"ข้อความแชทกับ " + c.name}
         >
             {#each c.msgs as x, i (i)}
+                {#if x.action === "closed"}
+                    <div class="closed-bar border-case-red/40 bg-case-red-bg text-case-red-fg w-full rounded-lg border px-3 py-2 text-center text-sm font-bold">
+                        ปิดเคส โดย {x.by} - {DAY_SHORT} - {x.t}
+                    </div>
+                {:else}
                 {@const mine = x.who !== "cust"}
                 <div class={"m flex max-w-5/6 flex-col gap-1 " + x.who + (mine ? " items-end self-end" : " items-start self-start")}>
                     <!-- ข้อความลูกค้าไม่มีชื่อ (รู้อยู่แล้วว่าเป็นใคร) · แอดมิน/ระบบมีชื่อผู้ส่ง -->
@@ -225,40 +250,39 @@
                     <span class="ts text-chat-meta text-xs tabular-nums">{TODAY} {x.t}</span>
                     {#if x.action === "slip"}
                         {#if x.checked}
-                            <span class="bg-card rounded-4xl"><Status tone="success">ตรวจสอบสลิปแล้ว</Status></span>
+                            <!-- ผลตรวจแบบสั้นใต้รูป (เว็บจริง) · กำลังตรวจ ⇒ หมุน -->
+                            {@const vd = x.v ? VERDICT[x.v] : null}
+                            <span class="bg-card rounded-4xl">
+                                {#if vd}<Status tone={vd.tone}>ผลตรวจ: {vd.short}</Status>{:else}<Status tone="info">กำลังตรวจ…</Status>{/if}
+                            </span>
                         {:else}
-                            <Button size="sm" disabled={done} onclick={() => slipCheck(c, i)}><ScanSearch data-icon="inline-start" />ตรวจสอบสลิป</Button>
+                            <Button size="sm" onclick={() => slipCheck(c, i)}><ScanSearch data-icon="inline-start" />ตรวจสอบสลิป</Button>
                         {/if}
                     {/if}
                 </div>
+                {/if}
             {/each}
-            {#if done}
-                <div role="status" class="closed-bar border-case-red/40 bg-case-red-bg text-case-red-fg rounded-lg border px-3 py-2 text-center text-sm font-bold">
-                    ปิดเคส โดย {c.closedBy} - {c.closedAt}
-                </div>
-            {/if}
         </div>
     {/key}
 
     <Card.Footer class="flex-col items-stretch gap-2 border-t py-2.5">
         <div class="quick flex flex-wrap items-center gap-1.5">
             <span class="text-muted-foreground text-xs">คีย์ลัด</span>
-            <Button variant="secondary" size="xs" disabled={done} onclick={() => askAcc(c)}>ขอเลขบัญชีลูกค้า</Button>
-            {#each quick as a (a.id)}
-                <Button variant="secondary" size="xs" disabled={done} onclick={() => quickSend(c, a.id)}>{a.name}</Button>
+            {#each starred as x (x.i)}
+                <Button variant="secondary" size="xs" onclick={() => sendQuickSet(c, x.i)}><Star class="fill-warning text-warning" data-icon="inline-start" aria-hidden="true" />{x.q.name}</Button>
             {:else}
-                <span class="text-muted-foreground text-xs">ยังไม่มีข้อความ เพิ่มได้ที่เมนู จัดการข้อความอัตโนมัติ</span>
+                <span class="text-muted-foreground text-xs">ยังไม่มีคีย์ลัดที่ติดดาว · ติดดาวได้ที่ ตั้งค่า › คีย์ลัด</span>
             {/each}
         </div>
         <!-- @container: ห้องแชทแคบกว่า 28rem (tablet แนวตั้ง) ⇒ แถบเครื่องมือขึ้นบรรทัดบน ช่องพิมพ์ได้ความกว้างเต็ม -->
         <div class="@container flex flex-wrap items-center gap-2">
-            <!-- แถบเครื่องมือข้อความ: ⚡ คีย์ลัด · 💳 การ์ดข้อความ · 🎟️ ชุดสติ๊กเกอร์ · 🖼️ ส่งรูปภาพ -->
+            <!-- แถบเครื่องมือข้อความ: ⚡ คีย์ลัด · 🎟️ ชุดสติ๊กเกอร์ (LINE) / 😊 อิโมจิ (Telegram) · 🖼️ ส่งรูปภาพ -->
             <div class="flex w-full shrink-0 items-center gap-0.5 @md:w-auto" role="toolbar" aria-label="เมนูข้อความ">
                 <Popover.Root bind:open={qrOpen}>
-                    <Popover.Trigger disabled={done} class={toolBtn} aria-label="คีย์ลัด" title="คีย์ลัด (หรือพิมพ์ / )"><Zap /></Popover.Trigger>
+                    <Popover.Trigger class={toolBtn} aria-label="คีย์ลัด" title="คีย์ลัด (หรือพิมพ์ / )"><Zap /></Popover.Trigger>
                     <Popover.Content align="start" side="top" class="w-80 gap-2 p-2">
                         <Popover.Header class="px-1"><Popover.Title>คีย์ลัด</Popover.Title></Popover.Header>
-                        {#each S.qr as q, qi (qi)}
+                        {#each qrs as q, qi (qi)}
                             <Button
                                 variant="outline"
                                 class="h-auto justify-start gap-2.5 px-2.5 py-2 text-left font-normal whitespace-normal"
@@ -269,7 +293,7 @@
                             >
                                 <Zap class="text-brand" aria-hidden="true" />
                                 <span class="flex min-w-0 flex-col">
-                                    <b class="truncate">{q.name}</b>
+                                    <b class="flex items-center gap-1 truncate">{#if q.star}<Star class="fill-warning text-warning size-3.5 shrink-0" aria-label="ติดดาว" />{/if}{q.name}</b>
                                     <small class="text-muted-foreground truncate text-xs">{q.items.length} รายการ · {q.items.map((it) => (it.t === "text" ? it.v : "[" + (it.t === "sticker" ? "สติ๊กเกอร์" : "รูปภาพ") + "]")).join(" / ")}</small>
                                 </span>
                             </Button>
@@ -279,54 +303,29 @@
                         {/each}
                     </Popover.Content>
                 </Popover.Root>
-                <!-- การ์ดข้อความ = Flex Card ของ LINE ⇒ ไม่มีในห้องแชท Telegram (16 ต.ค. 2026) -->
-                {#if m.platform !== "telegram"}
-                <Popover.Root bind:open={cardOpen}>
-                    <Popover.Trigger disabled={done} class={toolBtn} aria-label="การ์ดข้อความ" title="การ์ดข้อความ"><CreditCard /></Popover.Trigger>
-                    <Popover.Content align="start" side="top" class="w-80 gap-2 p-2">
-                        <Popover.Header class="px-1">
-                            <Popover.Title>การ์ดข้อความ</Popover.Title>
-                            <Popover.Description>กดเลือกการ์ด ระบบจะส่งการ์ดให้ลูกค้าในแชท</Popover.Description>
-                        </Popover.Header>
-                        {#each CARDS as cd, ci (ci)}
-                            <Button
-                                variant="outline"
-                                class="h-auto justify-start gap-2.5 px-2.5 py-2 text-left font-normal"
-                                onclick={() => {
-                                    sendCard(c, ci);
-                                    cardOpen = false;
-                                }}
-                            >
-                                <CreditCard class="text-brand" aria-hidden="true" />
-                                <span class="flex min-w-0 flex-col"><b>{cd.name}</b><small class="text-muted-foreground text-xs">{cd.desc}</small></span>
-                            </Button>
-                        {/each}
-                    </Popover.Content>
-                </Popover.Root>
-                {/if}
-                <StickerPicker {c} disabled={done} />
+                <!-- เว็บจริง 27 ต.ค. 2026: ไม่มีปุ่มการ์ดข้อความ · LINE = ชุดสติ๊กเกอร์ · Telegram = อิโมจิ (ลูกค้า Telegram รับสติ๊กเกอร์ไม่ได้) -->
+                <StickerPicker {c} />
                 <input bind:this={imgIn} type="file" accept="image/jpeg,image/png" class="sr-only" tabindex="-1" aria-hidden="true" onchange={pickImage} />
-                <Button variant="ghost" size="icon" disabled={done} aria-label="ส่งรูปภาพ" title="ส่งรูปภาพ (JPG / PNG ไม่เกิน 10 MB)" onclick={() => imgIn.click()}><ImageIcon /></Button>
+                <Button variant="ghost" size="icon" aria-label="ส่งรูปภาพ" title="ส่งรูปภาพ (JPG / PNG ไม่เกิน 10 MB)" onclick={() => imgIn.click()}><ImageIcon /></Button>
             </div>
             <Input
                 id="msgIn"
                 class="min-w-0 flex-1"
                 placeholder="พิมพ์ข้อความถึงลูกค้า · พิมพ์ / เพื่อเรียกคีย์ลัด"
                 aria-label="ข้อความ"
-                disabled={done}
-                bind:value={draft}
+                bind:value={st.draft}
                 onkeydown={(e) => {
                     if (e.key === "Enter") {
                         e.preventDefault();
                         send();
-                    } else if (e.key === "/" && !draft) {
+                    } else if (e.key === "/" && !st.draft) {
                         // พิมพ์ / ในช่องที่ว่างอยู่ ⇒ เปิดรายการคีย์ลัด
                         e.preventDefault();
                         qrOpen = true;
                     }
                 }}
             />
-            <Button disabled={done} onclick={send}><Send data-icon="inline-start" />ส่ง</Button>
+            <Button disabled={!st.draft.trim()} onclick={send}><Send data-icon="inline-start" />ส่ง</Button>
         </div>
     </Card.Footer>
 </Card.Root>

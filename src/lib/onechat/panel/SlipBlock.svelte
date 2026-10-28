@@ -3,21 +3,30 @@
     import Clock from "@lucide/svelte/icons/clock";
     import CircleCheck from "@lucide/svelte/icons/circle-check";
     import OctagonX from "@lucide/svelte/icons/octagon-x";
+    import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
+    import Info from "@lucide/svelte/icons/info";
+    import RotateCw from "@lucide/svelte/icons/rotate-cw";
+    import X from "@lucide/svelte/icons/x";
     import * as Item from "$lib/components/ui/item/index.js";
     import * as Alert from "$lib/components/ui/alert/index.js";
+    import { Button } from "$lib/components/ui/button/index.js";
     import { Spinner } from "$lib/components/ui/spinner/index.js";
     import FoldCard from "../ui/FoldCard.svelte";
     import Status from "../ui/Status.svelte";
     import BankLogo from "../ui/BankLogo.svelte";
     import { DL, DT, DD } from "../ui/kv.js";
-    import { bankOf, money } from "../data.js";
+    import { bankOf, money, verdictOf } from "../data.js";
+    import { slipRetry, slipDismiss } from "../store.svelte.js";
     let { c } = $props();
-    const s = $derived(c.slip);
-    // กำลังตรวจ / มีผล ⇒ การ์ดขึ้นบนสุดของแผงลูกค้า + ขอบและพื้นสีตามผล ให้เห็นว่าสำคัญ (เจ้าของงานสั่ง 15 ต.ค. 2026)
-    // ปลอม = แดง · จริง = เขียว · กำลังอ่าน = ฟ้า (มีป้ายข้อความบอกผลด้วย ไม่ได้บอกด้วยสีอย่างเดียว)
-    const tone = $derived(
-        !s ? "" : s.state === "reading" ? "ring-2 ring-info bg-info/5" : s.state === "ready" ? (s.fake ? "ring-2 ring-destructive bg-destructive/5" : "ring-2 ring-success bg-success/5") : "",
-    );
+    // ผลที่กำลังแสดง = กำลังตรวจหรือมีผลแล้ว (pending = ยังไม่กดตรวจ ⇒ ยังไม่มีผล) · ปิดผลตรวจแล้วกลับเป็นปุ่ม
+    const s = $derived(c.slip && !c.slip.hidden && (c.slip.state === "reading" || c.slip.state === "ready") ? c.slip : null);
+    const vd = $derived(s && s.state === "ready" ? verdictOf(s) : null);
+    // รูปจากลูกค้าที่ยังไม่ได้กดตรวจ (เว็บจริง: "รอตรวจ N รูป")
+    const waiting = $derived(c.msgs.filter((m) => m.who === "cust" && (m.action === "slip" || m.action === "image") && !m.checked).length);
+    // กำลังตรวจ / มีผล ⇒ การ์ดขึ้นบนสุดของแผงลูกค้า + ขอบและพื้นสีตามผล (เจ้าของงานสั่ง 15 ต.ค. 2026) · มีป้ายข้อความบอกผลด้วย ไม่ได้บอกด้วยสีอย่างเดียว
+    const RING = { success: "ring-2 ring-success bg-success/5", destructive: "ring-2 ring-destructive bg-destructive/5", warning: "ring-2 ring-warning bg-warning/5", info: "ring-2 ring-info bg-info/5" };
+    const tone = $derived(!s ? "" : s.state === "reading" ? RING.info : vd ? RING[vd.tone] : "");
+    const ICON = { success: CircleCheck, destructive: OctagonX, warning: TriangleAlert, info: Info };
 </script>
 
 {#snippet party(role, code, name, no)}
@@ -31,35 +40,44 @@
     </Item.Root>
 {/snippet}
 
-<!-- การ์ดตรวจสอบสลิปแสดงเสมอ (เว็บต้นฉบับ 15 ต.ค. 2026) · ยังไม่มีสลิป ⇒ บอกวิธีตรวจ · พับไว้จนกว่าจะเริ่มตรวจ (กำลังอ่าน / มีผล)
-     ปุ่ม "ไปหน้า Auto fast" ย้ายไปท้ายแผงลูกค้า -->
+<!-- ป้ายท้ายหัวการ์ด: ไม่มีสลิป · รอตรวจ N รูป · กำลังอ่าน · ผลตรวจ (ตามเว็บจริง 27 ต.ค. 2026) -->
 {#snippet badge()}
-    {#if !s}<Status icon={null}>ไม่มีสลิป</Status>
-    {:else if s.state === "ready"}
-        {#if s.fake}<Status tone="destructive">ปลอม</Status>{:else}<Status tone="success">จริง</Status>{/if}
-    {:else if s.state === "reading"}<Status tone="info">กำลังอ่าน</Status>
-    {:else}<Status icon={Clock}>รอตรวจ</Status>{/if}
+    {#if vd}<Status tone={vd.tone}>{vd.short}</Status>
+    {:else if s && s.state === "reading"}<Status tone="info">กำลังอ่าน</Status>
+    {:else if waiting}<Status icon={Clock}>รอตรวจ {waiting} รูป</Status>
+    {:else}<Status icon={null}>ไม่มีสลิป</Status>{/if}
 {/snippet}
 
-<FoldCard {c} title="ตรวจสอบสลิป" icon={ReceiptText} hint={!s ? "ไม่มีสลิป" : s.state === "pending" ? "รอตรวจ" : ""} dot={s && s.state === "pending" ? "warning" : ""} def={!(s && (s.state === "reading" || s.state === "ready"))} action={badge} cardClass={tone}>
+<FoldCard {c} title="ตรวจสอบสลิป" icon={ReceiptText} hint={waiting ? "รอตรวจ " + waiting + " รูป" : "ไม่มีสลิป"} dot={waiting ? "warning" : ""} def={!s} action={badge} cardClass={tone}>
     {#if !s}
-        <p class="text-muted-foreground text-sm">ยังไม่มีสลิปในแชทนี้ เมื่อลูกค้าส่งรูปสลิปมา ให้กด "ตรวจสอบสลิป" ใต้รูปในแชท ผลจะแสดงที่นี่</p>
-    {:else if s.state === "pending"}
-        <p class="text-muted-foreground text-sm">รอตรวจสอบสลิป ยอด <span class="tabular-nums">{money(s.amt)}</span> บาท</p>
+        {#if waiting}
+            <p class="text-muted-foreground text-sm">มีรูปจากลูกค้า {waiting} รูปที่ยังไม่ได้ตรวจ — กด "ตรวจสอบสลิป" ใต้รูปในแชท ผลจะแสดงที่นี่</p>
+        {:else}
+            <p class="text-muted-foreground text-sm">ยังไม่มีสลิปในแชทนี้ เมื่อลูกค้าส่งรูปสลิปมา ให้กด "ตรวจสอบสลิป" ใต้รูปในแชท ผลจะแสดงที่นี่</p>
+        {/if}
     {:else if s.state === "reading"}
-        <p class="text-muted-foreground flex items-center gap-2 text-sm" aria-busy="true"><Spinner class="text-brand" aria-label="กำลังตรวจสลิป" />กำลังตรวจสลิป…</p>
+        <p class="text-muted-foreground flex items-center gap-2 text-sm" aria-busy="true"><Spinner class="text-brand" aria-label="กำลังตรวจสลิป" />กำลังตรวจ…</p>
     {:else}
-        <Alert.Root data-tone={s.fake ? "destructive" : "success"} role="status" class="verdict">
-            {#if s.fake}<OctagonX />{:else}<CircleCheck />{/if}
-            <Alert.Title>{s.fake ? "สลิปปลอม" : "สลิปจริง"}</Alert.Title>
+        {@const Icon = ICON[vd.tone]}
+        <Alert.Root data-tone={vd.tone} role="status" class="verdict">
+            <Icon />
+            <Alert.Title>{vd.label}</Alert.Title>
+            {#if vd.hint}<Alert.Description>{vd.hint.replace("{when}", s.dupAt || "-")}</Alert.Description>{/if}
         </Alert.Root>
-        {@render party("ผู้โอน", s.fromBank, s.fromName, s.fromNo)}
-        <dl class={DL}>
-            <dt class={DT}>ยอดโอน</dt><dd class={DD + " font-bold tabular-nums"}>{money(s.amt)} บาท</dd>
-            <dt class={DT}>วันที่โอน</dt><dd class={DD}>{s.date}</dd>
-            <dt class={DT}>เวลาที่โอน</dt><dd class={DD + " tabular-nums"}>{s.time}</dd>
-            <dt class={DT}>เลขที่รายการ</dt><dd class={DD + " text-xs tabular-nums"}>{s.ref}</dd>
-        </dl>
-        {@render party("ผู้รับ", s.toBank, s.toName, s.toNo)}
+        {#if vd.detail}
+            {@render party("ผู้โอน", s.fromBank, s.fromName, s.fromNo)}
+            <dl class={DL}>
+                <dt class={DT}>ยอดโอน</dt><dd class={DD + " font-bold tabular-nums"}>{money(s.amt)} บาท</dd>
+                <dt class={DT}>วันที่โอน</dt><dd class={DD}>{s.date}</dd>
+                <dt class={DT}>เวลาที่โอน</dt><dd class={DD + " tabular-nums"}>{s.time}</dd>
+                <dt class={DT}>เลขที่รายการ</dt><dd class={DD + " text-xs tabular-nums"}>{s.ref}</dd>
+            </dl>
+            {@render party("ผู้รับ", s.toBank, s.toName, s.toNo)}
+        {/if}
+        <p class="text-muted-foreground text-xs">ตรวจโดย {s.by}</p>
+        <div class="flex gap-2 *:flex-1">
+            {#if vd.retry}<Button data-tone="primary" data-fill="solid" size="sm" onclick={() => slipRetry(c)}><RotateCw data-icon="inline-start" />ตรวจอีกครั้ง</Button>{/if}
+            <Button variant="outline" size="sm" onclick={() => slipDismiss(c)}><X data-icon="inline-start" />ปิดผลตรวจสลิป</Button>
+        </div>
     {/if}
 </FoldCard>

@@ -30,7 +30,8 @@
 <Card.Root id="colList" role="region" aria-label="การสนทนา" class={"bg-surface-chrome min-h-0 gap-0 rounded-none border-r py-0 shadow-none ring-0 " + className}>
     <!-- ช่องรายการแชท: เต็มสูง พื้นเดียวกับแถบบน คั่นด้วยเส้นขวา (ไม่ใช่การ์ด) -->
     <Card.Header class="gap-2 border-b py-3">
-        <Card.Title>การสนทนา</Card.Title>
+        <!-- จุดเขียว = การเชื่อมต่อแบบเรียลไทม์ทำงานอยู่ (เว็บจริง 27 ต.ค. 2026) -->
+        <Card.Title class="flex items-center gap-1.5">การสนทนา<span class="bg-success size-2 rounded-full" role="img" aria-label="การเชื่อมต่อแบบเรียลไทม์: เชื่อมต่อแล้ว" title="การเชื่อมต่อแบบเรียลไทม์: เชื่อมต่อแล้ว"></span></Card.Title>
         <Card.Action>
             <Button variant="ghost" size="icon-sm" aria-label="รีเฟรช" onclick={() => toast("รีเฟรชรายการแล้ว")}><RefreshCw /></Button>
         </Card.Action>
@@ -58,7 +59,7 @@
         >
             {#each TABS as [t, label] (t)}
                 <ToggleGroup.Item value={t}>
-                    {label}<Badge variant="secondary" class="tabular-nums max-xl:px-1">{cnt[t]}</Badge>
+                    {label}
                 </ToggleGroup.Item>
             {/each}
         </ToggleGroup.Root>
@@ -69,7 +70,8 @@
     <div id="caseList" class="@container relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         {#each shown as c (c.id)}
             {@const k = kindOf(c)}
-            {@const last = c.msgs.length ? msgPreview(c.msgs[c.msgs.length - 1]) : ""}
+            {@const lastM = c.msgs.filter((m) => m.action !== "closed").at(-1)}
+            {@const last = lastM ? msgPreview(lastM) : ""}
             <Item.Root size="sm" class={"case aria-[current=true]:ring-brand rounded-none border-0 border-b border-b-foreground/15 border-l-4 py-2 ps-2.5 pe-3 text-left aria-[current=true]:ring-2 aria-[current=true]:ring-inset " + k.row}>
                 {#snippet child({ props })}
                     <button
