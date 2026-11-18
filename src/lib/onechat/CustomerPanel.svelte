@@ -6,7 +6,7 @@
     import * as Item from "$lib/components/ui/item/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
     import { merch, platformOf } from "./data.js";
-    import { st, panelCase, selectCase, closeLook } from "./store.svelte.js";
+    import { st, panelCase, selectCase, closeLook, assistOf, lineUp } from "./store.svelte.js";
     import CustomerAvatar from "./ui/CustomerAvatar.svelte";
     import LineStatusBlock from "./panel/LineStatusBlock.svelte";
     import LookupBlock from "./panel/LookupBlock.svelte";
@@ -16,13 +16,16 @@
     import CreditBlock from "./panel/CreditBlock.svelte";
     import RegisterBlock from "./panel/RegisterBlock.svelte";
     import BankAccountsBlock from "./panel/BankAccountsBlock.svelte";
+    import BindHistoryBlock from "./panel/BindHistoryBlock.svelte";
+    import NoteHistoryBlock from "./panel/NoteHistoryBlock.svelte";
+    import P2PBlock from "./panel/P2PBlock.svelte";
 
     let { class: className = "" } = $props();
     // ลูกค้าที่แสดง = เลือกจากช่องค้นหา/ตรวจสอบ หรือของแชทที่เปิดอยู่ · ยังไม่มี ⇒ เหลือแค่เครื่องมือ (ค้นหา · ตรวจสอบ · สมัครสมาชิก)
     const c = $derived(panelCase());
     // บล็อกที่พับไว้ตั้งแต่แรก (= def ของ FoldCard ในแต่ละบล็อก) แสดงเป็นปุ่มเปิดหน้าต่าง เรียงเป็นปุ่มเล็กแถวเดียว
     // เว็บจริง 27 ต.ค. 2026: การ์ด "LINE และผู้ช่วย (OA)" มีทุกแชท (Telegram ชื่อ "ผู้ช่วย (OA)" ไม่มีส่วนสถานะ LINE) · ตรวจสอบสลิปมีทั้งแชทที่ผูกและยังไม่ผูกสมาชิก
-    const oaOk = $derived(!!c && (platformOf(c.merchant) !== "line" || c.lineOk) && st.assist.every((a) => a.ok));
+    const oaOk = $derived(!!c && (platformOf(c.merchant) !== "line" || lineUp(c)) && assistOf(c).every((a) => a.ok));
     const oaBtn = $derived(oaOk);
     const slipBtn = $derived(!!c && !(c.slip && !c.slip.hidden && (c.slip.state === "reading" || c.slip.state === "ready")));
     const histBtn = $derived(!!c && !c.unbound);
@@ -58,12 +61,16 @@
     {:else}
     <h2 class="px-0.5 text-sm font-bold">สมาชิกและรายการเงิน</h2>
     <!-- ข้อมูลที่ไม่แสดงตั้งแต่แรก = ปุ่มเล็กแถวเดียว (ขึ้นบรรทัดใหม่เมื่อเต็ม) กดแล้วเปิดหน้าต่าง (สถานะไลน์ปกติ · สลิปยังไม่มี · ประวัติ · สมัครสมาชิก) -->
-    {#if oaBtn || slipBtn || histBtn || regBtn}
+    {#if c}
         <div class="flex flex-wrap gap-1.5" role="group" aria-label="ข้อมูลเพิ่มเติม">
             {#if oaBtn}<LineStatusBlock {c} />{/if}
             {#if slipBtn}<SlipBlock {c} />{/if}
             {#if histBtn}<HistoryBlock {c} />{/if}
             {#if regBtn}<RegisterBlock {c} />{/if}
+            <!-- ประวัติการผูก — มีทุกแชท ทั้งที่ผูกและยังไม่ผูกสมาชิก (เว็บจริง 18 พ.ย. 2026) -->
+            <BindHistoryBlock {c} />
+            <!-- ประวัติโน้ต (เจ้าของงานสั่ง 18 พ.ย. 2026) -->
+            <NoteHistoryBlock {c} />
         </div>
     {/if}
     <!-- กดตรวจสอบสลิปแล้ว ⇒ การ์ดผลตรวจขึ้นเป็นการ์ดแรก เหนือการ์ดตรวจสอบ (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
@@ -74,6 +81,8 @@
     {#if c && !c.unbound}
         <BankAccountsBlock {c} />
         <PendingBlock {c} />
+        <!-- ฝาก P2P — เฉพาะลูกค้าที่ใช้ระบบ P2P อยู่แล้ว · อยู่ก่อนจัดการเครดิต (เจ้าของงานสั่ง 18 พ.ย. 2026) -->
+        {#if c.p2p}<P2PBlock {c} />{/if}
         <CreditBlock {c} />
     {/if}
     {#if !regBtn}<RegisterBlock {c} />{/if}

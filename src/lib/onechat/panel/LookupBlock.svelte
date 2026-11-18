@@ -1,4 +1,4 @@
-<!-- ตรวจสอบ — ตามเว็บจริง 27 ต.ค. 2026
+<!-- ตรวจสอบ — ตามเว็บจริง 27 ต.ค. 2026 · 18 พ.ย. 2026: เลิกผูกถามก่อน · ข้อความแชท LINE (ผูกแล้วลูกค้าเข้าสู่ระบบในหน้า LINE ได้เฉพาะสมาชิกคนนี้)
      ค้นหาด้วย username / เบอร์ / ชื่อ ⇒ รายชื่อ ⇒ กดชื่อเพื่อผูกกับแชทนี้ (ผูกอยู่แล้ว ⇒ ถาม "เปลี่ยนสมาชิกที่ผูกกับแชทนี้?")
      ข้อมูลสมาชิก + ปุ่มคัดลอก Username / เบอร์ · เลิกผูก + โหลดข้อมูลใหม่ · เปลี่ยนรหัสผ่านลูกค้า (รหัสใหม่ 2 ครั้ง + รหัสแอดมิน ⇒ ยืนยัน ⇒ แสดงรหัสใหม่ครั้งเดียว) -->
 <script>
@@ -21,12 +21,15 @@
     import PasswordInput from "../ui/PasswordInput.svelte";
     import { DL, DT, DD } from "../ui/kv.js";
     import { money } from "../data.js";
-    import { db, st, ok, lookup, pickMember, bindMember, rebindCancel, pwOpen, pwCancel, pwSave, pwConfirm, pwHide, unbindMember } from "../store.svelte.js";
+    import { db, st, ok, lookup, pickMember, bindMember, rebindCancel, pwOpen, pwCancel, pwSave, pwConfirm, pwHide, unbindMember, unbindAsk } from "../store.svelte.js";
+    import { platformOf } from "../data.js";
     let { c } = $props();
     const u = $derived(c?.user);
     const bound = $derived(c && !c.unbound);
     const res = $derived((st.lookRes || []).map((id) => db.cases.find((x) => x.id === id)).filter(Boolean));
     const nb = $derived(st.rebind && db.cases.find((x) => x.id === st.rebind));
+    // แชท LINE: การผูกมีผลกับการเข้าสู่ระบบในหน้า LINE ของลูกค้า (เว็บจริง 18 พ.ย. 2026)
+    const isLine = $derived(!!c && platformOf(c.merchant) === "line");
     let q = $state("");
     function copy(v, what) {
         navigator.clipboard?.writeText(v);
@@ -63,7 +66,7 @@
     <!-- ผลการค้นหา: กดชื่อเพื่อผูกกับแชทนี้ -->
     {#if res.length}
         <div class="flex flex-col gap-1.5" role="group" aria-label="ผลการค้นหา">
-            <p class="text-muted-foreground text-xs">{c ? "กดที่รายชื่อเพื่อผูกสมาชิกกับแชทนี้" : "กดที่รายชื่อเพื่อดูข้อมูลสมาชิก"}</p>
+            <p class="text-muted-foreground text-xs">{c ? "กดที่รายชื่อเพื่อผูกสมาชิกกับแชทนี้" + (isLine ? " · แชท LINE: หลังผูก ลูกค้าเข้าสู่ระบบในหน้า LINE ได้เฉพาะสมาชิกคนนี้" : "") : "กดที่รายชื่อเพื่อดูข้อมูลสมาชิก"}</p>
             {#each res as m (m.id)}
                 {@const here = bound && m.user.username === u.username}
                 <Item.Root variant="outline" size="sm">
@@ -85,6 +88,7 @@
             <p id="rbT" class="flex items-center gap-1.5 text-sm font-bold"><TriangleAlert class="text-warning size-4" aria-hidden="true" />เปลี่ยนสมาชิกที่ผูกกับแชทนี้?</p>
             <p class="text-sm">แชทนี้ผูกกับ <b>{u.username}</b> จะเปลี่ยนเป็น <b>{nb.user.username}</b></p>
             <p class="text-muted-foreground text-xs">การปรับเครดิตและการเปลี่ยนรหัสผ่านหลังจากนี้จะเป็นของสมาชิกคนใหม่</p>
+            {#if isLine}<p class="text-muted-foreground text-xs">แชท LINE: ถ้าลูกค้าเข้าสู่ระบบในหน้า LINE ด้วยบัญชีอื่นอยู่ จะถูกออกจากระบบและเมนูกลับเป็นแบบก่อนเข้าสู่ระบบ — หลังจากนี้เข้าสู่ระบบได้เฉพาะ {nb.user.username}</p>{/if}
             <div class="flex gap-2 *:flex-1">
                 <Button size="sm" onclick={() => bindMember(c, nb)}>เปลี่ยนการผูก</Button>
                 <Button variant="outline" size="sm" onclick={rebindCancel}>ยกเลิก</Button>
@@ -102,8 +106,7 @@
                 <Status tone="success">ใช้งานได้</Status>
             </dd>
             <dt class={DT}>Fullname</dt><dd class={DD}>{u.fullname}</dd>
-            <dt class={DT}>Bank</dt><dd class={DD}>ธนาคาร{u.bank}</dd>
-            <dt class={DT}>Number</dt><dd class={DD + " tabular-nums"}>{u.number}</dd>
+            <!-- Bank / Number ย้ายไปการ์ด "บัญชีธนาคาร" ด้านล่าง (เจ้าของงานสั่ง 18 พ.ย. 2026) -->
             <dt class={DT}>Mobile</dt>
             <dd class={DD + " flex items-center gap-1.5 tabular-nums"}>
                 {u.mobile}
@@ -121,10 +124,25 @@
                 {:else}<Status tone="success">ไม่ติดโปร</Status>{/if}
             </dd>
         </dl>
-        <div class="flex gap-2">
-            <Button variant="outline" size="sm" class="flex-1" onclick={() => unbindMember(c)}><Unlink data-icon="inline-start" />เลิกผูก</Button>
-            <Button variant="outline" size="icon-sm" class="size-8" aria-label="โหลดข้อมูลสมาชิกใหม่" title="โหลดข้อมูลสมาชิกใหม่" onclick={() => ok("โหลดข้อมูลสมาชิกใหม่แล้ว")}><RefreshCw /></Button>
-        </div>
+        {#if st.unbindAsk === c.id}
+            <!-- เลิกผูก ⇒ ถามก่อน (เว็บจริง 18 พ.ย. 2026) -->
+            <div class="border-warning/40 bg-warning/5 flex flex-col gap-2 rounded-lg border p-3" role="alertdialog" aria-labelledby="ubT">
+                <p id="ubT" class="flex items-center gap-1.5 text-sm font-bold"><TriangleAlert class="text-warning size-4" aria-hidden="true" />เลิกผูกสมาชิกกับแชทนี้?</p>
+                <p class="text-sm">แชทนี้ผูกกับ <b>{u.username}</b> อยู่</p>
+                <p class="text-muted-foreground text-xs">หลังเลิกผูก จะปรับเครดิตหรือเปลี่ยนรหัสผ่านจากแชทนี้ไม่ได้ จนกว่าจะผูกสมาชิกใหม่</p>
+                {#if isLine}<p class="text-muted-foreground text-xs">แชท LINE: ถ้าลูกค้าเข้าสู่ระบบในหน้า LINE อยู่ จะถูกออกจากระบบ และเมนูจะกลับเป็นแบบก่อนเข้าสู่ระบบ</p>{/if}
+                <div class="flex gap-2 *:flex-1">
+                    <Button variant="destructive" size="sm" onclick={() => unbindMember(c)}><Unlink data-icon="inline-start" />เลิกผูก</Button>
+                    <Button variant="outline" size="sm" onclick={() => unbindAsk(null)}>ยกเลิก</Button>
+                </div>
+            </div>
+        {:else}
+            <div class="flex gap-2">
+                <Button variant="outline" size="sm" class="flex-1" onclick={() => unbindAsk(c)}><Unlink data-icon="inline-start" />เลิกผูก</Button>
+                <Button variant="outline" size="icon-sm" class="size-8" aria-label="โหลดข้อมูลสมาชิกใหม่" title="โหลดข้อมูลสมาชิกใหม่" onclick={() => ok("โหลดข้อมูลสมาชิกใหม่แล้ว")}><RefreshCw /></Button>
+            </div>
+            {#if isLine}<p class="text-muted-foreground text-xs">แชท LINE: ลูกค้าเข้าสู่ระบบในหน้า LINE ได้เฉพาะสมาชิกคนนี้</p>{/if}
+        {/if}
         {#if !st.pw.open}
             <Button variant="outline" size="sm" onclick={pwOpen}>เปลี่ยนรหัสผ่านลูกค้า</Button>
             {#if st.pw.msg}<p class="text-success flex items-start gap-1.5 text-sm" role="status"><CircleCheck class="mt-0.5 size-4 shrink-0" aria-hidden="true" />{st.pw.msg}</p>{/if}

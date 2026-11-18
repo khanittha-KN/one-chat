@@ -3,7 +3,7 @@ import { toast as sonner } from "svelte-sonner";
 import { playChime } from "./sound.svelte.js";
 import {
     ME, merchants, money, chatChannels, canChat, BANKS, COACC, CARDS, bankOf, seedCases, seedAnnounces, nowT, slipData, tabOf,
-    SETMAP, SET_TABS, TODAY, typeLabel, pingOf, chanByName, PLATFORM, TG_BOTS, agents, agentOf, merch,
+    SETMAP, SET_TABS, TODAY, typeLabel, pingOf, chanByName, PLATFORM, TG_BOTS, agents, agentOf, merch, platformOf, P2P_ACC, p2pAcc, thDateTime,
 } from "./data.js";
 
 // เครดิต: confirm = ขั้นยืนยันก่อนปรับจริง (เว็บจริง 27 ต.ค. 2026)
@@ -14,18 +14,108 @@ const blankReg = () => ({ phone: "", bank: "", no: "", acct: "", pass: "", mkt: 
 const blankPw = () => ({ open: false, a: "", b: "", admin: "", err: null, msg: null, confirm: false, shown: null, left: 0 });
 
 export const db = $state({ cases: seedCases(), announces: seedAnnounces(), nextAnn: 5, annVersion: 0 });
+/* ประวัติการผูก (เว็บจริง 18 พ.ย. 2026) — ทุกครั้งที่ผูก / เลิกผูกสมาชิกกับแชท
+   { at: "dd/mm/yy hh:mm" (พ.ศ.), act: "bind" | "unbind", user, fullname, prev: ยูสเซอร์ก่อนหน้า, by: แอดมิน หรือ "หน้า LINE" (ระบบผูกให้ตอนลูกค้าเข้าสู่ระบบผ่าน LINE) }
+   ตัวอย่าง: แชท LINE ที่ผูกอยู่ ⇒ ผูกจากหน้า LINE · แชท Telegram ⇒ แอดมินผูกให้ */
+// ข้อมูลตัวอย่างหลายรายการ (เจ้าของงานสั่ง 18 พ.ย. 2026) — วันที่กระจายช่วง 1 ต.ค. – 17 พ.ย. 2569 · ใหม่สุดอยู่บน
+const OLD_USERS = [["olduser1188", "สมชาย ใจดี"], ["guest7734", "ไม่ระบุชื่อ"], ["member2045", "วิภา สุขใจ"], ["test0912", "ทดสอบ ระบบ"]];
+const NOTE_TXT = ["ลูกค้าขอให้โทรกลับช่วงเย็น", "เคยโอนผิดบัญชี ตรวจชื่อบัญชีทุกครั้ง", "ขอเปลี่ยนเบอร์โทร รอส่งเอกสาร", "ลูกค้า VIP ตอบให้ไวที่สุด", "แจ้งถอนซ้ำ 2 ครั้งในวันเดียว", "ติดโปรโมชั่นต้อนรับ ยังถอนไม่ได้", "ถามเรื่องโบนัสวันเกิด", "ลืมรหัสผ่านบ่อย ยืนยันตัวตนก่อนเปลี่ยน"];
+const ADMINS = ["admin01", "admin02", "admin03"];
+const p2 = (n) => String(n).padStart(2, "0");
+// วันที่ลำดับที่ k (0 = ใหม่สุด) ของแชท i ⇒ "dd/mm/69 hh:mm"
+const atOf = (i, k) => {
+    const day = 47 - k * 6 - (i % 5); // นับจาก 1 ต.ค. (วันที่ 0) ⇒ ไม่เกิน 17 พ.ย.
+    const d = Math.max(1, day), mo = d > 31 ? 11 : 10, dd = d > 31 ? d - 31 : d;
+    return p2(dd) + "/" + mo + "/69 " + p2(9 + ((i + k * 3) % 12)) + ":" + p2((i * 7 + k * 13) % 60);
+};
+db.cases.forEach((c, i) => {
+    if (c.bindLog) return;
+    const u = c.user, line = platformOf(c.merchant) === "line", old = OLD_USERS[i % OLD_USERS.length];
+    // ประวัติโน้ต: โน้ตที่มีอยู่แล้ว (เพิ่ม) + รายการเพิ่ม/ลบย้อนหลัง
+    const now = (c.notes || []).map((n) => ({ at: n.t, act: "add", user: c.unbound ? "" : u.username, text: n.text, by: n.by })).reverse();
+    const past = [];
+    for (let k = 0; k < 6 + (i % 4); k++) {
+        const text = NOTE_TXT[(i + k) % NOTE_TXT.length];
+        past.push({ at: atOf(i, k), act: k % 3 === 1 ? "del" : "add", user: c.unbound || k > 3 ? old[0] : u.username, text, by: ADMINS[(i + k) % 3] });
+    }
+    c.noteLog = [...now, ...past];
+    // ประวัติการผูก: ผูกครั้งล่าสุด ← เลิกผูกยูสเซอร์เก่า ← ผูกยูสเซอร์เก่า (บางแชทเปลี่ยนไปมาหลายรอบ)
+    //   แชทเลขคี่: ผูกคนใหม่ทับคนเดิมเลย (มียูสเซอร์ก่อนหน้า) · แชทเลขคู่: เลิกผูกคนเดิมก่อน แล้วค่อยผูกคนใหม่
+    const by0 = line ? "หน้า LINE" : ADMINS[i % 3];
+    const log = [];
+    const rounds = 1 + (i % 3);
+    for (let k = 1; k <= rounds; k++) {
+        const o = OLD_USERS[(i + k) % OLD_USERS.length];
+        if (k > 1 || i % 2 === 0) log.push({ at: atOf(i, k * 2 - 1), act: "unbind", user: o[0], fullname: o[1], prev: "", by: ADMINS[(i + k) % 3] });
+        log.push({ at: atOf(i, k * 2), act: "bind", user: o[0], fullname: o[1], prev: "", by: line ? "หน้า LINE" : ADMINS[(i + k + 1) % 3] });
+    }
+    const last = OLD_USERS[(i + 1) % OLD_USERS.length][0];
+    if (!c.unbound) log.unshift({ at: atOf(i, 0), act: "bind", user: u.username, fullname: u.fullname, prev: i % 2 ? last : "", by: by0 });
+    c.bindLog = log;
+});
+/* ลูกค้าที่ใช้ระบบ P2P อยู่แล้ว (เจ้าของงานสั่ง 18 พ.ย. 2026) ⇒ มีการ์ด "ฝาก P2P" · ประวัติฝากถอนบางรายการผ่าน P2P */
+const P2P_CASES = ["c1", "c3", "c20"];
+db.cases.forEach((c) => {
+    if (P2P_CASES.indexOf(c.id) < 0 || c.p2p) return;
+    c.p2p = true;
+    [...(c.histDep || []), ...(c.histWd || [])].forEach((r, k) => {
+        if (k % 3 === 0) {
+            r.via = "p2p";
+            r.by = r.by || "admin02";
+            r.acc = P2P_ACC.filter((a) => a.open)[k % 3].id;
+        }
+    });
+});
+const p2pNow = () => {
+    const d = new Date(), p = (n) => String(n).padStart(2, "0");
+    return { date: d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()), time: p(d.getHours()) + ":" + p(d.getMinutes()) };
+};
+const blankP2p = (mode = "dep") => ({ mode, acc: (P2P_ACC.find((a) => a.open) || {}).id || null, amt: "", ...p2pNow(), err: {}, ask: false, msg: null });
+export function p2pReset(mode) {
+    st.p2p = blankP2p(mode || st.p2p.mode);
+}
+// ตรวจช่อง ⇒ ผ่าน ⇒ ถามยืนยัน
+export function p2pSubmit() {
+    const f = st.p2p, amt = parseFloat(String(f.amt).replace(/,/g, "")), e = {};
+    if (!f.acc || !(p2pAcc(f.acc) || {}).open) e.acc = "เลือกบัญชีธนาคารที่เปิดรับรายการ";
+    if (!f.amt) e.amt = f.mode === "dep" ? "กรอกยอดฝาก" : "กรอกยอดถอน";
+    else if (!(amt > 0)) e.amt = "จำนวนเงินต้องมากกว่า 0";
+    if (!f.date) e.date = "เลือกวันที่";
+    if (!f.time) e.time = "เลือกเวลา";
+    f.err = e;
+    f.msg = null;
+    if (!Object.keys(e).length) f.ask = true;
+}
+// ยืนยัน ⇒ บันทึกเป็นรายการในประวัติฝากถอน (ช่องทาง P2P) + ข้อความระบบในแชท
+export function p2pConfirm(c) {
+    const f = st.p2p, amt = Math.round(parseFloat(String(f.amt).replace(/,/g, "")) * 100) / 100, a = p2pAcc(f.acc), dep = f.mode === "dep";
+    (dep ? c.histDep : c.histWd).unshift({ amt, time: thDateTime(f.date, f.time), ok: true, ref: (dep ? "PD" : "PW") + String(Date.now()).slice(-6), via: "p2p", acc: a.id, by: ME });
+    push(c, "sys", (dep ? "แจ้งฝาก P2P " : "แจ้งถอน P2P ") + money(amt) + " บาท · บัญชี " + bankOf(a.bank).name + " " + a.no + " · โดย " + ME);
+    ok((dep ? "แจ้งฝาก P2P " : "แจ้งถอน P2P ") + money(amt) + " บาทแล้ว");
+    const mode = f.mode, acc = f.acc;
+    st.p2p = { ...blankP2p(mode), acc, msg: (dep ? "แจ้งฝาก " : "แจ้งถอน ") + money(amt) + " บาท แล้ว — ดูได้ที่ประวัติฝากถอน" };
+}
+const stamp = () => TODAY + " " + nowT();
+function logBind(c, act, user, fullname, prev) {
+    (c.bindLog || (c.bindLog = [])).unshift({ at: stamp(), act, user, fullname, prev: prev || "", by: ME });
+}
 
 export const st = $state({
     loggedIn: false,
     // cur = แชทที่เปิดอยู่ · เริ่มที่ยังไม่เปิดแชทไหน (เจ้าของงาน 14 ต.ค. 2026 · แบบ LINE — เปิดให้เองลูกค้าจะเห็นว่าอ่านแล้วแต่ยังไม่ตอบ)
     tab: "all", sel: chatChannels().map((m) => m.id), collapsed: {}, cur: null, view: "list", page: "console", menu: false,
-    regMsg: null, regErr: {}, lookup: null, lookErr: null, look: null, hist: "all", histModal: false, accModal: false, coSel: null,
+    regMsg: null, regErr: {}, regAsk: false, unbindAsk: null, p2p: blankP2p(), lookup: null, lookErr: null, look: null, hist: "all", histModal: false, accModal: false, coSel: null,
     credit: blankCredit(), reg: blankReg(), pw: blankPw(),
     // chanOpen = แผงเลือกแชทที่แสดง (สไลด์ขวา) · panelOff = ซ่อนแผงลูกค้า · editName = เปิดช่องแก้ชื่อ/ไอดี · fold = การ์ดในแผงขวาที่พับ/กาง (แยกต่อเคส)
     chanOpen: false, panelOff: false, editName: false, fold: {},
     scrollTick: 0, // เพิ่มค่าเมื่อต้องเลื่อนห้องแชทลงล่างสุด (= scrollMsgs ของต้นฉบับ)
     // ผู้ช่วย (OA) ขององค์กร (เว็บจริง 27 ต.ค. 2026) — how: email = Verify ด้วยอีเมล · qr = QR Login · none = ไม่มีรหัสผ่านที่บันทึกไว้ (ใช้ QR) · by = แอดมินอื่นกำลัง verify
-    assist: [{ name: "ตย15", ok: true, how: "email" }, { name: "ตย22", ok: true, how: "email" }, { name: "กะดึก", ok: true, how: "qr" }],
+    // ผู้ช่วย (OA) แยกตาม Agent (เคสตัวอย่าง 18 พ.ย. 2026): Beta Shop ผู้ช่วยหมดอายุทุกตัว ⇒ แชท LINE ของ Beta Shop ขึ้น "LINE หลุด" ส่งผ่าน Messaging API
+    assist: {
+        agA: [{ name: "ตย15", ok: true, how: "email", email: "assist.alpha15@example.com" }, { name: "ตย22", ok: true, how: "email", email: "assist.alpha22@example.com" }, { name: "กะดึก", ok: true, how: "qr" }],
+        agB: [{ name: "support.beta01@example.com", ok: false, how: "email", email: "support.beta01@example.com" }, { name: "betanight", ok: false, how: "qr" }],
+        agC: [{ name: "ตย31", ok: true, how: "email", email: "assist.gamma31@example.com" }],
+    },
     assistChecking: false,
     // ข้อความในช่องพิมพ์ของห้องแชท (ปุ่ม "ขอเลขบัญชีลูกค้า" ใส่ข้อความให้ แอดมินกดส่งเอง) · lookRes = ผลค้นหาสมาชิก · rebind = สมาชิกที่จะเปลี่ยนการผูก
     draft: "", lookRes: null, rebind: null,
@@ -140,8 +230,21 @@ function effList(id, k) {
     const def = defaultsFor(id, k)
         .filter((d) => !d.forked)
         .map((d) => ({ ...d.x, ...(k === "qr" && d.pref.star != null ? { star: d.pref.star } : {}), ...(k === "am" && d.pref.on != null ? { on: d.pref.on } : {}) }));
-    return [...def, ...((ch && ch[k]) || [])];
+    const all = [...def, ...((ch && ch[k]) || [])];
+    const ord = k === "qr" && ch && ch.pref.qrOrder;
+    return ord ? sortByOrder(all, ord, (x) => (x.src === "custom" ? "c:" : "d:") + x.id) : all;
 }
+// เรียงตามลำดับที่ Channel จัดไว้ · รายการที่ไม่อยู่ในลำดับ (เพิ่มใหม่) ต่อท้ายตามเดิม · ค่าเริ่มต้นแบบลบไม่ได้ขึ้นก่อนเสมอ
+export function sortByOrder(arr, ord, key) {
+    const pos = (x) => (x.lock ? -1 : ord.indexOf(key(x)) >= 0 ? ord.indexOf(key(x)) : 1e6);
+    return arr.map((x, i) => ({ x, i })).sort((a, b) => pos(a.x) - pos(b.x) || a.i - b.i).map((r) => r.x);
+}
+export function setQrOrder(keys) {
+    const ch = chOf(S.scope.id);
+    ch.pref.qrOrder = keys.slice();
+    ok("บันทึกลำดับคีย์ลัดแล้ว");
+}
+export const qrOrderOf = (id) => ((chRead(id) || {}).pref || {}).qrOrder || null;
 // สติ๊กเกอร์โปรดของ Agent ในหน้า Channel (ค่าเริ่มต้น — ลบที่ Channel ไม่ได้)
 export function agentFavFor(id) {
     return agentScopeOf(id).fav || [];
@@ -475,14 +578,21 @@ export function setType(c, t) {
     ok("เปลี่ยนประเภทเป็น " + typeLabel[t]);
 }
 /* โน้ตของลูกค้า — แสดงเป็นรายการใต้ช่องโน้ต (วันเวลา · ข้อความ · ผู้บันทึก) */
+/* ประวัติโน้ต (เจ้าของงานสั่ง 18 พ.ย. 2026) — ทุกครั้งที่เพิ่ม / ลบโน้ตของลูกค้า
+   { at: "dd/mm/yy hh:mm", act: "add" | "del", user: ยูสเซอร์ของลูกค้าตอนนั้น, text, by: แอดมิน } */
+function logNote(c, act, text) {
+    (c.noteLog || (c.noteLog = [])).unshift({ at: TODAY + " " + nowT(), act, user: c.unbound ? "" : c.user.username, text, by: ME });
+}
 export function addNote(c, text) {
     const v = text.trim();
     if (!v) return false;
     (c.notes = c.notes || []).push({ t: TODAY + " " + nowT(), text: v, by: ME });
+    logNote(c, "add", v);
     ok("บันทึกโน้ตแล้ว");
     return true;
 }
 export function delNote(c, i) {
+    logNote(c, "del", c.notes[i].text);
     c.notes.splice(i, 1);
     toast("ลบโน้ตแล้ว");
 }
@@ -570,22 +680,27 @@ export function assistVerify(a) {
         ok("Verify ผู้ช่วย " + a.name + " แล้ว");
     }, 1500);
 }
-export function assistCheckAll() {
+// ผู้ช่วยของ Agent ที่แชทนี้สังกัด · LINE OA ใช้งานได้เมื่อมีผู้ช่วยออนไลน์อย่างน้อย 1 ตัว (หมดอายุทุกตัว ⇒ ส่งผ่าน Messaging API)
+export const assistOf = (c) => (c ? st.assist[agentOf(c.merchant).id] || [] : []);
+export const lineUp = (c) => !!c && c.lineOk !== false && assistOf(c).some((a) => a.ok);
+export function assistCheckAll(c) {
     st.assistChecking = true;
     setTimeout(() => {
         st.assistChecking = false;
-        const n = st.assist.filter((a) => !a.ok).length;
+        const n = assistOf(c).filter((a) => !a.ok).length;
         n ? toast("ผู้ช่วยหมดอายุ " + n + " คน — กด Verify เพื่อ login ใหม่") : ok("ผู้ช่วยทุกคนออนไลน์อยู่");
     }, 1200);
 }
 // ปุ่มทดลอง: ผู้ช่วย 2 คนหมดอายุ (1 คนมีแอดมินอื่นกำลัง verify อยู่) · อีกคนไม่มีรหัสผ่าน ⇒ ใช้ QR
-export function assistExpire() {
-    st.assist[1].ok = false;
-    st.assist[2].ok = false;
-    st.assist[2].by = "admin02";
+export function assistExpire(c) {
+    const as = assistOf(c), a1 = as[1] || as[0], a2 = as[2];
+    if (a1) a1.ok = false;
+    if (!a2) return toast("ตั้งผู้ช่วยเป็นหมดอายุแล้ว (ต้นแบบ)");
+    a2.ok = false;
+    a2.by = "admin02";
     toast("ตั้งผู้ช่วยเป็นหมดอายุแล้ว (ต้นแบบ)");
     setTimeout(() => {
-        delete st.assist[2].by;
+        delete a2.by;
     }, 8000);
 }
 export function pingLine(c) {
@@ -596,6 +711,7 @@ export function pingLine(c) {
 /* ผูกสมาชิกกับแชท (เว็บจริง 27 ต.ค. 2026) — ค้นหาด้วย username / เบอร์ / ชื่อ ⇒ รายชื่อ ⇒ กดชื่อเพื่อผูก
    แชทที่ผูกอยู่แล้ว ⇒ ถามก่อน "เปลี่ยนสมาชิกที่ผูกกับแชทนี้?" · ยังไม่เปิดแชท ⇒ กดชื่อแล้วแสดงข้อมูลในแผงขวา */
 export function bindMember(c, m) {
+    logBind(c, "bind", m.user.username, m.user.fullname, c.unbound ? "" : c.user.username);
     c.user = { ...m.user };
     c.turn = m.turn;
     c.promo = m.promo;
@@ -607,7 +723,13 @@ export function bindMember(c, m) {
     push(c, "sys", "ผูกสมาชิก " + m.user.username + " กับแชทนี้แล้ว");
     ok("ผูกสมาชิก " + m.user.username + " แล้ว");
 }
+// เลิกผูก ⇒ ถามก่อน (เว็บจริง 18 พ.ย. 2026) · unbindAsk = id ของแชทที่กำลังถาม
+export function unbindAsk(c) {
+    st.unbindAsk = c ? c.id : null;
+}
 export function unbindMember(c) {
+    st.unbindAsk = null;
+    logBind(c, "unbind", c.user.username, c.user.fullname, "");
     c.unbound = true;
     st.lookup = "";
     st.lookErr = null;
@@ -681,7 +803,7 @@ export function creditCancel() {
 export function confirmCredit(c) {
     const cr = st.credit, camt = parseFloat(amtOf(cr.amt)), cadd = cr.type === "add";
     c.credit = Math.round((c.credit + (cadd ? camt : -camt)) * 100) / 100;
-    (cadd ? c.histDep : c.histWd).unshift({ amt: camt, time: TODAY + " " + nowT(), ok: true, ref: "CR" + String(Date.now()).slice(-6) });
+    (cadd ? c.histDep : c.histWd).unshift({ amt: camt, time: TODAY + " " + nowT(), ok: true, ref: "CR" + String(Date.now()).slice(-6), by: ME });
     // เว็บจริง: ระบบปรับเครดิตทันที ไม่แจ้งลูกค้าในแชท — บันทึกเป็นข้อความระบบ (ลูกค้าไม่เห็น) ว่าใครทำ
     push(c, "sys", (cadd ? "เติมเครดิต " : "ถอนเครดิต ") + money(camt) + " บาท " + (cadd ? "ให้ " : "ของ ") + c.user.username + " โดย " + ME + (cr.note ? " (" + cr.note + ")" : ""));
     st.credit = { ...blankCredit(cr.type), msg: (cadd ? "เติมเครดิต " : "ถอนเครดิต ") + money(camt) + " บาท ให้ " + c.user.username + " แล้ว" };
@@ -787,6 +909,16 @@ export function regSubmit(c) {
         st.regMsg = { ok: false, text: "เลขบัญชีนี้สมัครสมาชิกแล้ว" };
         return;
     }
+    // ผ่านทุกช่องแล้ว ⇒ ถาม "ยืนยันสมัครสมาชิก" ก่อน (เว็บจริง 18 พ.ย. 2026)
+    st.regAsk = true;
+    st.regMsg = null;
+}
+export function regAskCancel() {
+    st.regAsk = false;
+}
+export function regConfirm(c) {
+    const rg = st.reg, rno = rg.no.replace(/[\s-]/g, "");
+    st.regAsk = false;
     const phone = rg.phone.replace(/[\s-]/g, ""), uname = "99q" + phone;
     // เว็บจริง: สมัครแล้วระบบผูกสมาชิกกับแชทนี้ทันที · เบอร์และรหัสผ่านยังค้างในฟอร์มให้กด "ส่งข้อมูลให้ลูกค้า"
     if (c) {
@@ -798,6 +930,8 @@ export function regSubmit(c) {
         c.turn = null;
         c.promo = null;
         c.credit = 0;
+        c.bonus = 0;
+        logBind(c, "bind", uname, rg.acct.trim(), "");
         push(c, "sys", "สมัครสมาชิก " + uname + " โดย " + ME);
     }
     st.regMsg = { ok: true, text: "สมัครสมาชิก " + uname + (c ? " สำเร็จและผูกกับแชทนี้แล้ว" : " สำเร็จ") };
@@ -828,6 +962,7 @@ export function regClear() {
     st.reg = blankReg();
     st.regErr = {};
     st.regMsg = null;
+    st.regAsk = false;
 }
 
 /* ---------- announce page ---------- */

@@ -23,6 +23,14 @@
     // ทั้งหมด · ทั่วไป (เรื่องทั่วไป) · การเงิน (ฝาก/ถอน) — เจ้าของงานเปลี่ยนชื่อ 15 ต.ค. 2026 (เดิม All / Line / Payment)
     const TABS = [["all", "ทั้งหมด"], ["line", "ทั่วไป"], ["payment", "การเงิน"]];
     const cnt = $derived(counts());
+    // จำนวนแชทที่รอแอดมินรับเคสในแต่ละแท็บ (เว็บจริง 18 พ.ย. 2026) · 0 = ไม่แสดง
+    const waitCnt = $derived.by(() => {
+        const w = visible().filter((c) => c.status === "waiting");
+        return { all: w.length, line: w.filter((c) => tabOf(c) === "line").length, payment: w.filter((c) => tabOf(c) === "payment").length };
+    });
+    // เวลาที่ลูกค้ารอ: วินาที · นาที:วินาที · ชั่วโมง:นาที:วินาที (เว็บจริง 18 พ.ย. 2026)
+    const p2 = (n) => String(n).padStart(2, "0");
+    const dur = (s) => (s < 60 ? String(s) : s < 3600 ? Math.floor(s / 60) + ":" + p2(s % 60) : Math.floor(s / 3600) + ":" + p2(Math.floor((s % 3600) / 60)) + ":" + p2(s % 60));
     const total = chatChannels().length;
     const shown = $derived(visible().filter((c) => st.tab === "all" || tabOf(c) === st.tab).sort(byRecent));
 </script>
@@ -58,8 +66,8 @@
             bind:value={() => st.tab, (t) => t && (st.tab = t)}
         >
             {#each TABS as [t, label] (t)}
-                <ToggleGroup.Item value={t}>
-                    {label}
+                <ToggleGroup.Item value={t} aria-label={label + (waitCnt[t] ? " — รอแอดมินรับเคส " + waitCnt[t] : "")}>
+                    {label}{#if waitCnt[t]}<Badge variant="secondary" class="h-4.5 min-w-4.5 px-1 tabular-nums">{waitCnt[t]}</Badge>{/if}
                 </ToggleGroup.Item>
             {/each}
         </ToggleGroup.Root>
@@ -91,14 +99,14 @@
                                 </span>
                             </Item.Title>
                             <span class="flex flex-wrap items-center gap-1 py-0.5">
-                                <Badge variant="outline" class="max-w-full ps-1" title={merch(c.merchant).name}><PlatformIcon p={merch(c.merchant).platform} /><span class="truncate">{merch(c.merchant).name}</span></Badge>
+                                <Badge variant="outline" class={"max-w-full ps-1 " + (merch(c.merchant).platform === "telegram" ? "border-telegram/40 bg-[color-mix(in_srgb,var(--telegram)_16%,var(--background))]" : "border-brand-accent/45 bg-[color-mix(in_srgb,var(--brand-accent)_18%,var(--background))]")} title={merch(c.merchant).name}><PlatformIcon p={merch(c.merchant).platform} /><span class="truncate">{merch(c.merchant).name}</span></Badge>
                                 {#if c.status === "waiting"}
                                     <Badge variant="secondary" data-tone="warning"
-                                        ><Clock aria-hidden="true" /><span class="@max-3xs:hidden">รอแอดมินรับเคส</span><span class="hidden @max-3xs:inline">รอรับ</span> <span class="tabular-nums">({c.secs})</span></Badge
+                                        ><Clock aria-hidden="true" /><span class="@max-3xs:hidden">รอแอดมินรับเคส</span><span class="hidden @max-3xs:inline">รอรับ</span> <span class="tabular-nums" title="ลูกค้ารออยู่">({dur(c.secs)})</span></Badge
                                     >
                                 {:else}
                                     <Badge variant="secondary" class="max-w-full"
-                                        ><UserRound aria-hidden="true" /><span class="truncate">{c.admin}</span> <span class="tabular-nums">({c.secs})</span></Badge
+                                        ><UserRound aria-hidden="true" /><span class="truncate">{c.admin}</span> <span class="tabular-nums" title="ลูกค้ารอไปเท่านี้ (หยุดนับแล้ว)">({dur(c.secs)})</span></Badge
                                     >
                                 {/if}
                                 <span class="sr-only">ประเภท {k.label}</span>

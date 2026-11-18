@@ -15,7 +15,10 @@
     const items = $derived(histAll(c));
     let tab = $state("all");
     let page = $state(1);
-    const list = $derived(tab === "all" ? items : items.filter((x) => x.k === tab));
+    // ทำรายการโดย: ทั้งหมด · แอดมิน · ลูกค้าทำเอง (เจ้าของงานสั่ง 18 พ.ย. 2026)
+    let who = $state("all");
+    const byWho = (x) => who === "all" || (who === "admin" ? !!x.r.by : !x.r.by);
+    const list = $derived((tab === "all" ? items : items.filter((x) => x.k === tab)).filter(byWho));
     const pages = $derived(Math.max(1, Math.ceil(list.length / PER)));
     const cur = $derived(Math.min(page, pages));
     const shown = $derived(list.slice((cur - 1) * PER, cur * PER));
@@ -26,9 +29,9 @@
     ]);
 </script>
 
-{#snippet who()}<span class="text-muted-foreground text-xs whitespace-nowrap tabular-nums">{items.length ? items.length + " รายการ" : "ไม่มี"}</span>{/snippet}
+{#snippet count()}<span class="text-muted-foreground text-xs whitespace-nowrap tabular-nums">{items.length ? items.length + " รายการ" : "ไม่มี"}</span>{/snippet}
 
-<FoldCard {c} title="ประวัติฝากถอน" icon={History} hint={items.length + " รายการ"} def={true} action={who} contentClass="gap-3">
+<FoldCard {c} title="ประวัติฝากถอน" icon={History} hint={items.length + " รายการ"} def={true} action={count} contentClass="gap-3">
     {#if items.length}
         <ToggleGroup.Root
             type="single"
@@ -41,8 +44,16 @@
                 <ToggleGroup.Item value={k}>{label}<Badge variant="secondary" class="tabular-nums">{n}</Badge></ToggleGroup.Item>
             {/each}
         </ToggleGroup.Root>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-muted-foreground text-xs">ทำรายการโดย</span>
+            <ToggleGroup.Root type="single" variant="outline" size="sm" aria-label="ทำรายการโดย" bind:value={() => who, (w) => w && ((who = w), (page = 1))}>
+                <ToggleGroup.Item value="all">ทั้งหมด</ToggleGroup.Item>
+                <ToggleGroup.Item value="admin">แอดมิน</ToggleGroup.Item>
+                <ToggleGroup.Item value="self">ลูกค้าทำเอง</ToggleGroup.Item>
+            </ToggleGroup.Root>
+        </div>
         <p class="text-muted-foreground text-xs tabular-nums">
-            {#if list.length}รายการที่ {(cur - 1) * PER + 1}–{Math.min(cur * PER, list.length)} จาก {list.length} · {histSums(list)}{:else}ไม่มีรายการ{tab === "dep" ? "ฝาก" : "ถอน"}{/if}
+            {#if list.length}รายการที่ {(cur - 1) * PER + 1}–{Math.min(cur * PER, list.length)} จาก {list.length} · {histSums(list)}{:else}ไม่มีรายการ{tab === "dep" ? "ฝาก" : tab === "wd" ? "ถอน" : ""}{who === "admin" ? "ที่แอดมินทำ" : who === "self" ? "ที่ลูกค้าทำเอง" : ""}{/if}
         </p>
         {#if shown.length}<HistRows items={shown} />{/if}
         {#if pages > 1}

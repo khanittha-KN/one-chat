@@ -34,6 +34,9 @@
             {money(c.credit)}
             <Button variant="ghost" size="icon-xs" aria-label="โหลดเครดิตคงเหลือใหม่" title="โหลดเครดิตคงเหลือใหม่" onclick={() => ok("โหลดเครดิตคงเหลือแล้ว")}><RefreshCw /></Button>
         </dd>
+        <!-- กระเป๋าโบนัส (เว็บจริง 18 พ.ย. 2026) -->
+        <dt class={DTS}>กระเป๋าโบนัส</dt>
+        <dd class={DDS + " tabular-nums"}>{money(c.bonus || 0)}</dd>
     </dl>
     {#if !st.credit.confirm}
         <Field.Group class="gap-4">

@@ -24,6 +24,7 @@
     import Send from "@lucide/svelte/icons/send";
     import Megaphone from "@lucide/svelte/icons/megaphone";
     import GripVertical from "@lucide/svelte/icons/grip-vertical";
+    import ArrowUpDown from "@lucide/svelte/icons/arrow-up-down";
     import ChevronUp from "@lucide/svelte/icons/chevron-up";
     import ChevronDown from "@lucide/svelte/icons/chevron-down";
     import CircleCheck from "@lucide/svelte/icons/circle-check";
@@ -60,7 +61,7 @@
     import PasswordInput from "./ui/PasswordInput.svelte";
     import { PACKS, TG_PACKS, TYPE_LBL, GUIDE, SET_TABS, stickerLabel, chanByName, PLATFORM, followersOf } from "./data.js";
     import PlatformIcon from "./ui/PlatformIcon.svelte";
-    import { S, db, showPage, setTab, settingsAct, simIncoming, openSettings, channelsOf, defaultsFor, defPref, forkDefault, resetItem, agentFavFor, setCloseUse, closeSetName, closeSetId, scopes } from "./store.svelte.js";
+    import { S, db, showPage, setTab, settingsAct, simIncoming, openSettings, channelsOf, defaultsFor, defPref, forkDefault, resetItem, agentFavFor, setCloseUse, closeSetName, closeSetId, scopes, sortByOrder, setQrOrder, qrOrderOf } from "./store.svelte.js";
     import { agents, agentOf } from "./data.js";
     import Building from "@lucide/svelte/icons/building-2";
     import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
@@ -125,6 +126,24 @@
         stk: { title: "ชุดสติ๊กเกอร์", newLabel: "สร้างชุดใหม่", newAct: "stk-new", edit: "stk-edit", del: "stk-del", sheet: "stk", desc: "" },
     };
     // ลำดับ: ค่าเริ่มต้น Agent แบบลบไม่ได้ · แบบลบได้ · Custom (เจ้าของงานสั่ง 29 ต.ค. 2026)
+    // คีย์ลัดของ Channel: โหมดจัดลำดับ (เว็บจริง 18 พ.ย. 2026) · reorder = ลำดับของแถวที่ย้ายได้ระหว่างจัด (null = ไม่ได้จัด)
+    //   แถวค่าเริ่มต้นแบบลบไม่ได้อยู่บนสุดเสมอ ย้ายไม่ได้ · ลากที่ปุ่มจับ หรือโฟกัสปุ่มจับแล้วกดลูกศรขึ้น/ลง
+    let reorder = $state(null);
+    let rFrom = $state(null);
+    let rOver = $state(null);
+    const rowKey = (r) => (r.custom ? "c:" : "d:") + r.x.id;
+    const pinned = (r) => !r.custom && !!r.x.lock;
+    function rMove(i, to) {
+        if (to < 0 || to >= reorder.length || to === i) return;
+        const [k] = reorder.splice(i, 1);
+        reorder.splice(to, 0, k);
+    }
+    $effect(() => {
+        // เปลี่ยนหน้า / เปลี่ยน Channel ⇒ ออกจากโหมดจัดลำดับ
+        S.tab;
+        S.ch;
+        reorder = null;
+    });
     const rank = (x) => (x.src === "custom" ? 2 : x.lock ? 0 : 1);
     const ord = (arr) => arr.map((x, i) => ({ x, i })).sort((a, b) => rank(a.x) - rank(b.x));
     // ชุดสติ๊กเกอร์ตรงกับช่องทางของ Channel (LINE / Telegram)
@@ -155,7 +174,13 @@
         pw: ["เปลี่ยนรหัสผ่าน", "เปลี่ยนรหัสผ่านสำหรับเข้าสู่ระบบของบัญชีคุณ"],
         gd: ["คู่มือแอดมิน", "สาเหตุและวิธีแก้ของปัญหาที่แอดมินพบบ่อย"],
     };
-    const head = $derived(HEAD[S.tab] || HEAD.gd);
+    // หน้า Agent: คำอธิบายใต้หัวบอกว่าเป็นค่าเริ่มต้นของทุก Channel (เว็บจริง 18 พ.ย. 2026)
+    const AGENT_DESC = {
+        stk: "ชุดสติ๊กเกอร์เริ่มต้นสำหรับทุก Channel — แก้ไขที่ Channel ได้ถ้าต้องการ Custom",
+        qr: "คีย์ลัดเริ่มต้นสำหรับทุก Channel — Channel แก้ไขได้",
+        am: "ข้อความอัตโนมัติเริ่มต้นสำหรับทุก Channel — Channel แก้ไขได้",
+    };
+    const head = $derived(isAgent && AGENT_DESC[S.tab] ? [HEAD[S.tab][0], AGENT_DESC[S.tab]] : HEAD[S.tab] || HEAD.gd);
 </script>
 
 {#snippet chanLabel()}
@@ -251,12 +276,27 @@
         }),
         ...mine.map((x, i) => ({ custom: true, x, i })).filter((r) => !r.x.from || !defs.some((dd) => dd.x.id === r.x.from)),
     ].filter((r) => k !== "stk" || stkOk(r.x))}
+    {@const ordered = k === "qr" && qrOrderOf(chan.id) ? sortByOrder(rows.map((r) => ({ ...r, lock: pinned(r) })), qrOrderOf(chan.id), rowKey) : rows}
+    {@const movable = ordered.filter((r) => !pinned(r))}
+    {@const sorting = k === "qr" && !!reorder}
     <Card.Root>
         <Card.Header>
             <Card.Title class="flex items-center gap-2">{meta.title} <Badge variant="secondary" class="tabular-nums">{rows.length}</Badge></Card.Title>
-            <Card.Description class="max-w-prose">{meta.desc}ค่าเริ่มต้นมาจาก Agent {agent.name} และอัปเดตตาม Agent เสมอ · กดแก้ไขแล้วจะเป็น Custom ของ Channel นี้ กดคืนค่าเริ่มต้นเพื่อกลับไปใช้ของ Agent</Card.Description>
-            <Card.Action>
-                <Button size="sm" aria-label={meta.newLabel} onclick={act(meta.newAct)}><Plus data-icon="inline-start" /><span class="sm:hidden">เพิ่ม</span><span class="max-sm:hidden">{meta.newLabel}</span></Button>
+            {#if sorting}
+                <Card.Description class="max-w-prose">ลากแถว (หรือโฟกัสปุ่มจับ <GripVertical class="inline size-3.5" aria-label="ปุ่มจับ" /> แล้วกดลูกศรขึ้น/ลง) เพื่อจัดลำดับ แล้วกด "บันทึก" — กด "ยกเลิก" ลำดับจะกลับเป็นเหมือนเดิม · ลำดับนี้คือลำดับปุ่มคีย์ลัดใต้ห้องแชท</Card.Description>
+            {:else}
+                <Card.Description class="max-w-prose">{meta.desc}ค่าเริ่มต้นมาจาก Agent {agent.name} และอัปเดตตาม Agent เสมอ · กดแก้ไขแล้วจะเป็น Custom ของ Channel นี้ กดคืนค่าเริ่มต้นเพื่อกลับไปใช้ของ Agent</Card.Description>
+            {/if}
+            <Card.Action class="flex flex-wrap justify-end gap-2">
+                {#if sorting}
+                    <Button variant="outline" size="sm" onclick={() => (reorder = null)}>ยกเลิก</Button>
+                    <Button size="sm" onclick={() => (setQrOrder(reorder), (reorder = null))}><Save data-icon="inline-start" />บันทึก</Button>
+                {:else}
+                    {#if k === "qr"}
+                        <Button variant="outline" size="sm" disabled={movable.length < 2} title={movable.length < 2 ? "มีคีย์ลัดน้อยกว่า 2 รายการ" : "จัดลำดับคีย์ลัด"} onclick={() => (reorder = movable.map(rowKey))}><ArrowUpDown data-icon="inline-start" />จัดลำดับ</Button>
+                    {/if}
+                    <Button size="sm" aria-label={meta.newLabel} onclick={act(meta.newAct)}><Plus data-icon="inline-start" /><span class="sm:hidden">เพิ่ม</span><span class="max-sm:hidden">{meta.newLabel}</span></Button>
+                {/if}
             </Card.Action>
         </Card.Header>
         <Card.Content class="flex flex-col gap-3">
@@ -265,8 +305,61 @@
                     {ccNow ? "ปิดเคสแล้วระบบจะส่งชุด “" + ccNow + "”" : "ปิดเคสแล้วระบบจะไม่ส่งข้อความ"}{ccPref ? " · เลือกโดย " + ccPref.by + " · " + ccPref.at : " · ตามค่าเริ่มต้นของ Agent"}
                 </p>
             {/if}
+            {#if sorting}
+                <!-- โหมดจัดลำดับ: ปุ่มจับ · ลำดับ · ชื่อ + ป้าย · ตัวอย่างรายการ (ไม่มีปุ่มอื่น) -->
+                <Item.Group class="gap-2" role="list" aria-label="ลากเพื่อเรียงลำดับคีย์ลัด">
+                    {#each ordered.filter(pinned) as r, n (rowKey(r))}
+                        <Item.Root variant="outline" size="sm" role="listitem" class="bg-muted/40 items-center">
+                            <span class="text-muted-foreground grid size-7 place-items-center" title="ค่าเริ่มต้นแบบลบไม่ได้อยู่บนสุดเสมอ"><Lock class="size-4" aria-label="ย้ายไม่ได้" /></span>
+                            <Badge variant="secondary" class="tabular-nums">{n + 1}</Badge>
+                            <Item.Content class="min-w-0"><Item.Title class="w-full"><span class="truncate">{r.x.name}</span>{@render agBadge(r.x)}</Item.Title>{@render itemBody(k, r.x)}</Item.Content>
+                        </Item.Root>
+                    {/each}
+                    {#each reorder as key, i (key)}
+                        {@const r = movable.find((m) => rowKey(m) === key)}
+                        {@const base = ordered.filter(pinned).length}
+                        {#if r}
+                            <Item.Root
+                                variant="outline"
+                                size="sm"
+                                role="listitem"
+                                class={"items-center " + (rOver === i ? "border-brand bg-brand/5" : "")}
+                                draggable="true"
+                                ondragstart={(e) => ((rFrom = i), (e.dataTransfer.effectAllowed = "move"))}
+                                ondragover={(e) => rFrom != null && (e.preventDefault(), (rOver = i))}
+                                ondrop={(e) => (e.preventDefault(), rFrom != null && rMove(rFrom, i), (rFrom = null), (rOver = null))}
+                                ondragend={() => ((rFrom = null), (rOver = null))}
+                            >
+                                <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    class="text-muted-foreground cursor-grab active:cursor-grabbing"
+                                    aria-label={"ย้าย " + r.x.name + " (ลำดับที่ " + (base + i + 1) + " — ลาก หรือกดลูกศรขึ้น/ลง)"}
+                                    data-rgrip
+                                    onkeydown={(e) => {
+                                        if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+                                        e.preventDefault();
+                                        const to = i + (e.key === "ArrowUp" ? -1 : 1);
+                                        rMove(i, to);
+                                        requestAnimationFrame(() => document.querySelectorAll("[data-rgrip]")[Math.max(0, Math.min(reorder.length - 1, to))]?.focus());
+                                    }}><GripVertical /></Button
+                                >
+                                <Badge variant="secondary" class="tabular-nums">{base + i + 1}</Badge>
+                                <Item.Content class="min-w-0">
+                                    <Item.Title class="w-full flex-wrap">
+                                        {#if r.custom ? r.x.star : (r.pref.star ?? !!r.x.star)}<Star class="text-warning size-3.5" fill="currentColor" aria-label="ติดดาว" />{/if}
+                                        <span class="truncate">{r.x.name}</span>
+                                        {#if r.custom}<Badge data-tone="warning">Custom</Badge>{#if r.x.from}<Badge variant="outline">แก้จากค่าเริ่มต้น Agent</Badge>{/if}{:else}{@render agBadge(r.x)}{/if}
+                                    </Item.Title>
+                                    {@render itemBody(k, r.x)}
+                                </Item.Content>
+                            </Item.Root>
+                        {/if}
+                    {/each}
+                </Item.Group>
+            {:else}
             <Item.Group class="gap-2">
-                {#each rows as r ((r.custom ? "c-" : "d-") + r.x.id)}
+                {#each ordered as r ((r.custom ? "c-" : "d-") + r.x.id)}
                     {@const x = r.x}
                     {@const pref = r.custom ? {} : r.pref}
                     {@const star = k === "qr" && (r.custom ? !!x.star : (pref.star ?? !!x.star))}
@@ -309,6 +402,7 @@
                     <p class="text-muted-foreground text-sm">ยังไม่มีรายการ — กด "{meta.newLabel}"</p>
                 {/each}
             </Item.Group>
+            {/if}
         </Card.Content>
     </Card.Root>
 {/snippet}

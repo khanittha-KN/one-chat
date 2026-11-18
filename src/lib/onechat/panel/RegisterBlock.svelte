@@ -10,8 +10,9 @@
     import { Input } from "$lib/components/ui/input/index.js";
     import { NativeSelect, NativeSelectOption } from "$lib/components/ui/native-select/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
-    import { BANKS } from "../data.js";
-    import { db, st, regCheck, regSubmit, regClear, askAcc, sendReg, regValidate, MKT, refSearch, refPick, refClear, partnerLookup } from "../store.svelte.js";
+    import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
+    import { BANKS, bankOf } from "../data.js";
+    import { db, st, regCheck, regSubmit, regConfirm, regAskCancel, regClear, askAcc, sendReg, regValidate, MKT, refSearch, refPick, refClear, partnerLookup } from "../store.svelte.js";
     let { c } = $props();
     const bad = $derived(st.regMsg && !st.regMsg.ok);
     const refRes = $derived((st.reg.refRes || []).map((id) => db.cases.find((x) => x.id === id)).filter(Boolean));
@@ -120,10 +121,28 @@
         {#if bad}<Field.Error>{st.regMsg.text}</Field.Error>
         {:else}<p class="text-success flex items-center gap-1.5 text-sm" role="status"><CircleCheck class="size-4 shrink-0" aria-hidden="true" />{st.regMsg.text}</p>{/if}
     {/if}
-    <div class="flex gap-2 *:flex-1">
-        <Button onclick={() => regSubmit(c)}><UserPlus data-icon="inline-start" />สมัครสมาชิก</Button>
-        <Button variant="outline" onclick={regClear}>ล้างฟอร์ม</Button>
-    </div>
+    {#if st.regAsk}
+        <!-- ขั้นยืนยันก่อนสมัครจริง (เว็บจริง 18 พ.ย. 2026) -->
+        <div class="border-warning/40 bg-warning/5 flex flex-col gap-2 rounded-lg border p-3" role="alertdialog" aria-labelledby="rgT">
+            <p id="rgT" class="flex items-center gap-1.5 text-sm font-bold"><TriangleAlert class="text-warning size-4" aria-hidden="true" />ยืนยันสมัครสมาชิก?</p>
+            <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
+                <dt class="text-muted-foreground">เบอร์</dt><dd class="tabular-nums">{st.reg.phone}</dd>
+                <dt class="text-muted-foreground">ธนาคาร</dt><dd>{bankOf(st.reg.bank).name}</dd>
+                <dt class="text-muted-foreground">เลขที่บัญชี</dt><dd class="tabular-nums">{st.reg.no}</dd>
+                <dt class="text-muted-foreground">ชื่อบัญชี</dt><dd>{st.reg.acct}</dd>
+            </dl>
+            {#if c}<p class="text-muted-foreground text-xs">สมัครแล้วระบบจะผูกสมาชิกกับแชทนี้ทันที</p>{/if}
+            <div class="flex gap-2 *:flex-1">
+                <Button size="sm" onclick={() => regConfirm(c)}><UserPlus data-icon="inline-start" />ยืนยันสมัครสมาชิก</Button>
+                <Button variant="outline" size="sm" onclick={regAskCancel}>ยกเลิก</Button>
+            </div>
+        </div>
+    {:else}
+        <div class="flex gap-2 *:flex-1">
+            <Button onclick={() => regSubmit(c)}><UserPlus data-icon="inline-start" />สมัครสมาชิก</Button>
+            <Button variant="outline" onclick={regClear}>ล้างฟอร์ม</Button>
+        </div>
+    {/if}
     {#if c}
         <Button variant="secondary" title="ใส่ข้อความขอเลขที่บัญชีในช่องพิมพ์ — กดส่งเอง" onclick={() => askAcc(c)}>ขอเลขบัญชีลูกค้า</Button>
         <Field.Field>

@@ -146,9 +146,9 @@
         </div>
         <!-- แถว 2: ช่องทาง (LINE / Telegram) + Channel · ป้ายสถานะ · เปลี่ยนประเภทเคส -->
         <div class="col-span-full flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <Card.Description class="oa flex min-w-0 items-center gap-1.5 text-xs" title={PLATFORM[m.platform] + " " + m.name + " (@" + m.id + ")"}>
-                <PlatformIcon p={m.platform} label />
-                <span class="min-w-0 truncate"><b class="text-foreground font-bold">{m.name}</b> (@{m.id})</span>
+            <Card.Description class="oa flex min-w-0 items-center gap-1.5 text-sm" title={PLATFORM[m.platform] + " " + m.name + " (@" + m.id + ")"}>
+                <PlatformIcon p={m.platform} />
+                <span class="text-foreground min-w-0 truncate font-bold">{m.name} (@{m.id})</span>
             </Card.Description>
             <Badge variant="outline" class={"status " + k.badge}>{done ? "ปิดเคสแล้ว" : k.label}</Badge>
             <span class="flex-1"></span>

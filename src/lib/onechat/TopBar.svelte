@@ -1,8 +1,9 @@
-<!-- แถบบน 64px — DESIGN-SYSTEM §9.1: โลโก้ · กลับหน้า SmartHub · (ว่าง) · ไปหน้า Auto fast · สลับธีม · เสียง · เมนู -->
+<!-- แถบบน 64px — DESIGN-SYSTEM §9.1: โลโก้ · กลับหน้า SmartHub · (ว่าง) · คู่มือการใช้งาน · ไปหน้า Auto fast · สลับธีม · เสียง · เมนู -->
 <script>
     import MenuIcon from "@lucide/svelte/icons/menu";
     import ArrowLeft from "@lucide/svelte/icons/arrow-left";
     import ExternalLink from "@lucide/svelte/icons/external-link";
+    import BookOpen from "@lucide/svelte/icons/book-open";
     import BrandLogo from "./ui/BrandLogo.svelte";
     import Moon from "@lucide/svelte/icons/moon";
     import Sun from "@lucide/svelte/icons/sun";
@@ -46,6 +47,10 @@
         <ArrowLeft data-icon="inline-start" /><span class="hidden sm:inline">กลับหน้า SmartHub</span>
     </Button>
     <span class="flex-1"></span>
+    <!-- คู่มือการใช้งาน (เว็บจริง 15 พ.ย. 2026) — เปิดคู่มือ HTML ในแท็บใหม่ -->
+    <a href="/manual/index.html" target="_blank" rel="noopener" class={buttonVariants({ variant: "outline", size: "sm" })} aria-label="คู่มือการใช้งาน (เปิดแท็บใหม่)">
+        <BookOpen data-icon="inline-start" /><span class="hidden md:inline">คู่มือการใช้งาน</span>
+    </a>
     <!-- ไปหน้า Auto fast — ย้ายจากแผงลูกค้ามาไว้บนแถบบน (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
     <Button data-tone="success" data-fill="solid" size="sm" aria-label="ไปหน้า Auto fast" onclick={() => toast("ไปยัง Auto fast (ยังไม่มีลิงก์จริง)")}>
         <ExternalLink data-icon="inline-start" /><span class="hidden md:inline">ไปหน้า Auto fast</span>

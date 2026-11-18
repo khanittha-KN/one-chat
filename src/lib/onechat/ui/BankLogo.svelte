@@ -10,5 +10,6 @@
 </script>
 
 <span class={cn("grid size-10 shrink-0 place-items-center rounded-md", className)} style:background={b.bg} aria-hidden="true">
-    <span class="size-6" style="background-color: {b.fg}; -webkit-mask: {mask}; mask: {mask};"></span>
+    <!-- โลโก้ 60% ของกล่อง ⇒ กล่องขนาดไหนก็ได้สัดส่วนเดิม (กล่อง 40px = โลโก้ 24px เท่าเดิม) -->
+    <span class="size-[60%]" style="background-color: {b.fg}; -webkit-mask: {mask}; mask: {mask};"></span>
 </span>

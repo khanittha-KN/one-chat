@@ -15,12 +15,29 @@
         return db.cases.filter((c) => [c.name, c.user.username, c.user.fullname, c.user.mobile].join(" ").toLowerCase().indexOf(s) >= 0).slice(0, 8);
     });
 
+    // แยกข้อความเป็นช่วงที่ตรง / ไม่ตรงกับคำค้น (ไม่สนตัวพิมพ์เล็กใหญ่) ⇒ ไฮไลต์ช่วงที่ตรง
+    function parts(text) {
+        const s = q.trim().toLowerCase(), t = String(text ?? "");
+        if (!s) return [{ t, m: false }];
+        const out = [];
+        let i = 0, j;
+        while ((j = t.toLowerCase().indexOf(s, i)) >= 0) {
+            if (j > i) out.push({ t: t.slice(i, j), m: false });
+            out.push({ t: t.slice(j, j + s.length), m: true });
+            i = j + s.length;
+        }
+        if (i < t.length) out.push({ t: t.slice(i), m: false });
+        return out;
+    }
     function pick(id) {
         pickSearch(id);
         open = false;
         q = "";
     }
 </script>
+
+<!-- ตัวอักษรที่ตรงกับคำค้น: พื้นเหลืองอ่อน ตัวหนา (ตัวอักษรสีหลักอ่านได้ทั้งสองธีม) -->
+{#snippet hl(text)}{#each parts(text) as p, i (i)}{#if p.m}<mark class="bg-warning/30 text-foreground rounded-sm font-bold">{p.t}</mark>{:else}{p.t}{/if}{/each}{/snippet}
 
 <!-- คลิกนอกช่องค้นหา ⇒ ปิดผลลัพธ์ -->
 <svelte:document
@@ -52,8 +69,8 @@
                 {#snippet child({ props })}
                     <button {...props} type="button" onclick={() => pick(c.id)}>
                         <Item.Content class="min-w-0">
-                            <Item.Title>{c.name} · {c.user.username}</Item.Title>
-                            <Item.Description>{c.user.fullname} · {c.user.mobile} · {merch(c.merchant).name}</Item.Description>
+                            <Item.Title><span class="min-w-0 truncate">{@render hl(c.name)} · {@render hl(c.user.username)}</span></Item.Title>
+                            <Item.Description>{@render hl(c.user.fullname)} · <span class="tabular-nums">{@render hl(c.user.mobile)}</span> · {merch(c.merchant).name}</Item.Description>
                         </Item.Content>
                     </button>
                 {/snippet}

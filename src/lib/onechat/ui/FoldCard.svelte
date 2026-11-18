@@ -11,7 +11,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import { isFolded, setFold } from "../store.svelte.js";
 
-    let { c, title, def = false, action, children, contentClass = "", cardClass = "", icon: Icon = null, hint = "", dot = "", showHint = false } = $props();
+    let { c, title, def = false, action, children, contentClass = "", cardClass = "", dialogClass = "sm:max-w-md", icon: Icon = null, hint = "", dot = "", showHint = false } = $props();
     // ปุ่ม: hint = สถานะ (บอกโปรแกรมอ่านหน้าจอ + tooltip) · dot = จุดสีสถานะ success | warning | destructive
     const DOT = { success: "bg-success", warning: "bg-warning", destructive: "bg-destructive" };
     const folded = $derived(isFolded(c, title, def));
@@ -37,7 +37,7 @@
         {#if showHint && hint}<span class="text-muted-foreground font-normal" aria-hidden="true">· {hint}</span>{/if}
     </Button>
     <Dialog.Root bind:open>
-        <Dialog.Content class="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-md">
+        <Dialog.Content class={"flex max-h-[calc(100dvh-2rem)] flex-col " + dialogClass}>
             <Dialog.Header>
                 <Dialog.Title class="flex flex-wrap items-center gap-2 pe-6">{title}{#if action}<span class="text-sm font-normal">{@render action()}</span>{/if}</Dialog.Title>
             </Dialog.Header>

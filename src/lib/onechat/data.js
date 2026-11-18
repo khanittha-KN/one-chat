@@ -169,6 +169,8 @@ export function makeHist(n, kind) {
             time: 14 - Math.floor(i / 2) + " ต.ค. 2569 " + pad(9 + ((n + i * 3) % 12)) + ":" + pad((n * 7 + i * 13) % 60),
             ok: kind === "dep" ? i % 4 !== 3 : i % 3 !== 2,
             ref: (kind === "dep" ? "D" : "W") + (100000 + n * 1111 + i * 37),
+            // ทำรายการโดย: ชื่อแอดมิน · null = ลูกค้าทำเอง (เจ้าของงานสั่ง 18 พ.ย. 2026)
+            by: (n + i) % 3 === 0 ? ["admin01", "admin02", "admin03"][(n + i * 2) % 3] : null,
         });
     }
     return out;
@@ -219,8 +221,8 @@ export function seedCases() {
             msgs: [{ who: "cust", text: "สวัสดีค่ะ", t: "13:45" }, { who: "cust", text: "ขอแจ้งฝากหน่อยค่ะ ยูส " + usernameOf(1) + " ฝาก 253 บาทค่ะ", t: "13:46" }, { who: "cust", text: "ต้องโอนเข้าบัญชีไหนคะ", t: "13:46" }] },
         { id: "c2", name: "Nattaya.T", type: "withdraw", merchant: "alphavip", status: "open", admin: "admin02", secs: 35, ago: "5 นาที", lineOk: true, wd: 2, user: mkUser(2),
             msgs: [{ who: "cust", text: "ขอถอนเงินหน่อยค่ะ", t: "13:47" }, { who: "cust", text: "ถอน200", t: "13:48" }, { who: "cust", text: "ถอนแล้วยังไม่เข้าเลยค่ะ", t: "13:49" }] },
-        { id: "c3", name: "แนน กนกวรรณ", type: "general", merchant: "betacs", status: "open", admin: "admin03", secs: 12, ago: "9 นาที", lineOk: false, wd: 0, user: mkUser(3),
-            msgs: [{ who: "cust", text: "สอบถามโปรโมชั่นหน่อยค่ะ", t: "13:50" }, { who: "cust", text: "ทักไปหลายรอบแล้วไม่เห็นตอบเลยค่ะ", t: "13:51" }, { who: "sys", text: "ไลน์หลุด กรุณากด Verify ที่แผงขวา", t: "13:51" }] },
+        { id: "c3", name: "แนน กนกวรรณ", type: "general", merchant: "betacs", status: "open", admin: "admin03", secs: 12, ago: "9 นาที", lineOk: true, wd: 0, user: mkUser(3),
+            msgs: [{ who: "cust", text: "สอบถามโปรโมชั่นหน่อยค่ะ", t: "13:50" }, { who: "cust", text: "ทักไปหลายรอบแล้วไม่เห็นตอบเลยค่ะ", t: "13:51" }, { who: "sys", text: "ผู้ช่วยหมดอายุทุกตัว — ข้อความจะถูกส่งผ่าน Messaging API (เสียโควต้า)", t: "13:51" }] },
         { id: "c4", name: "Ploy", type: "deposit", merchant: "alpha1", status: "closed", admin: "admin02", secs: 210, ago: "36 นาที", lineOk: true, wd: 0, user: mkUser(4),
             msgs: [{ who: "cust", text: "ฝาก " + said("kbank") + " ค่ะ", t: "13:10" }, { who: "admin", by: "admin02", text: ACC, t: "13:11" }, { who: "cust", text: "โอนแล้วค่ะ", t: "13:13" }, slipMsg("kbank", "13:13", { checked: true, v: "real" }), { who: "sys", text: "เติมเงิน " + money(SLIPS.kbank.amt) + " บาท ให้ " + usernameOf(4) + " เรียบร้อย", t: "13:14" },
                 // ข้อความระบบลูกค้าไม่เห็น ⇒ แอดมินแจ้งลูกค้าก่อน ลูกค้าจึงตอบกลับได้ (เจ้าของงานทัก 16 ต.ค. 2026)
@@ -344,6 +346,23 @@ export const COACC = [
     { bank: "SCB", name: "บจก. เดโม่ กรุ๊ป", no: "412-2-90564-1" },
     { bank: "KTB", name: "บจก. เดโม่ กรุ๊ป", no: "981-0-23476-5" },
 ];
+/* บัญชี P2P (เจ้าของงานสั่ง 18 พ.ย. 2026) — บัญชีบุคคลที่ใช้รับฝาก / โอนถอนให้ลูกค้าที่ใช้ระบบ P2P (ชื่อสมมติ)
+   open = รับรายการได้ · false = ปิดรับชั่วคราว (เลือกไม่ได้) */
+export const P2P_ACC = [
+    { id: "p1", bank: "KBANK", name: "สุดา ใจงาม", no: "2348792302", open: false },
+    { id: "p2", bank: "KBANK", name: "โสภา ธรรมดี", no: "2363751345", open: false },
+    { id: "p3", bank: "KBANK", name: "นันทนา สุขสม", no: "2403457119", open: true },
+    { id: "p4", bank: "KBANK", name: "เรณู ใจชื่น", no: "2418031983", open: true },
+    { id: "p5", bank: "SCB", name: "มัทนา กุลวงศ์", no: "4136075771", open: false },
+    { id: "p6", bank: "KTB", name: "อิทธิพล กิตติวงศ์", no: "1751031072", open: true },
+];
+export const p2pAcc = (id) => P2P_ACC.find((a) => a.id === id);
+const TH_MON = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+// "2026-11-18" + "14:30" ⇒ "18 พ.ย. 2569 14:30" (รูปแบบเดียวกับประวัติฝากถอน)
+export const thDateTime = (d, t) => {
+    const [y, m, dd] = d.split("-").map(Number);
+    return dd + " " + TH_MON[m - 1] + " " + (y + 543) + " " + t;
+};
 // ต้นฉบับประกาศตัวแปรนี้ไว้แต่ไม่ได้ใช้ที่ใด — เก็บไว้ครบตามต้นฉบับ
 export const accounts = ["กสิกรไทย  038-8-41275-6", "ไทยพาณิชย์  412-2-90564-1"];
 
