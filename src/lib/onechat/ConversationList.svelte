@@ -33,6 +33,16 @@
     const dur = (s) => (s < 60 ? String(s) : s < 3600 ? Math.floor(s / 60) + ":" + p2(s % 60) : Math.floor(s / 3600) + ":" + p2(Math.floor((s % 3600) / 60)) + ":" + p2(s % 60));
     const total = chatChannels().length;
     const shown = $derived(visible().filter((c) => st.tab === "all" || tabOf(c) === st.tab).sort(byRecent));
+    /* แชทที่ยังไม่ได้อ่าน — ทีมแจ้งว่าดูไม่ชัด ทำ 3 แบบให้เลือก (เจ้าของงานสั่ง 19 พ.ย. 2026) · สลับได้ที่แถบท้ายรายการ
+       1 พื้นแถวเขียว (แถบซ้ายยังเป็นสีประเภทเคส) + ตัวเลขพื้นเขียวเข้ม ตัวขาว · 2 ตัวเลขพื้นเขียวเข้ม ตัวขาว
+       3 เน้นแบบ LINE: วงเขียวรอบรูป + เวลาเขียวตัวหนา + ตัวเลขพื้นเขียวเข้ม */
+    const UNREAD_UI = [
+        ["1", "แบบ 1", "พื้นแถวสีเขียว ตัวเลขพื้นเขียวเข้ม"],
+        ["2", "แบบ 2", "ตัวเลขพื้นเขียวเข้ม"],
+        ["3", "แบบ 3", "วงเขียวรอบรูป เวลาเขียว ตัวเลขเขียว"],
+    ];
+    const ROW_UNREAD = "bg-[color-mix(in_srgb,var(--brand-accent)_20%,var(--surface-chrome))] hover:bg-[color-mix(in_srgb,var(--brand-accent)_30%,var(--surface-chrome))]";
+    const stripe = (row) => (row.match(/border-l-\S+/) || [""])[0];
 </script>
 
 <Card.Root id="colList" role="region" aria-label="การสนทนา" class={"bg-surface-chrome min-h-0 gap-0 rounded-none border-r py-0 shadow-none ring-0 " + className}>
@@ -80,7 +90,8 @@
             {@const k = kindOf(c)}
             {@const lastM = c.msgs.filter((m) => m.action !== "closed").at(-1)}
             {@const last = lastM ? msgPreview(lastM) : ""}
-            <Item.Root size="sm" class={"case aria-[current=true]:ring-brand rounded-none border-0 border-b border-b-foreground/15 border-l-4 py-2 ps-2.5 pe-3 text-left aria-[current=true]:ring-2 aria-[current=true]:ring-inset " + k.row}>
+            {@const u = c.unread ? st.unreadUi : 0}
+            <Item.Root size="sm" class={"case aria-[current=true]:ring-brand rounded-none border-0 border-b border-b-foreground/15 border-l-4 py-2 ps-2.5 pe-3 text-left aria-[current=true]:ring-2 aria-[current=true]:ring-inset " + (u === 1 ? ROW_UNREAD + " " + stripe(k.row) : k.row)}>
                 {#snippet child({ props })}
                     <button
                         {...props}
@@ -88,14 +99,14 @@
                         aria-current={c.id === st.cur ? "true" : undefined}
                         onclick={() => selectCase(c.id)}
                     >
-                        <Item.Media><CustomerAvatar {c} /></Item.Media>
+                        <Item.Media><CustomerAvatar {c} class={u === 3 ? "ring-brand-accent ring-2" : ""} /></Item.Media>
                         <Item.Content class="min-w-0 gap-0.5">
                             <!-- วันเวลาชิดขวาเสมอ · รายการแคบ (tablet) ⇒ ลงบรรทัดใต้ชื่อแต่ยังชิดขวา ชื่อไม่ถูกตัดจนอ่านไม่ออก -->
                             <!-- line-clamp-none ทำให้ Item.Title เป็น block ⇒ จัดแถวด้วย span ด้านใน -->
                             <Item.Title class="line-clamp-none w-full">
                                 <span class="flex w-full flex-wrap items-baseline gap-x-2">
                                 <span class={"r1 min-w-0 flex-1 basis-24 truncate font-bold " + k.name}>{c.name}</span>
-                                <span class="text-muted-foreground ms-auto shrink-0 text-xs font-normal whitespace-nowrap tabular-nums">{DAY_SHORT} - {c.msgs.length ? c.msgs[c.msgs.length - 1].t : ""}</span>
+                                <span class={"ms-auto shrink-0 text-xs whitespace-nowrap tabular-nums " + (u === 3 ? "text-brand font-bold" : "text-muted-foreground font-normal")}>{DAY_SHORT} - {c.msgs.length ? c.msgs[c.msgs.length - 1].t : ""}</span>
                                 </span>
                             </Item.Title>
                             <span class="flex flex-wrap items-center gap-1 py-0.5">
@@ -115,7 +126,8 @@
                             <span class="flex min-w-0 items-center gap-2">
                                 <Item.Description class={"r3 line-clamp-1 flex-1 " + (c.unread ? "text-foreground font-bold" : "")}>{last}</Item.Description>
                                 {#if c.unread}
-                                    <Badge variant="destructive" class="h-5 min-w-5 rounded-full px-1.5 tabular-nums">{c.unread}<span class="sr-only"> ข้อความใหม่</span></Badge>
+                                    <!-- ตัวเลขข้อความใหม่: วงกลมพื้นเขียวเข้ม ตัวขาว ทุกแบบ (เจ้าของงานสั่ง 19 พ.ย. 2026) -->
+                                    <Badge class="bg-brand text-brand-foreground h-5 min-w-5 rounded-full px-1.5 tabular-nums">{c.unread}<span class="sr-only"> ข้อความใหม่</span></Badge>
                                 {/if}
                             </span>
                         </Item.Content>
@@ -136,6 +148,15 @@
                 </Empty.Header>
             </Empty.Root>
         {/each}
+    </div>
+    <!-- ตัวเลือกแบบแชทยังไม่อ่าน (ให้ทีมลองเทียบ 3 แบบ) -->
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 border-t px-3 py-2">
+        <span id="unreadUiL" class="text-muted-foreground text-xs">แชทยังไม่อ่าน</span>
+        <ToggleGroup.Root type="single" variant="outline" size="sm" class="flex-1 *:flex-1" aria-labelledby="unreadUiL" bind:value={() => String(st.unreadUi), (v) => v && (st.unreadUi = Number(v))}>
+            {#each UNREAD_UI as [v, label, desc] (v)}
+                <ToggleGroup.Item value={v} title={desc} aria-label={label + ": " + desc}>{label}</ToggleGroup.Item>
+            {/each}
+        </ToggleGroup.Root>
     </div>
     <Card.Footer class="flex-wrap gap-x-3 gap-y-1 border-t py-2" aria-label="คำอธิบายประเภท">
         {#each KINDS as kd (kd.key)}

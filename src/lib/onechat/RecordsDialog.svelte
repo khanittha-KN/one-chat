@@ -34,7 +34,7 @@
 <Dialog.Root bind:open={() => st.accModal || st.histModal, (v) => !v && close()}>
     <Dialog.Content
         showCloseButton={false}
-        class="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-lg"
+        class={"flex max-h-[calc(100dvh-2rem)] flex-col " + (st.accModal ? "sm:max-w-lg" : "sm:max-w-5xl")}
         onOpenAutoFocus={(e) => {
             e.preventDefault();
             closeBtn?.focus();

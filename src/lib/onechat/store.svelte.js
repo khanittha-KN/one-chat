@@ -53,6 +53,12 @@ db.cases.forEach((c, i) => {
     if (!c.unbound) log.unshift({ at: atOf(i, 0), act: "bind", user: u.username, fullname: u.fullname, prev: i % 2 ? last : "", by: by0 });
     c.bindLog = log;
 });
+/* ตัวอย่างแชทที่ยังไม่ได้อ่านตอนเปิดหน้า (19 พ.ย. 2026) — เห็นตัวเลขข้อความใหม่ได้ทันที ไม่ต้องรอข้อความจำลอง
+   แชท 4 ห้องแรกที่ข้อความล่าสุดมาจากลูกค้า · 1–3 ข้อความ */
+db.cases
+    .filter((c) => (c.msgs.at(-1) || {}).who === "cust")
+    .slice(0, 4)
+    .forEach((c, i) => (c.unread = [2, 1, 3, 1][i]));
 /* ลูกค้าที่ใช้ระบบ P2P อยู่แล้ว (เจ้าของงานสั่ง 18 พ.ย. 2026) ⇒ มีการ์ด "ฝาก P2P" · ประวัติฝากถอนบางรายการผ่าน P2P */
 const P2P_CASES = ["c1", "c3", "c20"];
 db.cases.forEach((c) => {
@@ -60,8 +66,10 @@ db.cases.forEach((c) => {
     c.p2p = true;
     // ฝาก Manual มีเฉพาะฝาก ⇒ ตัวอย่างเฉพาะรายการฝาก
     (c.histDep || []).forEach((r, k) => {
+        if (k % 3 === 1) r.ch = "p2p"; // ลูกค้าฝากเองผ่าน P2P
         if (k % 3 === 0) {
-            r.via = "p2p";
+            r.ch = "p2p";
+            r.manual = true; // แอดมินแจ้งฝาก Manual
             r.note = ["ลูกค้าโอนผ่านแอปธนาคาร สลิปไม่มี QR", "ยอดตรงกับสลิป ตรวจแล้ว", "ลูกค้าโอนจากบัญชีอื่นของตัวเอง"][k % 3 === 0 ? (k / 3) % 3 : 0];
             r.noQr = (k / 3) % 2 === 0;
             r.by = r.by || "admin02";
@@ -77,8 +85,9 @@ const p2pNow = () => {
     return { date: d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()), time: p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) };
 };
 const blankP2p = () => ({ acc: (P2P_ACC.find((a) => a.open) || {}).id || null, amt: "", date: "", time: "", noQr: false, slip: null, note: "", err: {}, ask: false, msg: null });
+// เปลี่ยนลูกค้าในแผงขวา ⇒ ล้างฟอร์มฝาก Manual + ข้อความแจ้งฝากสำเร็จ (คงบัญชีบริษัทที่เลือกไว้ แอดมินมักใช้บัญชีเดิมต่อ)
 export function p2pReset() {
-    st.p2p = blankP2p();
+    st.p2p = { ...blankP2p(), acc: st.p2p ? st.p2p.acc : blankP2p().acc };
 }
 // ช่องเวลาแบบมีวินาที ⇒ "hh:mm:ss" (เบราว์เซอร์ตัดวินาทีทิ้งเมื่อเป็น 00 ⇒ เติมให้)
 /* ยอดคงเหลือของบัญชีบริษัท (เจ้าของงานสั่ง 19 พ.ย. 2026 · ระบบเดิมมีปุ่ม "อัพเดตยอด")
@@ -99,9 +108,8 @@ export function p2pSubmit() {
     if (!f.amt) e.amt = "กรอกยอดฝาก";
     else if (!(amt > 0)) e.amt = "จำนวนเงินต้องมากกว่า 0";
     // วันและเวลาฝาก: ไม่บังคับ · ติ๊ก "ไม่ต้องเช็ค QRCode" ⇒ บังคับ · กรอกช่องเดียว ⇒ ให้กรอกอีกช่อง
-    if (f.noQr && !f.date) e.date = "ไม่เช็ค QRCode ต้องกรอกวันที่ฝาก";
-    if (f.noQr && !f.time) e.time = "ไม่เช็ค QRCode ต้องกรอกเวลาฝาก";
-    if (!f.noQr && !!f.date !== !!f.time) e[f.date ? "time" : "date"] = "กรอกทั้งวันที่และเวลา หรือเว้นว่างทั้งคู่";
+    // วันและเวลาฝากเป็นช่องเดียว (datetime-local) ⇒ กรอกไม่ครบ = ว่าง
+    if (f.noQr && !(f.date && f.time)) e.date = "ไม่เช็ค QRCode ต้องกรอกวันและเวลาฝาก";
     if (!f.noQr && !f.slip) e.slip = "แนบหลักฐานการโอนเพื่อให้ระบบเช็ค QRCode หรือติ๊ก \"ไม่ต้องเช็ค QRCode\"";
     if (!f.note.trim()) e.note = "กรอกหมายเหตุ";
     f.err = e;
@@ -113,11 +121,11 @@ export function p2pConfirm(c) {
     const f = st.p2p, amt = Math.round(parseFloat(String(f.amt).replace(/,/g, "")) * 100) / 100, a = p2pAcc(f.acc);
     // ไม่กรอกวันเวลาฝาก ⇒ ใช้เวลาที่แจ้ง
     const now = p2pNow(), at = f.date ? thDateTime(f.date, p2pTime(f).slice(0, 5)) : thDateTime(now.date, now.time.slice(0, 5));
-    c.histDep.unshift({ amt, time: at, ok: true, ref: "MD" + String(Date.now()).slice(-6), via: "p2p", acc: a.id, by: ME, note: f.note.trim(), slip: f.slip ? f.slip.name : "", noQr: f.noQr });
+    c.histDep.unshift({ amt, time: at, ok: true, ref: "MD" + String(Date.now()).slice(-6), ch: "p2p", manual: true, acc: a.id, by: ME, note: f.note.trim(), slip: f.slip ? f.slip.name : "", noQr: f.noQr });
     push(c, "sys", "แจ้งฝาก Manual " + money(amt) + " บาท · บัญชี " + bankOf(a.bank).name + " " + a.no + (f.noQr ? " · ไม่เช็ค QRCode" : "") + " · โดย " + ME);
     ok("แจ้งฝาก Manual " + money(amt) + " บาทแล้ว");
     if (p2pBal[a.id]) p2pBal[a.id].amt = Math.round((p2pBal[a.id].amt + amt) * 100) / 100;
-    st.p2p = { ...blankP2p(), acc: f.acc, msg: "แจ้งฝาก " + money(amt) + " บาทแล้ว ดูรายการได้ที่ประวัติฝากถอน" };
+    st.p2p = { ...blankP2p(), acc: f.acc, msg: "แจ้งฝาก " + money(amt) + " บาทแล้ว" };
 }
 const stamp = () => TODAY + " " + nowT();
 function logBind(c, act, user, fullname, prev) {
@@ -128,6 +136,10 @@ export const st = $state({
     loggedIn: false,
     // cur = แชทที่เปิดอยู่ · เริ่มที่ยังไม่เปิดแชทไหน (เจ้าของงาน 14 ต.ค. 2026 · แบบ LINE — เปิดให้เองลูกค้าจะเห็นว่าอ่านแล้วแต่ยังไม่ตอบ)
     tab: "all", sel: chatChannels().map((m) => m.id), collapsed: {}, cur: null, view: "list", page: "console", menu: false,
+    // แบบแสดงแชทที่ยังไม่ได้อ่าน (ให้ทีมเลือก 19 พ.ย. 2026): 1 พื้นแถวเขียว + ตัวเลขเขียว · 2 ตัวเลขพื้นเขียวเข้ม · 3 เน้นแบบ LINE (วงเขียวรอบรูป + เวลาเขียว + ตัวเลขเขียว)
+    unreadUi: 1,
+    // histJump = ขอเปิดหน้าต่างประวัติฝากถอนที่แท็บนี้ ("dep" · "wd" · "all") — ปุ่ม "ดูประวัติฝาก" ในข้อความแจ้งฝากสำเร็จ (19 พ.ย. 2026)
+    histJump: null,
     regMsg: null, regErr: {}, regAsk: false, unbindAsk: null, p2p: blankP2p(), lookup: null, lookErr: null, look: null, hist: "all", histModal: false, accModal: false, coSel: null,
     credit: blankCredit(), reg: blankReg(), pw: blankPw(),
     // chanOpen = แผงเลือกแชทที่แสดง (สไลด์ขวา) · panelOff = ซ่อนแผงลูกค้า · editName = เปิดช่องแก้ชื่อ/ไอดี · fold = การ์ดในแผงขวาที่พับ/กาง (แยกต่อเคส)
@@ -521,6 +533,7 @@ function resetPanel() {
     st.rebind = null;
     st.pw = blankPw();
     st.credit = blankCredit();
+    p2pReset();
 }
 export function selectCase(id) {
     st.cur = id;
@@ -827,7 +840,7 @@ export function creditCancel() {
 export function confirmCredit(c) {
     const cr = st.credit, camt = parseFloat(amtOf(cr.amt)), cadd = cr.type === "add";
     c.credit = Math.round((c.credit + (cadd ? camt : -camt)) * 100) / 100;
-    (cadd ? c.histDep : c.histWd).unshift({ amt: camt, time: TODAY + " " + nowT(), ok: true, ref: "CR" + String(Date.now()).slice(-6), by: ME });
+    (cadd ? c.histDep : c.histWd).unshift({ amt: camt, time: TODAY + " " + nowT(), ok: true, ref: "CR" + String(Date.now()).slice(-6), by: ME, ch: "credit" });
     // เว็บจริง: ระบบปรับเครดิตทันที ไม่แจ้งลูกค้าในแชท — บันทึกเป็นข้อความระบบ (ลูกค้าไม่เห็น) ว่าใครทำ
     push(c, "sys", (cadd ? "เติมเครดิต " : "ถอนเครดิต ") + money(camt) + " บาท " + (cadd ? "ให้ " : "ของ ") + c.user.username + " โดย " + ME + (cr.note ? " (" + cr.note + ")" : ""));
     st.credit = { ...blankCredit(cr.type), msg: (cadd ? "เติมเครดิต " : "ถอนเครดิต ") + money(camt) + " บาท ให้ " + c.user.username + " แล้ว" };

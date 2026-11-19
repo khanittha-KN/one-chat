@@ -231,17 +231,20 @@
     --warning-solid: #b45309;
     --info-solid: #0369a1;
 
-    /* สีประเภทเคส — โหมดมืด · พื้นแถวอิ่มสีขึ้น (เจ้าของงาน 14 ต.ค. 2026: "ซีด ดูไม่ออกว่าสีอะไร")
-       ลดความอิ่มสีลงครึ่งหนึ่ง 15 ต.ค. 2026 (ทีมแจ้งว่าแสบตา) — แถบซ้ายยังสีสดบอกประเภท · ตัวขาว ≥13.6:1 · ตัวรอง ≥7:1 · ตัวสีประเภท ≥6.6:1 */
+    /* สีประเภทเคส — โหมดมืด
+       14 ต.ค. อิ่มสีขึ้น ("ซีด ดูไม่ออก") → 15 ต.ค. ลดครึ่งหนึ่ง (แสบตา) → 19 พ.ย. 2026 ผู้ใช้แจ้งว่ามืดไป ดูสีเคสไม่ออก
+       ⇒ พื้นแถว = สีประเภท 28% ผสมพื้นรายการแชทของธีมนั้น (--surface-chrome) ⇒ เข้ากับทุกธีมมืด (มืด · ทีล · สเลท · เนวี่) เอง ไม่ต้องตั้งแยก
+       ตัวรองในแถวเคสสว่างขึ้น (--case-muted) · ตัวส้ม/แดงสว่างขึ้น ⇒ ตัวอักษรทุกแบบบนพื้นแถวทุกธีม ≥4.5:1 */
     --case-yellow: #e9d95e;
-    --case-yellow-bg: #302d1a;
+    --case-yellow-bg: color-mix(in srgb, var(--case-yellow) 28%, var(--surface-chrome));
     --case-yellow-fg: #e9d95e;
     --case-orange: #f0a25e;
-    --case-orange-bg: #38291e;
-    --case-orange-fg: #f0a25e;
+    --case-orange-bg: color-mix(in srgb, var(--case-orange) 28%, var(--surface-chrome));
+    --case-orange-fg: #ffb47a;
     --case-red: #ee6c86;
-    --case-red-bg: #3a2029;
-    --case-red-fg: #ff8fa6;
+    --case-red-bg: color-mix(in srgb, var(--case-red) 28%, var(--surface-chrome));
+    --case-red-fg: #ff9db1;
+    --case-muted: color-mix(in srgb, var(--muted-foreground) 65%, #ffffff);
     --case-white: #e2e6ed;
     --case-white-bg: #2a2e35; /* ปิดเคส = เทาอ่อนกว่าพื้นรายการ #171A1F ให้แยกออก */
     --case-white-fg: var(--foreground);
@@ -275,9 +278,6 @@
     --rail-input: #647c83;
     --chat-bg: #091317;
     --bubble-cust: #24393f;
-    --case-yellow-bg: #2b2f1f;
-    --case-orange-bg: #322a22;
-    --case-red-bg: #33232b;
     --case-white-bg: #24393f;
 }
 [data-theme="dark"][data-palette="slate"] {
@@ -303,9 +303,6 @@
     --rail-border: #262d36;
     --rail-input: #6e7a8a;
     --bubble-cust: #2f3a48;
-    --case-yellow-bg: #312f22;
-    --case-orange-bg: #382d26;
-    --case-red-bg: #3a2731;
     --case-white-bg: #2f3843;
     --chat-bg: #11151a;
 }
@@ -332,11 +329,17 @@
     --rail-border: #1a2338;
     --rail-input: #64739a;
     --bubble-cust: #26324e;
-    --case-yellow-bg: #2c2d24;
-    --case-orange-bg: #33292a;
-    --case-red-bg: #352235;
     --case-white-bg: #25314d;
     --chat-bg: #0a1120;
+}
+
+/* แถวเคสในรายการแชท — โหมดมืด (19 พ.ย. 2026): ตัวรองสว่างขึ้นให้อ่านบนพื้นสีเคสที่อิ่มขึ้น · ชี้แล้วสว่างขึ้นเล็กน้อย
+   (hover:bg-case-x/25 ของโหมดสว่างจะเข้มกว่าพื้นใหม่ ⇒ ซ้อนชั้นขาวโปร่งแทน) */
+:is([data-theme="dark"], .dark) #caseList .case {
+    --muted-foreground: var(--case-muted);
+}
+:is([data-theme="dark"], .dark) #caseList .case:hover {
+    background-image: linear-gradient(rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.07));
 }
 
 /* ── แผงซ้าย (Merchant) — <Sidebar.Root class="surface-rail"> ทั้งจอคอมและแผงเลื่อนบนมือถือ ──

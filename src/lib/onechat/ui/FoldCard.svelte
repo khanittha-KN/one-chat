@@ -11,12 +11,12 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import { isFolded, setFold } from "../store.svelte.js";
 
-    let { c, title, def = false, action, children, contentClass = "", cardClass = "", dialogClass = "sm:max-w-md", icon: Icon = null, hint = "", dot = "", showHint = false } = $props();
+    let { c, title, def = false, action, children, contentClass = "", cardClass = "", dialogClass = "sm:max-w-md", icon: Icon = null, hint = "", dot = "", showHint = false, open = $bindable(false) } = $props();
     // ปุ่ม: hint = สถานะ (บอกโปรแกรมอ่านหน้าจอ + tooltip) · dot = จุดสีสถานะ success | warning | destructive
     const DOT = { success: "bg-success", warning: "bg-warning", destructive: "bg-destructive" };
     const folded = $derived(isFolded(c, title, def));
     const id = $derived("fold-" + title.replace(/\W+/g, "") + "-" + (c ? c.id : "x"));
-    let open = $state(false);
+    // bind:open ได้ ⇒ การ์ดอื่นสั่งเปิดหน้าต่างได้ (เช่น ปุ่ม "ดูประวัติฝาก" หลังแจ้งฝาก Manual)
 </script>
 
 {#if def}

@@ -157,6 +157,20 @@ function mkUser(n) {
     return { no: n, username: usernameOf(n), fullname: PEOPLE[n - 1] ? PEOPLE[n - 1][1] : usernameOf(n), bank: b.name, bankCode: b.code, number: acctNo(n), mobile: mobileOf(n), picture: avatarOf(n) };
 }
 
+/* ช่องทางที่ทำรายการฝาก/ถอน (เจ้าของงานสั่ง 19 พ.ย. 2026) — ใช้เป็นคอลัมน์และตัวกรองในประวัติฝากถอน
+   P2P มีเฉพาะลูกค้าที่ใช้ระบบ P2P (ใส่ใน store) · ฝาก Manual ของแอดมิน = ช่องทาง P2P + manual: true */
+export const HIST_CH = [
+    { k: "bankbot", label: "แบงค์บอท" },
+    { k: "oneslip", label: "OneSlip" },
+    { k: "p2p", label: "P2P" },
+    { k: "qr", label: "QR Payment" },
+    { k: "one2coin", label: "One 2 coin" },
+];
+// ch: "credit" = แอดมินปรับเครดิตจากการ์ดจัดการเครดิต (ไม่อยู่ในตัวกรอง แสดงเมื่อเลือก "ทั้งหมด")
+export const chLabel = (k) => (k === "credit" ? "ปรับเครดิต" : (HIST_CH.find((x) => x.k === k) || { label: "-" }).label);
+const DEP_CH = ["bankbot", "oneslip", "qr", "bankbot", "one2coin"];
+const WD_CH = ["bankbot", "one2coin", "bankbot"];
+
 export function makeHist(n, kind) {
     if (n === 6 || (n === 3 && kind === "wd")) return [];
     const amts = [100, 200, 253, 300, 500, 1000, 150, 400, 800];
@@ -171,6 +185,7 @@ export function makeHist(n, kind) {
             ref: (kind === "dep" ? "D" : "W") + (100000 + n * 1111 + i * 37),
             // ทำรายการโดย: ชื่อแอดมิน · null = ลูกค้าทำเอง (เจ้าของงานสั่ง 18 พ.ย. 2026)
             by: (n + i) % 3 === 0 ? ["admin01", "admin02", "admin03"][(n + i * 2) % 3] : null,
+            ch: kind === "dep" ? DEP_CH[(n + i) % DEP_CH.length] : WD_CH[(n + i) % WD_CH.length],
         });
     }
     return out;
@@ -448,7 +463,7 @@ export function histSums(items) {
             else w += x.r.amt;
         }
     });
-    return "ฝากสำเร็จ " + d.toFixed(2) + " · ถอนสำเร็จ " + w.toFixed(2) + " บาท";
+    return "ฝากสำเร็จ " + money(d) + " · ถอนสำเร็จ " + money(w) + " บาท";
 }
 export function accountsOf(c) {
     const n = c.user.no || 1, cnt = 1 + (n % 5);
