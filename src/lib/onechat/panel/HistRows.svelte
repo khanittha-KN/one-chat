@@ -1,7 +1,7 @@
 <!-- รายการฝาก/ถอน — ออกแบบใหม่ (เจ้าของงานสั่ง 18 พ.ย. 2026)
      แถวบน: ประเภท (ป้ายสีเดียวกับประเภทเคส ฝาก เหลือง · ถอน ส้ม) · ยอด (+ ฝาก / − ถอน) · ผล
      แถวรอง: วันเวลา · เลขอ้างอิง
-     เส้นคั่น แล้วตาราง 2 คอลัมน์: ทำรายการ (แอดมินคนไหน หรือลูกค้าทำเอง) · ช่องทาง (P2P + บัญชีบริษัท หรือ ระบบปกติ) -->
+     เส้นคั่น แล้วตาราง 2 คอลัมน์: ทำรายการ (แอดมินคนไหน หรือลูกค้าทำเอง) · ช่องทาง (Manual + บัญชีบริษัท หรือ ระบบปกติ) · หมายเหตุ (ฝาก Manual) -->
 <script>
     import UserCog from "@lucide/svelte/icons/user-cog";
     import Smartphone from "@lucide/svelte/icons/smartphone";
@@ -33,10 +33,15 @@
                 <dt class="text-muted-foreground">ช่องทาง</dt>
                 <dd class="flex min-w-0 items-center gap-1">
                     {#if x.r.via === "p2p"}
-                        <Badge variant="secondary" data-tone="info" class="shrink-0">P2P</Badge>
+                        <Badge variant="secondary" data-tone="info" class="shrink-0">Manual</Badge>
                         {#if a}<BankLogo code={a.bank} class="size-4 rounded-sm" /><span class="min-w-0 truncate tabular-nums" title={bankOf(a.bank).name + " " + a.no + " · " + a.name}>{a.no} · {a.name}</span>{/if}
                     {:else}<span>ระบบปกติ</span>{/if}
                 </dd>
+                {#if x.r.note}
+                    <!-- ฝาก Manual: หมายเหตุ · ไม่เช็ค QRCode -->
+                    <dt class="text-muted-foreground">หมายเหตุ</dt>
+                    <dd class="min-w-0 wrap-anywhere">{x.r.note}{#if x.r.noQr} <span class="text-muted-foreground">· ไม่เช็ค QRCode</span>{/if}</dd>
+                {/if}
             </dl>
         </li>
     {/each}

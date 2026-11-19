@@ -58,42 +58,66 @@ const P2P_CASES = ["c1", "c3", "c20"];
 db.cases.forEach((c) => {
     if (P2P_CASES.indexOf(c.id) < 0 || c.p2p) return;
     c.p2p = true;
-    [...(c.histDep || []), ...(c.histWd || [])].forEach((r, k) => {
+    // ฝาก Manual มีเฉพาะฝาก ⇒ ตัวอย่างเฉพาะรายการฝาก
+    (c.histDep || []).forEach((r, k) => {
         if (k % 3 === 0) {
             r.via = "p2p";
+            r.note = ["ลูกค้าโอนผ่านแอปธนาคาร สลิปไม่มี QR", "ยอดตรงกับสลิป ตรวจแล้ว", "ลูกค้าโอนจากบัญชีอื่นของตัวเอง"][k % 3 === 0 ? (k / 3) % 3 : 0];
+            r.noQr = (k / 3) % 2 === 0;
             r.by = r.by || "admin02";
             r.acc = P2P_ACC.filter((a) => a.open)[k % 3].id;
         }
     });
 });
+/* ฝาก Manual (เดิม "ฝาก P2P" · เจ้าของงานสั่ง 19 พ.ย. 2026) — แจ้งฝากอย่างเดียว ไม่มีแจ้งถอน
+   บัญชีบริษัท · ชื่อบัญชีลูกค้า · ยอดฝาก · วันและเวลาฝาก (ไม่บังคับ · มีวินาที) · ติ๊ก "ไม่ต้องเช็ค QRCode" · แนบสลิป · หมายเหตุ (บังคับ)
+   ไม่ติ๊ก "ไม่ต้องเช็ค QRCode" ⇒ ต้องแนบสลิปให้ระบบเช็ค QR */
 const p2pNow = () => {
     const d = new Date(), p = (n) => String(n).padStart(2, "0");
-    return { date: d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()), time: p(d.getHours()) + ":" + p(d.getMinutes()) };
+    return { date: d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()), time: p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) };
 };
-const blankP2p = (mode = "dep") => ({ mode, acc: (P2P_ACC.find((a) => a.open) || {}).id || null, amt: "", ...p2pNow(), err: {}, ask: false, msg: null });
-export function p2pReset(mode) {
-    st.p2p = blankP2p(mode || st.p2p.mode);
+const blankP2p = () => ({ acc: (P2P_ACC.find((a) => a.open) || {}).id || null, amt: "", date: "", time: "", noQr: false, slip: null, note: "", err: {}, ask: false, msg: null });
+export function p2pReset() {
+    st.p2p = blankP2p();
 }
+// ช่องเวลาแบบมีวินาที ⇒ "hh:mm:ss" (เบราว์เซอร์ตัดวินาทีทิ้งเมื่อเป็น 00 ⇒ เติมให้)
+/* ยอดคงเหลือของบัญชีบริษัท (เจ้าของงานสั่ง 19 พ.ย. 2026 · ระบบเดิมมีปุ่ม "อัพเดตยอด")
+   p2pBal[id] = { amt, at: "hh:mm:ss" } · แจ้งฝากสำเร็จ ⇒ บวกยอด · อัปเดตยอด ⇒ ดึงยอดใหม่ (ต้นแบบ: ยอดขยับเล็กน้อย) */
+export const p2pBal = $state(Object.fromEntries(P2P_ACC.map((a) => [a.id, { amt: a.bal, at: p2pNow().time }])));
+export function p2pRefresh(id) {
+    const b = p2pBal[id];
+    if (!b) return;
+    b.amt = Math.round((b.amt + (Math.floor(Math.random() * 5) - 1) * 100) * 100) / 100;
+    b.at = p2pNow().time;
+    ok("อัปเดตยอดคงเหลือแล้ว");
+}
+export const p2pTime = (f) => (f.time.length === 5 ? f.time + ":00" : f.time);
 // ตรวจช่อง ⇒ ผ่าน ⇒ ถามยืนยัน
 export function p2pSubmit() {
     const f = st.p2p, amt = parseFloat(String(f.amt).replace(/,/g, "")), e = {};
-    if (!f.acc || !(p2pAcc(f.acc) || {}).open) e.acc = "เลือกบัญชีธนาคารที่เปิดรับรายการ";
-    if (!f.amt) e.amt = f.mode === "dep" ? "กรอกยอดฝาก" : "กรอกยอดถอน";
+    if (!f.acc || !(p2pAcc(f.acc) || {}).open) e.acc = "เลือกบัญชีบริษัทที่เปิดรับรายการ";
+    if (!f.amt) e.amt = "กรอกยอดฝาก";
     else if (!(amt > 0)) e.amt = "จำนวนเงินต้องมากกว่า 0";
-    if (!f.date) e.date = "เลือกวันที่";
-    if (!f.time) e.time = "เลือกเวลา";
+    // วันและเวลาฝาก: ไม่บังคับ · ติ๊ก "ไม่ต้องเช็ค QRCode" ⇒ บังคับ · กรอกช่องเดียว ⇒ ให้กรอกอีกช่อง
+    if (f.noQr && !f.date) e.date = "ไม่เช็ค QRCode ต้องกรอกวันที่ฝาก";
+    if (f.noQr && !f.time) e.time = "ไม่เช็ค QRCode ต้องกรอกเวลาฝาก";
+    if (!f.noQr && !!f.date !== !!f.time) e[f.date ? "time" : "date"] = "กรอกทั้งวันที่และเวลา หรือเว้นว่างทั้งคู่";
+    if (!f.noQr && !f.slip) e.slip = "แนบหลักฐานการโอนเพื่อให้ระบบเช็ค QRCode หรือติ๊ก \"ไม่ต้องเช็ค QRCode\"";
+    if (!f.note.trim()) e.note = "กรอกหมายเหตุ";
     f.err = e;
     f.msg = null;
     if (!Object.keys(e).length) f.ask = true;
 }
-// ยืนยัน ⇒ บันทึกเป็นรายการในประวัติฝากถอน (ช่องทาง P2P) + ข้อความระบบในแชท
+// ยืนยัน ⇒ บันทึกเป็นรายการฝากในประวัติฝากถอน (ช่องทาง Manual) + ข้อความระบบในแชท
 export function p2pConfirm(c) {
-    const f = st.p2p, amt = Math.round(parseFloat(String(f.amt).replace(/,/g, "")) * 100) / 100, a = p2pAcc(f.acc), dep = f.mode === "dep";
-    (dep ? c.histDep : c.histWd).unshift({ amt, time: thDateTime(f.date, f.time), ok: true, ref: (dep ? "PD" : "PW") + String(Date.now()).slice(-6), via: "p2p", acc: a.id, by: ME });
-    push(c, "sys", (dep ? "แจ้งฝาก P2P " : "แจ้งถอน P2P ") + money(amt) + " บาท · บัญชี " + bankOf(a.bank).name + " " + a.no + " · โดย " + ME);
-    ok((dep ? "แจ้งฝาก P2P " : "แจ้งถอน P2P ") + money(amt) + " บาทแล้ว");
-    const mode = f.mode, acc = f.acc;
-    st.p2p = { ...blankP2p(mode), acc, msg: (dep ? "แจ้งฝาก " : "แจ้งถอน ") + money(amt) + " บาท แล้ว — ดูได้ที่ประวัติฝากถอน" };
+    const f = st.p2p, amt = Math.round(parseFloat(String(f.amt).replace(/,/g, "")) * 100) / 100, a = p2pAcc(f.acc);
+    // ไม่กรอกวันเวลาฝาก ⇒ ใช้เวลาที่แจ้ง
+    const now = p2pNow(), at = f.date ? thDateTime(f.date, p2pTime(f).slice(0, 5)) : thDateTime(now.date, now.time.slice(0, 5));
+    c.histDep.unshift({ amt, time: at, ok: true, ref: "MD" + String(Date.now()).slice(-6), via: "p2p", acc: a.id, by: ME, note: f.note.trim(), slip: f.slip ? f.slip.name : "", noQr: f.noQr });
+    push(c, "sys", "แจ้งฝาก Manual " + money(amt) + " บาท · บัญชี " + bankOf(a.bank).name + " " + a.no + (f.noQr ? " · ไม่เช็ค QRCode" : "") + " · โดย " + ME);
+    ok("แจ้งฝาก Manual " + money(amt) + " บาทแล้ว");
+    if (p2pBal[a.id]) p2pBal[a.id].amt = Math.round((p2pBal[a.id].amt + amt) * 100) / 100;
+    st.p2p = { ...blankP2p(), acc: f.acc, msg: "แจ้งฝาก " + money(amt) + " บาทแล้ว ดูรายการได้ที่ประวัติฝากถอน" };
 }
 const stamp = () => TODAY + " " + nowT();
 function logBind(c, act, user, fullname, prev) {

@@ -349,12 +349,13 @@ export const COACC = [
 /* บัญชี P2P (เจ้าของงานสั่ง 18 พ.ย. 2026) — บัญชีบุคคลที่ใช้รับฝาก / โอนถอนให้ลูกค้าที่ใช้ระบบ P2P (ชื่อสมมติ)
    open = รับรายการได้ · false = ปิดรับชั่วคราว (เลือกไม่ได้) */
 export const P2P_ACC = [
-    { id: "p1", bank: "KBANK", name: "สุดา ใจงาม", no: "2348792302", open: false },
-    { id: "p2", bank: "KBANK", name: "โสภา ธรรมดี", no: "2363751345", open: false },
-    { id: "p3", bank: "KBANK", name: "นันทนา สุขสม", no: "2403457119", open: true },
-    { id: "p4", bank: "KBANK", name: "เรณู ใจชื่น", no: "2418031983", open: true },
-    { id: "p5", bank: "SCB", name: "มัทนา กุลวงศ์", no: "4136075771", open: false },
-    { id: "p6", bank: "KTB", name: "อิทธิพล กิตติวงศ์", no: "1751031072", open: true },
+    // bal = ยอดคงเหลือในบัญชี (บาท) ตอนเปิดหน้า
+    { id: "p1", bank: "KBANK", name: "สุดา ใจงาม", no: "2348792302", open: false, bal: 12450 },
+    { id: "p2", bank: "KBANK", name: "โสภา ธรรมดี", no: "2363751345", open: false, bal: 3870.5 },
+    { id: "p3", bank: "KBANK", name: "นันทนา สุขสม", no: "2403457119", open: true, bal: 165357 },
+    { id: "p4", bank: "KBANK", name: "เรณู ใจชื่น", no: "2418031983", open: true, bal: 98420.25 },
+    { id: "p5", bank: "SCB", name: "มัทนา กุลวงศ์", no: "4136075771", open: false, bal: 0 },
+    { id: "p6", bank: "KTB", name: "อิทธิพล กิตติวงศ์", no: "1751031072", open: true, bal: 41200 },
 ];
 export const p2pAcc = (id) => P2P_ACC.find((a) => a.id === id);
 const TH_MON = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
