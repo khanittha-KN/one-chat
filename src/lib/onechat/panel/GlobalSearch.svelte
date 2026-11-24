@@ -12,7 +12,7 @@
     const results = $derived.by(() => {
         const s = q.trim().toLowerCase();
         if (!s) return [];
-        return db.cases.filter((c) => [c.name, c.user.username, c.user.fullname, c.user.mobile].join(" ").toLowerCase().indexOf(s) >= 0).slice(0, 8);
+        return db.cases.filter((c) => [c.name, c.lineName || "", c.label || "", c.user.username, c.user.fullname, c.user.mobile].join(" ").toLowerCase().indexOf(s) >= 0).slice(0, 8);
     });
 
     // แยกข้อความเป็นช่วงที่ตรง / ไม่ตรงกับคำค้น (ไม่สนตัวพิมพ์เล็กใหญ่) ⇒ ไฮไลต์ช่วงที่ตรง

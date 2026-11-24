@@ -207,6 +207,10 @@ export const SLIPS = {
     },
 };
 export const slipOf = (m) => SLIPS[m.img] || SLIPS.kbank;
+/* ยูสเซอร์ที่แสดงใต้ชื่อในรายการแชท (เจ้าของงานสั่ง 23 พ.ย. 2026 · ระบบเดิมมีช่องชื่อ + ยูสเซอร์)
+   แอดมินแก้ได้ (c.label) · ยังไม่แก้ ⇒ username ของสมาชิกที่ผูก · ไม่ผูก ⇒ ว่าง
+   เป็นป้ายของแชทเท่านั้น ไม่เปลี่ยน username ของบัญชีสมาชิก */
+export const userLabel = (c) => (c.label != null ? c.label : c.unbound ? "" : c.user.username);
 const slipMsg = (img, t, extra) => ({ who: "cust", text: "", t, action: "slip", img, amt: SLIPS[img].amt, ...extra });
 // ยอดที่ลูกค้าพิมพ์ในแชท เช่น "10,000" — ใช้กับเคสที่มีสลิป ให้ยอดที่แจ้ง · ยอดค้าง · รูปสลิป ตรงกัน (เจ้าของงานสั่ง 14 ต.ค. 2026)
 const said = (img) => SLIPS[img].amt.toLocaleString("en-US");

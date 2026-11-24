@@ -31,7 +31,7 @@
     import StickerImg from "./ui/StickerImg.svelte";
     import CustomerAvatar from "./ui/CustomerAvatar.svelte";
     import PlatformIcon from "./ui/PlatformIcon.svelte";
-    import { merch, slipOf, bankOf, money, TODAY, PLATFORM, VERDICT, DAY_SHORT } from "./data.js";
+    import { merch, slipOf, bankOf, money, TODAY, PLATFORM, VERDICT, DAY_SHORT, userLabel } from "./data.js";
     import { kindOf, TYPE_BTNS } from "./kinds.js";
     import {
         db, st, S, cur, ME, toast, closeCase, saveName, sendText, quickSend, askAcc, slipCheck,
@@ -51,6 +51,11 @@
 
     let msgsEl = $state(null);
     let eName = $state(null);
+    const escCancel = (e) => {
+        if (e.key !== "Escape") return;
+        e.stopPropagation();
+        st.editName = false;
+    };
     let eUser = $state(null);
     let imgIn = $state(null);
     // ค่าที่พิมพ์ค้างอยู่คงไว้ข้ามการสลับเคส เหมือนต้นฉบับ · อยู่ใน store ให้ปุ่ม "ขอเลขบัญชีลูกค้า" ใส่ข้อความให้ได้ (เว็บจริง 27 ต.ค. 2026)
@@ -86,24 +91,25 @@
         <div class="col-span-full flex min-w-0 flex-wrap items-center gap-2">
             <CustomerAvatar {c} class="size-8" />
             {#if st.editName}
-                <!-- แก้ชื่อลูกค้า (เว็บจริง 27 ต.ค. 2026): ช่องเดียวแทนที่ชื่อ · Enter บันทึก · Esc ยกเลิก · เว้นว่าง = ใช้ชื่อ LINE เดิม -->
-                <Input
-                    bind:ref={eName}
-                    value={c.name}
-                    placeholder={c.lineName || c.name}
-                    aria-label="ชื่อลูกค้า — Enter บันทึก · Esc ยกเลิก"
-                    class="bg-muted h-8 max-w-sm flex-1 rounded-none border-0 border-b-2 text-base shadow-none focus-visible:ring-0"
-                    onkeydown={(e) => {
-                        if (e.key === "Enter") saveName(c, eName.value, c.user.username);
-                        else if (e.key === "Escape") {
-                            e.stopPropagation();
-                            st.editName = false;
-                        }
-                    }}
-                    onblur={() => st.editName && saveName(c, eName.value, c.user.username)}
-                />
+                <!-- แก้ชื่อและยูสเซอร์ (เจ้าของงานสั่ง 23 พ.ย. 2026 ตามระบบเดิม): ชื่อ LINE เดิมอยู่บน · ชื่อ + ยูสเซอร์ + บันทึก
+                     Enter บันทึก · Esc ยกเลิก · ชื่อว่าง = กลับเป็นชื่อ LINE -->
+                <form
+                    class="flex min-w-0 flex-1 flex-col gap-1"
+                    aria-label="แก้ไขชื่อและ Username"
+                    onsubmit={(e) => (e.preventDefault(), saveName(c, eName.value, eUser.value))}
+                >
+                    <span class="text-muted-foreground text-xs">ชื่อ LINE <b class="text-foreground">{c.lineName || c.name}</b></span>
+                    <span class="flex flex-wrap items-center gap-2">
+                        <Input bind:ref={eName} value={c.name} placeholder={c.lineName || c.name} aria-label="ชื่อ" class="h-8 min-w-32 flex-1" onkeydown={escCancel} />
+                        <Input bind:ref={eUser} value={userLabel(c)} placeholder="Username" aria-label="Username" class="h-8 min-w-32 flex-1 tabular-nums" onkeydown={escCancel} />
+                        <Button type="submit" size="sm">บันทึก</Button>
+                        <Button type="button" variant="ghost" size="sm" onclick={() => (st.editName = false)}>ยกเลิก</Button>
+                    </span>
+                </form>
             {:else}
             <Card.Title class={"truncate text-base font-bold " + k.name}>{c.name}</Card.Title>
+            {#if c.lineName && c.lineName !== c.name}<!-- ชื่อ LINE เดิม: เส้นคั่นตั้ง แล้วตามด้วยชื่อ (เว้นระยะด้วย gap · ช่องว่างท้าย span ถูกตัดทิ้งตอน render) -->
+            <span class="text-muted-foreground flex shrink-0 items-center gap-2 text-xs" title="ชื่อ LINE เดิม"><span class="bg-muted-foreground/50 h-3.5 w-px" aria-hidden="true"></span><span><span class="sr-only">ชื่อ LINE เดิม </span>{c.lineName}</span></span>{/if}
             <Button
                 variant="ghost"
                 size="icon-sm"

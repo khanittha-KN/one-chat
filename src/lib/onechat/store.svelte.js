@@ -55,10 +55,10 @@ db.cases.forEach((c, i) => {
 });
 /* ตัวอย่างแชทที่ยังไม่ได้อ่านตอนเปิดหน้า (19 พ.ย. 2026) — เห็นตัวเลขข้อความใหม่ได้ทันที ไม่ต้องรอข้อความจำลอง
    แชท 4 ห้องแรกที่ข้อความล่าสุดมาจากลูกค้า · 1–3 ข้อความ */
-db.cases
-    .filter((c) => (c.msgs.at(-1) || {}).who === "cust")
-    .slice(0, 4)
-    .forEach((c, i) => (c.unread = [2, 1, 3, 1][i]));
+// มีทั้งเคสที่ยังไม่มีแอดมินรับ (รอแอดมินรับเคส) 3 ห้อง และเคสที่แอดมินรับแล้ว 4 ห้อง (23 พ.ย. 2026)
+const custLast = (c) => (c.msgs.at(-1) || {}).who === "cust";
+db.cases.filter((c) => c.status === "waiting" && custLast(c)).slice(0, 3).forEach((c, i) => (c.unread = [1, 4, 2][i]));
+db.cases.filter((c) => c.status !== "waiting" && custLast(c)).slice(0, 4).forEach((c, i) => (c.unread = [2, 1, 3, 1][i]));
 /* ลูกค้าที่ใช้ระบบ P2P อยู่แล้ว (เจ้าของงานสั่ง 18 พ.ย. 2026) ⇒ มีการ์ด "ฝาก P2P" · ประวัติฝากถอนบางรายการผ่าน P2P */
 const P2P_CASES = ["c1", "c3", "c20"];
 db.cases.forEach((c) => {
@@ -633,11 +633,14 @@ export function delNote(c, i) {
     c.notes.splice(i, 1);
     toast("ลบโน้ตแล้ว");
 }
-export function saveName(c, name, username) {
+// แก้ชื่อและยูสเซอร์ของแชท (23 พ.ย. 2026): เก็บชื่อ LINE เดิมไว้ครั้งแรกที่แก้ · ชื่อว่าง ⇒ กลับเป็นชื่อ LINE
+// ยูสเซอร์เป็นป้ายของแชท (c.label) ไม่แตะ username ของบัญชีสมาชิก
+export function saveName(c, name, label) {
     st.editName = false;
-    c.name = name || c.name;
-    c.user.username = username || c.user.username;
-    ok("บันทึกชื่อและไอดีแล้ว");
+    if (!c.lineName) c.lineName = c.name;
+    c.name = (name || "").trim() || c.lineName;
+    c.label = (label || "").trim();
+    ok("บันทึกชื่อและ Username แล้ว");
 }
 export function sendText(c, v) {
     v = v.trim();

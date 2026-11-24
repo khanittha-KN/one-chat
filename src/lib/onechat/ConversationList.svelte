@@ -12,7 +12,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import Inbox from "@lucide/svelte/icons/inbox";
     import ListFilter from "@lucide/svelte/icons/list-filter";
-    import { merch, tabOf, msgPreview, DAY_SHORT, chatChannels } from "./data.js";
+    import { merch, tabOf, msgPreview, DAY_SHORT, chatChannels, userLabel } from "./data.js";
     import { st, visible, byRecent, counts, selectCase, toast } from "./store.svelte.js";
     import { kindOf, KINDS } from "./kinds.js";
     import GlobalSearch from "./panel/GlobalSearch.svelte";
@@ -90,6 +90,7 @@
             {@const k = kindOf(c)}
             {@const lastM = c.msgs.filter((m) => m.action !== "closed").at(-1)}
             {@const last = lastM ? msgPreview(lastM) : ""}
+            {@const uname = userLabel(c)}
             {@const u = c.unread ? st.unreadUi : 0}
             <Item.Root size="sm" class={"case aria-[current=true]:ring-brand rounded-none border-0 border-b border-b-foreground/15 border-l-4 py-2 ps-2.5 pe-3 text-left aria-[current=true]:ring-2 aria-[current=true]:ring-inset " + (u === 1 ? ROW_UNREAD + " " + stripe(k.row) : k.row)}>
                 {#snippet child({ props })}
@@ -124,7 +125,12 @@
                             </span>
                             <!-- ข้อความล่าสุดอยู่ล่างสุดเหมือน .r3 ของต้นฉบับ -->
                             <span class="flex min-w-0 items-center gap-2">
-                                <Item.Description class={"r3 line-clamp-1 flex-1 " + (c.unread ? "text-foreground font-bold" : "")}>{last}</Item.Description>
+                                <!-- แถวล่าง = Username แทนข้อความล่าสุด (เจ้าของงานสั่ง 23 พ.ย. 2026 · ประหยัดบรรทัด) · ข้อความล่าสุดดูได้ตอนชี้เมาส์
+                                     ยังไม่ผูกบัญชี (ไม่มี Username) ⇒ แสดงข้อความล่าสุดเหมือนเดิม -->
+                                <Item.Description
+                                    class={"r3 line-clamp-1 flex-1 " + (uname ? "tabular-nums" : c.unread ? "text-foreground font-bold" : "")}
+                                    title={uname && last ? "ข้อความล่าสุด: " + last : undefined}>{uname || last}</Item.Description
+                                >
                                 {#if c.unread}
                                     <!-- ตัวเลขข้อความใหม่: วงกลมพื้นเขียวเข้ม ตัวขาว ทุกแบบ (เจ้าของงานสั่ง 19 พ.ย. 2026) -->
                                     <Badge class="bg-brand text-brand-foreground h-5 min-w-5 rounded-full px-1.5 tabular-nums">{c.unread}<span class="sr-only"> ข้อความใหม่</span></Badge>
