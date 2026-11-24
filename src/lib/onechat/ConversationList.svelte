@@ -4,6 +4,7 @@
     import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import Clock from "@lucide/svelte/icons/clock";
     import UserRound from "@lucide/svelte/icons/user-round";
+    import Unlink from "@lucide/svelte/icons/unlink";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Item from "$lib/components/ui/item/index.js";
     import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
@@ -123,13 +124,13 @@
                                 {/if}
                                 <span class="sr-only">ประเภท {k.label}</span>
                             </span>
-                            <!-- ข้อความล่าสุดอยู่ล่างสุดเหมือน .r3 ของต้นฉบับ -->
+                            <!-- แถวล่าง = บัญชีของแชททุกแชท (เจ้าของงานสั่ง 23–24 พ.ย. 2026 · ประหยัดบรรทัด · แบบเดียวกันทุกแถว)
+                                 ผูกแล้ว ⇒ Username · ยังไม่ผูก ⇒ "ยังไม่ผูกบัญชี" (ไอคอนลิงก์ขาด) · ข้อความล่าสุดดูได้ตอนชี้เมาส์ -->
                             <span class="flex min-w-0 items-center gap-2">
-                                <!-- แถวล่าง = Username แทนข้อความล่าสุด (เจ้าของงานสั่ง 23 พ.ย. 2026 · ประหยัดบรรทัด) · ข้อความล่าสุดดูได้ตอนชี้เมาส์
-                                     ยังไม่ผูกบัญชี (ไม่มี Username) ⇒ แสดงข้อความล่าสุดเหมือนเดิม -->
                                 <Item.Description
-                                    class={"r3 line-clamp-1 flex-1 " + (uname ? "tabular-nums" : c.unread ? "text-foreground font-bold" : "")}
-                                    title={uname && last ? "ข้อความล่าสุด: " + last : undefined}>{uname || last}</Item.Description
+                                    class={"r3 flex min-w-0 flex-1 items-center gap-1 " + (uname ? "tabular-nums" : "text-muted-foreground")}
+                                    title={last ? "ข้อความล่าสุด: " + last : undefined}
+                                    >{#if uname}<span class="truncate">{uname}</span>{:else}<Unlink class="size-3.5 shrink-0" aria-hidden="true" /><span class="truncate">ยังไม่ผูกบัญชี</span>{/if}</Item.Description
                                 >
                                 {#if c.unread}
                                     <!-- ตัวเลขข้อความใหม่: วงกลมพื้นเขียวเข้ม ตัวขาว ทุกแบบ (เจ้าของงานสั่ง 19 พ.ย. 2026) -->

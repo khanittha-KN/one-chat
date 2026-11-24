@@ -644,7 +644,7 @@ export function saveName(c, name, label) {
     st.editName = false;
     if (!c.lineName) c.lineName = c.name;
     c.name = (name || "").trim() || c.lineName;
-    c.label = (label || "").trim();
+    c.label = (label || "").trim() || null; // ลบ Username จนว่าง ⇒ กลับไปใช้ username ของบัญชีที่ผูก
     ok("บันทึกชื่อและ Username แล้ว");
 }
 export function sendText(c, v) {
