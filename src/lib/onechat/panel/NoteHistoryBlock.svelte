@@ -10,7 +10,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import Status from "../ui/Status.svelte";
     import FoldCard from "../ui/FoldCard.svelte";
-    let { c } = $props();
+    let { c, look = "pill" } = $props(); // look = "row" ⇒ แถวในกลุ่มเมนูของแผงลูกค้า (ver2)
     const PER = 10;
     const items = $derived(c.noteLog || []);
     let from = $state("");
@@ -30,7 +30,7 @@
 
 {#snippet who()}<span class="text-muted-foreground text-xs whitespace-nowrap tabular-nums">{items.length ? items.length + " รายการ" : "ไม่มี"}</span>{/snippet}
 
-<FoldCard {c} title="ประวัติโน้ต" icon={NotebookPen} hint={items.length ? items.length + " รายการ" : "ไม่มี"} def={true} action={who} dialogClass="sm:max-w-2xl" contentClass="gap-3">
+<FoldCard {c} {look} title="ประวัติโน้ต" icon={NotebookPen} hint={items.length ? items.length + " รายการ" : "ไม่มี"} def={true} action={who} dialogClass="sm:max-w-2xl" contentClass="gap-3">
     <div class="grid grid-cols-2 gap-2 sm:max-w-sm" role="group" aria-label="กรองประวัติโน้ตตามวันที่">
         <Field.Field data-invalid={bad}>
             <Field.Label for="nhFrom" class="text-xs">ตั้งแต่</Field.Label>

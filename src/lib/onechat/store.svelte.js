@@ -54,11 +54,10 @@ db.cases.forEach((c, i) => {
     c.bindLog = log;
 });
 /* ตัวอย่างแชทที่ยังไม่ได้อ่านตอนเปิดหน้า (19 พ.ย. 2026) — เห็นตัวเลขข้อความใหม่ได้ทันที ไม่ต้องรอข้อความจำลอง
-   แชท 4 ห้องแรกที่ข้อความล่าสุดมาจากลูกค้า · 1–3 ข้อความ */
-db.cases
-    .filter((c) => (c.msgs.at(-1) || {}).who === "cust")
-    .slice(0, 4)
-    .forEach((c, i) => (c.unread = [2, 1, 3, 1][i]));
+   ข้อความล่าสุดมาจากลูกค้า · 1–3 ข้อความ · มีทั้งเคสที่ยังไม่มีแอดมินรับ (รอแอดมินรับเคส) 3 ห้อง และเคสที่แอดมินรับแล้ว 4 ห้อง */
+const custLast = (c) => (c.msgs.at(-1) || {}).who === "cust";
+db.cases.filter((c) => c.status === "waiting" && custLast(c)).slice(0, 3).forEach((c, i) => (c.unread = [1, 4, 2][i]));
+db.cases.filter((c) => c.status !== "waiting" && custLast(c)).slice(0, 4).forEach((c, i) => (c.unread = [2, 1, 3, 1][i]));
 /* ลูกค้าที่ใช้ระบบ P2P อยู่แล้ว (เจ้าของงานสั่ง 18 พ.ย. 2026) ⇒ มีการ์ด "ฝาก P2P" · ประวัติฝากถอนบางรายการผ่าน P2P */
 const P2P_CASES = ["c1", "c3", "c20"];
 db.cases.forEach((c) => {
@@ -140,6 +139,11 @@ export const st = $state({
     unreadUi: 1,
     // histJump = ขอเปิดหน้าต่างประวัติฝากถอนที่แท็บนี้ ("dep" · "wd" · "all") — ปุ่ม "ดูประวัติฝาก" ในข้อความแจ้งฝากสำเร็จ (19 พ.ย. 2026)
     histJump: null,
+    // แผงลูกค้า ver2 (23 พ.ย. 2026): แท็บที่เปิดอยู่ (money การเงิน · member สมาชิก · hist ประวัติ) · rebindOpen = เปิดช่องค้นหาเพื่อเปลี่ยนสมาชิกที่ผูก
+    panelTab: "money",
+    // ฟอร์มในแท็บการเงินที่เปิดอยู่ (ลูกค้า P2P มี 2 ฟอร์ม · แสดงทีละฟอร์ม): p2p ฝาก Manual · credit ปรับเครดิต
+    moneyForm: "p2p",
+    rebindOpen: false,
     regMsg: null, regErr: {}, regAsk: false, unbindAsk: null, p2p: blankP2p(), lookup: null, lookErr: null, look: null, hist: "all", histModal: false, accModal: false, coSel: null,
     credit: blankCredit(), reg: blankReg(), pw: blankPw(),
     // chanOpen = แผงเลือกแชทที่แสดง (สไลด์ขวา) · panelOff = ซ่อนแผงลูกค้า · editName = เปิดช่องแก้ชื่อ/ไอดี · fold = การ์ดในแผงขวาที่พับ/กาง (แยกต่อเคส)
@@ -534,6 +538,7 @@ function resetPanel() {
     st.pw = blankPw();
     st.credit = blankCredit();
     p2pReset();
+    st.rebindOpen = false;
 }
 export function selectCase(id) {
     st.cur = id;
@@ -633,11 +638,14 @@ export function delNote(c, i) {
     c.notes.splice(i, 1);
     toast("ลบโน้ตแล้ว");
 }
-export function saveName(c, name, username) {
+// แก้ชื่อและยูสเซอร์ของแชท (23 พ.ย. 2026): เก็บชื่อ LINE เดิมไว้ครั้งแรกที่แก้ · ชื่อว่าง ⇒ กลับเป็นชื่อ LINE
+// ยูสเซอร์เป็นป้ายของแชท (c.label) ไม่แตะ username ของบัญชีสมาชิก
+export function saveName(c, name, label) {
     st.editName = false;
-    c.name = name || c.name;
-    c.user.username = username || c.user.username;
-    ok("บันทึกชื่อและไอดีแล้ว");
+    if (!c.lineName) c.lineName = c.name;
+    c.name = (name || "").trim() || c.lineName;
+    c.label = (label || "").trim();
+    ok("บันทึกชื่อและ Username แล้ว");
 }
 export function sendText(c, v) {
     v = v.trim();
@@ -758,6 +766,7 @@ export function bindMember(c, m) {
     st.rebind = null;
     st.lookup = null;
     push(c, "sys", "ผูกสมาชิก " + m.user.username + " กับแชทนี้แล้ว");
+    st.rebindOpen = false;
     ok("ผูกสมาชิก " + m.user.username + " แล้ว");
 }
 // เลิกผูก ⇒ ถามก่อน (เว็บจริง 18 พ.ย. 2026) · unbindAsk = id ของแชทที่กำลังถาม
@@ -829,8 +838,8 @@ export function saveCredit(c) {
     if (!raw || isNaN(camt) || !/^\d+(\.\d*)?$/.test(raw)) cr.err = "รูปแบบจำนวนเงินไม่ถูกต้อง";
     else if (!(camt > 0)) cr.err = "จำนวนเงินต้องมากกว่า 0";
     else if (/\.\d{3,}$/.test(raw)) cr.err = "ทศนิยมได้ไม่เกิน 2 ตำแหน่ง";
-    else if (cr.type === "sub" && camt > c.credit) cr.err = "จำนวนเงินเกินเครดิตคงเหลือ — ถอนได้ไม่เกิน " + money(c.credit) + " บาท";
-    else if (c.promo) cr.err = "สมาชิกกำลังติดโปรโมชั่น — ปรับเครดิตด้วยมือไม่ได้";
+    else if (cr.type === "sub" && camt > c.credit) cr.err = "ถอนได้ไม่เกิน " + money(c.credit) + " บาท (เครดิตคงเหลือ)";
+    else if (c.promo) cr.err = "ติดโปรโมชั่นอยู่ ปรับเครดิตเองไม่ได้";
     else if (!cr.pass) cr.err = "กรอกรหัสผ่านแอดมินก่อนบันทึก";
     else cr.confirm = true;
 }
@@ -865,7 +874,7 @@ export function pwSave(c) {
 }
 export function pwConfirm(c) {
     const pass = st.pw.a;
-    st.pw = { ...blankPw(), msg: "เปลี่ยนรหัสผ่านของ " + c.user.username + " แล้ว — แจ้งรหัสใหม่ให้ลูกค้าทางแชท (ระบบไม่ส่งรหัสให้ลูกค้าเอง)", shown: pass, left: 30 };
+    st.pw = { ...blankPw(), msg: "เปลี่ยนรหัสผ่านของ " + c.user.username + " แล้ว", shown: pass, left: 30 };
     push(c, "sys", "เปลี่ยนรหัสผ่านของ " + c.user.username + " โดย " + ME);
     ok("เปลี่ยนรหัสผ่านลูกค้าแล้ว");
     clearInterval(pwTimer);

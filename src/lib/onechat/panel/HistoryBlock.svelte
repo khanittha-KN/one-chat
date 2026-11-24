@@ -15,7 +15,7 @@
     import HistRows from "./HistRows.svelte";
     import { histAll, histSums, HIST_CH, chLabel } from "../data.js";
     import { st } from "../store.svelte.js";
-    let { c } = $props();
+    let { c, look = "pill" } = $props(); // look = "row" ⇒ แถวในกลุ่มเมนูของแผงลูกค้า (ver2)
     const PER = 10;
     const items = $derived(histAll(c));
     let tab = $state("all");
@@ -58,7 +58,7 @@
 
 {#snippet count()}<span class="text-muted-foreground text-xs whitespace-nowrap tabular-nums">{items.length ? items.length + " รายการ" : "ไม่มี"}</span>{/snippet}
 
-<FoldCard {c} bind:open title="ประวัติฝากถอน" icon={History} hint={items.length + " รายการ"} def={true} action={count} dialogClass="sm:max-w-5xl" contentClass="gap-3">
+<FoldCard {c} {look} bind:open title="ประวัติฝากถอน" icon={History} hint={items.length + " รายการ"} def={true} action={count} dialogClass="sm:max-w-5xl" contentClass="gap-3">
     {#if items.length}
         <ToggleGroup.Root
             type="single"

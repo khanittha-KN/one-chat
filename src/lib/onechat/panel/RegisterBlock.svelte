@@ -13,7 +13,7 @@
     import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
     import { BANKS, bankOf } from "../data.js";
     import { db, st, regCheck, regSubmit, regConfirm, regAskCancel, regClear, askAcc, sendReg, regValidate, MKT, refSearch, refPick, refClear, partnerLookup } from "../store.svelte.js";
-    let { c } = $props();
+    let { c, look = "pill" } = $props(); // look = "row" ⇒ แถวในกลุ่มเมนูของแผงลูกค้า (ver2)
     const bad = $derived(st.regMsg && !st.regMsg.ok);
     const refRes = $derived((st.reg.refRes || []).map((id) => db.cases.find((x) => x.id === id)).filter(Boolean));
 </script>
@@ -28,7 +28,7 @@
 
 <!-- สมัครสมาชิก Player — ตามเว็บจริง 27 ต.ค. 2026 · ลูกค้าเก่าเป็นปุ่มในแถวบน · ลูกค้าใหม่ (ยังไม่ผูก) และหลังสมัครสำเร็จกางเป็นการ์ด
      สมัครแล้วระบบผูกสมาชิกกับแชทนี้ทันที · "ส่งข้อมูลให้ลูกค้า" กดได้หลังสมัครสำเร็จ (ส่งชื่อผู้ใช้ = เบอร์โทร และรหัสผ่าน) -->
-<FoldCard {c} title="สมัครสมาชิก Player" icon={UserPlus} def={!!c && !c.justReg && !c.unbound} contentClass="gap-3">
+<FoldCard {c} {look} title="สมัครสมาชิก Player" icon={UserPlus} def={!!c && !c.justReg && !c.unbound} contentClass="gap-3">
     <Field.Group class="gap-4">
         <Field.Field data-invalid={!!st.regErr.phone}>
             {@render req("regPhone", "เบอร์")}
@@ -144,7 +144,7 @@
         </div>
     {/if}
     {#if c}
-        <Button variant="secondary" title="ใส่ข้อความขอเลขที่บัญชีในช่องพิมพ์ — กดส่งเอง" onclick={() => askAcc(c)}>ขอเลขบัญชีลูกค้า</Button>
+        <Button variant="secondary" title="ใส่ข้อความขอเลขบัญชีในช่องพิมพ์ แล้วกดส่งเอง" onclick={() => askAcc(c)}>ขอเลขบัญชีลูกค้า</Button>
         <Field.Field>
             <Button disabled={!c.lastReg} title="ส่งชื่อผู้ใช้ (เบอร์โทร) และรหัสผ่านของสมาชิกที่เพิ่งสมัครให้ลูกค้าในแชทนี้" onclick={() => sendReg(c)}><Send data-icon="inline-start" />ส่งข้อมูลให้ลูกค้า</Button>
             {#if !c.lastReg}<Field.Description class="text-xs">กดได้หลังสมัครสมาชิกสำเร็จ</Field.Description>{/if}

@@ -3,7 +3,6 @@
 <script>
     import Save from "@lucide/svelte/icons/save";
     import CircleCheck from "@lucide/svelte/icons/circle-check";
-    import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
     import FoldCard from "../ui/FoldCard.svelte";
     import * as Field from "$lib/components/ui/field/index.js";
@@ -11,9 +10,8 @@
     import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
-    import { DLS, DTS, DDS } from "../ui/kv.js";
     import { money } from "../data.js";
-    import { st, ok, saveCredit, confirmCredit, creditCancel } from "../store.svelte.js";
+    import { st, saveCredit, confirmCredit, creditCancel } from "../store.svelte.js";
     let { c } = $props();
     const add = $derived(st.credit.type === "add");
     // รับเฉพาะตัวเลข ทศนิยม 2 ตำแหน่ง · ใส่ลูกน้ำให้เอง (1000 → 1,000)
@@ -27,17 +25,7 @@
 </script>
 
 <FoldCard {c} title="จัดการเครดิต" contentClass="gap-3">
-    <dl class={DLS}>
-        <dt class={DTS}>ชื่อผู้ใช้</dt><dd class={DDS}>{c.user.username}</dd>
-        <dt class={DTS}>เครดิตคงเหลือ</dt>
-        <dd class={DDS + " flex items-center gap-1.5 font-bold tabular-nums"}>
-            {money(c.credit)}
-            <Button variant="ghost" size="icon-xs" aria-label="โหลดเครดิตคงเหลือใหม่" title="โหลดเครดิตคงเหลือใหม่" onclick={() => ok("โหลดเครดิตคงเหลือแล้ว")}><RefreshCw /></Button>
-        </dd>
-        <!-- กระเป๋าโบนัส (เว็บจริง 18 พ.ย. 2026) -->
-        <dt class={DTS}>กระเป๋าโบนัส</dt>
-        <dd class={DDS + " tabular-nums"}>{money(c.bonus || 0)}</dd>
-    </dl>
+    <!-- ชื่อผู้ใช้ · เครดิตคงเหลือ · กระเป๋าโบนัส แสดงในการ์ดสรุปสมาชิกบนสุดของแผงแล้ว (ver2) ⇒ ไม่ซ้ำที่นี่ -->
     {#if !st.credit.confirm}
         <Field.Group class="gap-4">
             <Field.Set class="gap-2">
@@ -61,7 +49,6 @@
             <Field.Field data-invalid={!!st.credit.err}>
                 <Field.Label for="crPass">รหัสผ่านแอดมิน</Field.Label>
                 <Input id="crPass" type="password" autocomplete="off" bind:value={st.credit.pass} />
-                <Field.Description class="text-xs">รหัสผ่านของบัญชีที่ล็อกอินอยู่ — ถามทุกครั้งก่อนปรับเครดิต</Field.Description>
                 {#if st.credit.err}<Field.Error>{st.credit.err}</Field.Error>{/if}
             </Field.Field>
         </Field.Group>
@@ -78,7 +65,7 @@
         <div class={"flex flex-col gap-2 rounded-lg border p-3 " + (add ? "border-success/40 bg-success/5" : "border-destructive/40 bg-destructive/5")} role="alertdialog" aria-labelledby="crT">
             <p id="crT" class="flex items-center gap-1.5 text-sm font-bold"><TriangleAlert class={(add ? "text-success" : "text-destructive") + " size-4"} aria-hidden="true" />{add ? "เติมเครดิต" : "ถอนเครดิต"} {amtShown} บาท</p>
             <p class="text-sm">{add ? "ให้" : "ของ"} <b>{c.user.username}</b>{st.credit.note ? " · " + st.credit.note : ""}</p>
-            <p class="text-muted-foreground text-xs">ระบบปรับเครดิตของสมาชิกทันที — ไม่แจ้งลูกค้าในแชท และจดว่าเป็นรายการของคุณ</p>
+            <p class="text-muted-foreground text-xs">ปรับทันที ไม่แจ้งลูกค้าในแชท</p>
             <div class="flex gap-2 *:flex-1">
                 <Button data-tone={add ? "success" : "destructive"} data-fill="solid" size="sm" onclick={() => confirmCredit(c)}>{add ? "ยืนยันเติมเครดิต" : "ยืนยันถอนเครดิต"}</Button>
                 <Button variant="outline" size="sm" onclick={creditCancel}>ยกเลิก</Button>

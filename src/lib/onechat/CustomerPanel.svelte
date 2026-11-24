@@ -1,15 +1,27 @@
+<!-- แผงลูกค้า ver2 (23 พ.ย. 2026 · ทีมแจ้ง: เลื่อนยาว · ข้อมูลซ้ำหลายที่ · ปุ่มใต้หัวข้อดูเป็นแท็ก)
+     โครงใหม่ ⇒ เห็นของสำคัญตลอด ที่เหลือแบ่งเป็นสัดส่วน:
+       1. สรุปสมาชิก (ติดบนสุดเสมอ) — Username · ชื่อ · เบอร์ · เครดิต · โบนัส · เทิร์น · โปร · ยอดค้าง · เมนูจัดการ
+       2. แจ้งเตือนที่ต้องจัดการก่อน (มีเมื่อเกิดขึ้น) — ผลตรวจสลิป · LINE หลุด / ผู้ช่วยหมดอายุ
+       3. แท็บ การเงิน · สมาชิก · ประวัติ — แต่ละแท็บมีเฉพาะงานของเรื่องนั้น
+          ของที่เปิดเป็นหน้าต่าง (สลิป · สถานะ LINE · ประวัติ · สมัครสมาชิก) = แถวรายการในกล่องกลุ่มเดียว (เดิมปุ่มทึบดูเป็นแท็ก)
+     ยังไม่ผูกสมาชิก ⇒ ไม่มีสรุป/แท็บ: การ์ดผูกสมาชิก · สมัครสมาชิก · เครื่องมืออื่นเป็นแถวรายการ
+     ลูกค้าจากช่องค้นหา (ไม่ได้เปิดแชท) ⇒ แถบบอกว่ากำลังดูใคร + เปิดแชท / ปิด อยู่บนสุดเหมือนเดิม -->
 <script>
     import MessageCircle from "@lucide/svelte/icons/message-circle";
     import X from "@lucide/svelte/icons/x";
     import UserRound from "@lucide/svelte/icons/user-round";
     import * as Empty from "$lib/components/ui/empty/index.js";
     import * as Item from "$lib/components/ui/item/index.js";
+    import * as Tabs from "$lib/components/ui/tabs/index.js";
+    import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
-    import { merch, platformOf } from "./data.js";
+    import { merch, platformOf, pendingDep, pendingWd } from "./data.js";
     import { st, panelCase, selectCase, closeLook, assistOf, lineUp } from "./store.svelte.js";
     import CustomerAvatar from "./ui/CustomerAvatar.svelte";
+    import MemberSummary from "./panel/MemberSummary.svelte";
     import LineStatusBlock from "./panel/LineStatusBlock.svelte";
     import LookupBlock from "./panel/LookupBlock.svelte";
+    import PasswordBlock from "./panel/PasswordBlock.svelte";
     import SlipBlock from "./panel/SlipBlock.svelte";
     import PendingBlock from "./panel/PendingBlock.svelte";
     import HistoryBlock from "./panel/HistoryBlock.svelte";
@@ -21,22 +33,36 @@
     import P2PBlock from "./panel/P2PBlock.svelte";
 
     let { class: className = "" } = $props();
-    // ลูกค้าที่แสดง = เลือกจากช่องค้นหา/ตรวจสอบ หรือของแชทที่เปิดอยู่ · ยังไม่มี ⇒ เหลือแค่เครื่องมือ (ค้นหา · ตรวจสอบ · สมัครสมาชิก)
     const c = $derived(panelCase());
-    // บล็อกที่พับไว้ตั้งแต่แรก (= def ของ FoldCard ในแต่ละบล็อก) แสดงเป็นปุ่มเปิดหน้าต่าง เรียงเป็นปุ่มเล็กแถวเดียว
-    // เว็บจริง 27 ต.ค. 2026: การ์ด "LINE และผู้ช่วย (OA)" มีทุกแชท (Telegram ชื่อ "ผู้ช่วย (OA)" ไม่มีส่วนสถานะ LINE) · ตรวจสอบสลิปมีทั้งแชทที่ผูกและยังไม่ผูกสมาชิก
+    // สถานะ LINE/ผู้ช่วยปกติ ⇒ แถวรายการ · มีปัญหา ⇒ การ์ดแจ้งเตือนบนสุด
     const oaOk = $derived(!!c && (platformOf(c.merchant) !== "line" || lineUp(c)) && assistOf(c).every((a) => a.ok));
-    const oaBtn = $derived(oaOk);
-    const slipBtn = $derived(!!c && !(c.slip && !c.slip.hidden && (c.slip.state === "reading" || c.slip.state === "ready")));
-    const histBtn = $derived(!!c && !c.unbound);
-    const regBtn = $derived(!!c && !c.justReg && !c.unbound);
+    // สลิปกำลังตรวจ/มีผล ⇒ การ์ดแจ้งเตือนบนสุด · ไม่มี ⇒ แถว "ตรวจสอบสลิป" ในแท็บการเงิน
+    const slipCard = $derived(!!c && !!(c.slip && !c.slip.hidden && (c.slip.state === "reading" || c.slip.state === "ready")));
+    const bound = $derived(!!c && !c.unbound);
+    const pendN = $derived(c && bound ? pendingDep(c).length + pendingWd(c).length : 0);
+    // กล่องกลุ่มของแถวรายการ (เมนูกลุ่มเดียว · เส้นคั่นระหว่างแถว)
+    const GROUP = "bg-card ring-foreground/10 flex flex-col divide-y overflow-hidden rounded-xl ring-1";
+    /* สรุปสมาชิกเต็มเลื่อนไปกับแผง · เลื่อนจนสรุปพ้นจอ ⇒ แถบย่อแถวเดียวติดบนสุด (ver2 · 23 พ.ย. 2026: จอเตี้ยไม่เสียที่ 190px ตลอด)
+       แถบย่อสูง 0 ใน layout (ลอยทับ) ⇒ เนื้อหาไม่กระโดดตอนแถบโผล่/หาย */
+    let panelEl = $state(null);
+    let sumEl = $state(null);
+    let mini = $state(false);
+    $effect(() => {
+        if (!panelEl || !sumEl) return void (mini = false);
+        const io = new IntersectionObserver(([e]) => (mini = !e.isIntersecting), { root: panelEl, rootMargin: "-44px 0px 0px 0px" });
+        io.observe(sumEl);
+        return () => io.disconnect();
+    });
 </script>
 
-<!-- แผงลูกค้า — ช่องเต็มสูงแบบเมนู Organization: พื้นเดียวกับเมนูข้าง · เส้นซ้ายคั่นจากห้องแชท · แต่ละบล็อกเป็นการ์ด (sm) ห่างกัน 12px · ลำดับเดียวกับ renderPanel() ของต้นฉบับ
-     (CompanyAccountsBlock = coBlock() ต้นฉบับประกาศไว้แต่ไม่ได้วาง — ไฟล์อยู่ใน panel/ พร้อมใช้) -->
-<section id="colPanel" aria-label="ข้อมูลลูกค้า" class={"min-h-0 bg-surface-chrome flex-col gap-3 overflow-y-auto border-l p-3 *:shrink-0 " + className}>
+<section
+    id="colPanel"
+    aria-label="ข้อมูลลูกค้า"
+    class={"min-h-0 bg-surface-chrome flex-col gap-3 overflow-y-auto border-l p-3 *:shrink-0 " + className}
+    style={bound ? "scroll-padding-top: 56px" : undefined}
+    bind:this={panelEl}
+>
     {#if st.look && c}
-        <!-- ลูกค้าจากช่องค้นหา (ไม่ได้เปิดแชท) — บอกให้ชัดว่ากำลังจัดการข้อมูลของใคร · เปิดแชท = เลือกแชทนั้น · × = กลับไปลูกค้าของแชทที่เปิดอยู่ -->
         <Item.Root variant="outline" size="sm" class="bg-card border-brand" role="status" aria-label={"ข้อมูลลูกค้า " + c.name}>
             <Item.Media><CustomerAvatar {c} /></Item.Media>
             <Item.Content class="min-w-0">
@@ -49,8 +75,8 @@
             </Item.Actions>
         </Item.Root>
     {/if}
+
     {#if !c}
-        <!-- ยังไม่เปิดแชท / ยังไม่เลือกลูกค้า (เว็บจริง 27 ต.ค. 2026) -->
         <Empty.Root class="justify-start p-6">
             <Empty.Header>
                 <Empty.Media variant="icon"><UserRound /></Empty.Media>
@@ -58,33 +84,78 @@
                 <Empty.Description>เปิดแชท หรือค้นหาลูกค้าจากช่องค้นหาในรายการสนทนา เพื่อดูข้อมูลสมาชิกและรายการเงิน</Empty.Description>
             </Empty.Header>
         </Empty.Root>
-    {:else}
-    <h2 class="px-0.5 text-sm font-bold">สมาชิกและรายการเงิน</h2>
-    <!-- ข้อมูลที่ไม่แสดงตั้งแต่แรก = ปุ่มเล็กแถวเดียว (ขึ้นบรรทัดใหม่เมื่อเต็ม) กดแล้วเปิดหน้าต่าง (สถานะไลน์ปกติ · สลิปยังไม่มี · ประวัติ · สมัครสมาชิก) -->
-    {#if c}
-        <div class="flex flex-wrap gap-1.5" role="group" aria-label="ข้อมูลเพิ่มเติม">
-            {#if oaBtn}<LineStatusBlock {c} />{/if}
-            {#if slipBtn}<SlipBlock {c} />{/if}
-            {#if histBtn}<HistoryBlock {c} />{/if}
-            {#if regBtn}<RegisterBlock {c} />{/if}
-            <!-- ประวัติการผูก — มีทุกแชท ทั้งที่ผูกและยังไม่ผูกสมาชิก (เว็บจริง 18 พ.ย. 2026) -->
-            <BindHistoryBlock {c} />
-            <!-- ประวัติโน้ต (เจ้าของงานสั่ง 18 พ.ย. 2026) -->
-            <NoteHistoryBlock {c} />
+    {:else if bound}
+        <!-- 1. แถบย่อ (โผล่เมื่อสรุปเต็มเลื่อนพ้นจอ) · -top-3 ชนขอบบนจริง · -mb-3 หักช่องห่างเพราะสูง 0 -->
+        <div class="sticky -top-3 z-20 -mx-3 -mb-3 h-0">
+            {#if mini}
+                <div class="bg-surface-chrome/95 motion-safe:animate-in motion-safe:fade-in-0 absolute inset-x-0 top-0 border-b px-3 py-1.5 shadow-sm backdrop-blur-sm">
+                    <MemberSummary {c} compact />
+                </div>
+            {/if}
         </div>
-    {/if}
-    <!-- กดตรวจสอบสลิปแล้ว ⇒ การ์ดผลตรวจขึ้นเป็นการ์ดแรก เหนือการ์ดตรวจสอบ (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
-    {#if c && !slipBtn}<SlipBlock {c} />{/if}
-    <!-- ข้อมูลที่แสดงอยู่ = การ์ดเดิม · ไลน์หลุด / มีสลิปรอตรวจ / ลูกค้าใหม่ ⇒ การ์ดนั้นกางขึ้นมาในลำดับนี้ -->
-    {#if c && !oaBtn}<LineStatusBlock {c} />{/if}
-    <LookupBlock {c} />
-    {#if c && !c.unbound}
-        <BankAccountsBlock {c} />
-        <PendingBlock {c} />
-        <!-- ฝาก Manual (เดิมฝาก P2P) — เฉพาะลูกค้าที่ใช้ระบบ P2P อยู่แล้ว · อยู่ก่อนจัดการเครดิต (เจ้าของงานสั่ง 18–19 พ.ย. 2026) -->
-        {#if c.p2p}<P2PBlock {c} />{/if}
-        <CreditBlock {c} />
-    {/if}
-    {#if !regBtn}<RegisterBlock {c} />{/if}
+        <div bind:this={sumEl}><MemberSummary {c} /></div>
+
+        <!-- 2. แจ้งเตือนที่ต้องจัดการก่อน · เพิ่งสมัครสำเร็จ ⇒ การ์ดสมัคร (ส่งข้อมูลให้ลูกค้า) -->
+        {#if c.justReg}<RegisterBlock {c} />{/if}
+        {#if slipCard}<SlipBlock {c} />{/if}
+        {#if !oaOk}<LineStatusBlock {c} look="alert" />{/if}
+
+        <!-- 3. แท็บตามเรื่อง -->
+        <Tabs.Root bind:value={st.panelTab} class="gap-3">
+            <Tabs.List class="w-full" aria-label="ข้อมูลลูกค้า">
+                <Tabs.Trigger value="money">การเงิน{#if pendN}<span class="bg-warning/15 text-warning rounded-full px-1.5 text-xs tabular-nums" aria-label={"ยอดค้าง " + pendN + " รายการ"}>{pendN}</span>{/if}</Tabs.Trigger>
+                <Tabs.Trigger value="member">สมาชิก</Tabs.Trigger>
+                <Tabs.Trigger value="hist">ประวัติ</Tabs.Trigger>
+            </Tabs.List>
+
+            <Tabs.Content value="money" class="flex flex-col gap-3">
+                {#if !slipCard}<div class={GROUP}><SlipBlock {c} look="row" /></div>{/if}
+                <!-- ยอดค้าง: มีเมื่อมียอดค้างเท่านั้น -->
+                {#if pendN}<PendingBlock {c} />{/if}
+                <!-- ลูกค้า P2P มี 2 ฟอร์ม ⇒ เลือกแสดงทีละฟอร์ม ไม่ต่อกันยาว (ver2) · ลูกค้าทั่วไปมีแค่จัดการเครดิต -->
+                {#if c.p2p}
+                    <ToggleGroup.Root type="single" variant="outline" class="w-full *:flex-1" aria-label="เลือกรายการที่จะทำ" bind:value={() => st.moneyForm, (v) => v && (st.moneyForm = v)}>
+                        <ToggleGroup.Item value="p2p">ฝาก Manual</ToggleGroup.Item>
+                        <ToggleGroup.Item value="credit">จัดการเครดิต</ToggleGroup.Item>
+                    </ToggleGroup.Root>
+                    {#if st.moneyForm === "p2p"}<P2PBlock {c} />{:else}<CreditBlock {c} />{/if}
+                {:else}
+                    <CreditBlock {c} />
+                {/if}
+            </Tabs.Content>
+
+            <Tabs.Content value="member" class="flex flex-col gap-3">
+                <BankAccountsBlock {c} />
+                <LookupBlock {c} />
+                <PasswordBlock {c} />
+                {#if oaOk || !c.justReg}
+                    <div class={GROUP}>
+                        {#if oaOk}<LineStatusBlock {c} look="row" />{/if}
+                        {#if !c.justReg}<RegisterBlock {c} look="row" />{/if}
+                    </div>
+                {/if}
+            </Tabs.Content>
+
+            <Tabs.Content value="hist">
+                <div class={GROUP}>
+                    <HistoryBlock {c} look="row" />
+                    <BindHistoryBlock {c} look="row" />
+                    <NoteHistoryBlock {c} look="row" />
+                </div>
+            </Tabs.Content>
+        </Tabs.Root>
+    {:else}
+        <!-- ยังไม่ผูกสมาชิก: ผูก หรือสมัครใหม่ ก่อน -->
+        {#if slipCard}<SlipBlock {c} />{/if}
+        {#if !oaOk}<LineStatusBlock {c} look="alert" />{/if}
+        <LookupBlock {c} />
+        <!-- ยังไม่ผูก ⇒ ฟอร์มสมัครสมาชิกกางเป็นการ์ด (ลองเป็นแถวเปิดหน้าต่างแล้ว เจ้าของงานให้กลับแบบเดิม 23 พ.ย. 2026) -->
+        <RegisterBlock {c} />
+        <div class={GROUP} role="group" aria-label="เครื่องมือ">
+            {#if !slipCard}<SlipBlock {c} look="row" />{/if}
+            {#if oaOk}<LineStatusBlock {c} look="row" />{/if}
+            <BindHistoryBlock {c} look="row" />
+            <NoteHistoryBlock {c} look="row" />
+        </div>
     {/if}
 </section>

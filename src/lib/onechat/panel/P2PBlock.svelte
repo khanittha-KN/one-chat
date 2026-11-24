@@ -57,7 +57,7 @@
     }
     function takeFile(file) {
         if (!file) return;
-        if (!/^image\/(jpeg|png)$/.test(file.type)) return (slipErr = "รองรับเฉพาะไฟล์ JPG หรือ PNG — เลือกไฟล์ใหม่");
+        if (!/^image\/(jpeg|png)$/.test(file.type)) return (slipErr = "รองรับเฉพาะไฟล์ JPG หรือ PNG");
         if (file.size > 10 * 1024 * 1024) return (slipErr = "ไฟล์ใหญ่เกิน 10 MB — ย่อรูปก่อนแล้วแนบใหม่");
         slipErr = "";
         if (st.p2p.slip?.src) URL.revokeObjectURL(st.p2p.slip.src);
@@ -183,7 +183,7 @@
                 </label>
                 {#if f.noQr}
                     <p id="p2pNoQrWarn" class="border-warning/40 bg-warning/10 flex items-start gap-1.5 rounded-md border px-2 py-1.5 text-xs" role="status">
-                        <TriangleAlert class="text-warning mt-px size-3.5 shrink-0" aria-hidden="true" />ไม่เช็ค QRCode ต้องกรอกวันและเวลาฝากให้ตรงกับสเตทเมนต์ ถ้าไม่ตรง ระบบอาจทำรายการซ้ำ
+                        <TriangleAlert class="text-warning mt-px size-3.5 shrink-0" aria-hidden="true" />กรอกวันเวลาให้ตรงกับสเตทเมนต์ ไม่งั้นระบบอาจทำรายการซ้ำ
                     </p>
                 {/if}
             </div>
@@ -227,8 +227,7 @@
                 <Button variant="ghost" size="icon-xs" class="absolute end-2 top-2" aria-label="ปิดข้อความ" onclick={() => (st.p2p.msg = null)}><X /></Button>
                 <Alert.Title>{f.msg}</Alert.Title>
                 <Alert.Description class="flex flex-col items-start gap-2">
-                    รายการอยู่บนสุดของประวัติฝากถอน
-                    <Button variant="outline" size="sm" onclick={() => (st.histJump = "dep")}><History data-icon="inline-start" />ดูประวัติฝาก</Button>
+                    <Button variant="outline" size="sm" onclick={() => ((st.panelTab = "hist"), (st.histJump = "dep"))}><History data-icon="inline-start" />ดูประวัติฝาก</Button>
                 </Alert.Description>
             </Alert.Root>
         {/if}

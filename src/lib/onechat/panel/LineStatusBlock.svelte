@@ -20,7 +20,7 @@
     import { DL, DT, DD } from "../ui/kv.js";
     import { merch, platformOf } from "../data.js";
     import { st, toast, assistVerify, assistCheckAll, assistExpire, assistOf, lineUp } from "../store.svelte.js";
-    let { c } = $props();
+    let { c, look = "pill" } = $props(); // look = "row" ⇒ แถวในกลุ่มเมนูของแผงลูกค้า (ver2)
     const lm = $derived(merch(c.merchant));
     const isLine = $derived(platformOf(c.merchant) === "line");
     const bad = $derived(assistOf(c).filter((a) => !a.ok));
@@ -35,7 +35,7 @@
     {#if problem}<Status tone="destructive">{sum}</Status>{:else}<Status tone="success">ออนไลน์</Status>{/if}
 {/snippet}
 
-<FoldCard {c} {title} icon={isLine ? Wifi : Bot} hint={sum} dot={problem ? "destructive" : "success"} def={!problem} action={badge} contentClass="gap-3">
+<FoldCard {c} {look} {title} icon={isLine ? Wifi : Bot} hint={sum} dot={problem ? "destructive" : "success"} def={!problem || look === "alert"} action={badge} contentClass="gap-3">
     {#if isLine}
         <section class="flex flex-col gap-2" aria-label="LINE OA">
             <h3 class="text-muted-foreground flex items-center gap-1.5 text-xs font-normal"><Wifi class="size-3.5" aria-hidden="true" />LINE OA</h3>

@@ -11,7 +11,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import Status from "../ui/Status.svelte";
     import FoldCard from "../ui/FoldCard.svelte";
-    let { c } = $props();
+    let { c, look = "pill" } = $props(); // look = "row" ⇒ แถวในกลุ่มเมนูของแผงลูกค้า (ver2)
     const PER = 10;
     const items = $derived(c.bindLog || []);
     let from = $state("");
@@ -31,7 +31,7 @@
 
 {#snippet who()}<span class="text-muted-foreground text-xs whitespace-nowrap tabular-nums">{items.length ? items.length + " รายการ" : "ไม่มี"}</span>{/snippet}
 
-<FoldCard {c} title="ประวัติการผูก" icon={Link2} hint={items.length ? items.length + " รายการ" : "ไม่มี"} def={true} action={who} contentClass="gap-3">
+<FoldCard {c} {look} title="ประวัติการผูก" icon={Link2} hint={items.length ? items.length + " รายการ" : "ไม่มี"} def={true} action={who} contentClass="gap-3">
     <div class="grid grid-cols-2 gap-2" role="group" aria-label="กรองประวัติการผูกตามวันที่">
         <Field.Field data-invalid={bad}>
             <Field.Label for="bhFrom" class="text-xs">ตั้งแต่</Field.Label>

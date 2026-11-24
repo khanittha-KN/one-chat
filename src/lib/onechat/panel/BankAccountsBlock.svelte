@@ -20,7 +20,6 @@
         <Item.Content class="min-w-0 gap-1">
             <Item.Title>ธนาคาร{bankOf(a0.bank).name}</Item.Title>
             <Item.Description class="tabular-nums">{a0.no}</Item.Description>
-            <Item.Description>{c.user.fullname}</Item.Description>
             <span class="flex flex-wrap gap-1 pt-0.5">
                 <Status tone={a0.st === "อนุมัติ" ? "success" : a0.st === "รออนุมัติ" ? "warning" : "destructive"}>{a0.st}</Status>
                 {#if a0.nm}<Status tone="success">ยืนยันชื่อแล้ว</Status>{:else}<Status tone="destructive">ตรวจชื่อไม่ผ่าน</Status>{/if}
