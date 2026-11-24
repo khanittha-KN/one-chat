@@ -88,7 +88,7 @@
         <!-- 1. แถบย่อ (โผล่เมื่อสรุปเต็มเลื่อนพ้นจอ) · -top-3 ชนขอบบนจริง · -mb-3 หักช่องห่างเพราะสูง 0 -->
         <div class="sticky -top-3 z-20 -mx-3 -mb-3 h-0">
             {#if mini}
-                <div class="bg-surface-chrome/95 motion-safe:animate-in motion-safe:fade-in-0 absolute inset-x-0 top-0 border-b px-3 py-1.5 shadow-sm backdrop-blur-sm">
+                <div class="bg-surface-chrome motion-safe:animate-in motion-safe:fade-in-0 absolute inset-x-0 top-0 border-b px-3 py-1.5 shadow-sm">
                     <MemberSummary {c} compact />
                 </div>
             {/if}
