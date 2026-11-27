@@ -3,7 +3,7 @@ import { toast as sonner } from "svelte-sonner";
 import { playChime } from "./sound.svelte.js";
 import {
     ME, merchants, money, chatChannels, canChat, BANKS, COACC, CARDS, bankOf, seedCases, seedAnnounces, nowT, slipData, tabOf,
-    SETMAP, SET_TABS, TODAY, typeLabel, pingOf, chanByName, PLATFORM, TG_BOTS, agents, agentOf, merch, platformOf, P2P_ACC, p2pAcc, thDateTime,
+    SETMAP, SET_TABS, TODAY, typeLabel, pingOf, chanByName, PLATFORM, TG_BOTS, agents, agentOf, merch, platformOf, P2P_ACC, p2pAcc, thDateTime, userLabel,
 } from "./data.js";
 
 // เครดิต: confirm = ขั้นยืนยันก่อนปรับจริง (เว็บจริง 27 ต.ค. 2026)
@@ -39,6 +39,14 @@ db.cases.forEach((c, i) => {
         past.push({ at: atOf(i, k), act: k % 3 === 1 ? "del" : "add", user: c.unbound || k > 3 ? old[0] : u.username, text, by: ADMINS[(i + k) % 3] });
     }
     c.noteLog = [...now, ...past];
+    /* ประวัติแก้ไขชื่อและยูสเซอร์ของแชท (เจ้าของงานสั่ง 27 พ.ย. 2026): { at, name, user, by } ใหม่สุดอยู่บน
+       name / user = ค่าหลังแก้ครั้งนั้น · ตัวอย่างครึ่งหนึ่งของแชท 1–3 รายการ (รายการบนสุด = ชื่อปัจจุบัน) */
+    if (i % 2 === 0) {
+        const nl = [];
+        for (let k = 0; k < 1 + (i % 3); k++)
+            nl.push({ at: atOf(i, k * 2 + 1), name: k ? c.name + ["", " (ลูกค้าเก่า)", " VIP"][k] : c.name, user: c.unbound ? "" : k === 2 ? old[0] : u.username, by: ADMINS[(i + k) % 3] });
+        c.nameLog = nl;
+    }
     // ประวัติการผูก: ผูกครั้งล่าสุด ← เลิกผูกยูสเซอร์เก่า ← ผูกยูสเซอร์เก่า (บางแชทเปลี่ยนไปมาหลายรอบ)
     //   แชทเลขคี่: ผูกคนใหม่ทับคนเดิมเลย (มียูสเซอร์ก่อนหน้า) · แชทเลขคู่: เลิกผูกคนเดิมก่อน แล้วค่อยผูกคนใหม่
     const by0 = line ? "หน้า LINE" : ADMINS[i % 3];
@@ -643,8 +651,11 @@ export function delNote(c, i) {
 export function saveName(c, name, label) {
     st.editName = false;
     if (!c.lineName) c.lineName = c.name;
+    const before = c.name + "|" + userLabel(c);
     c.name = (name || "").trim() || c.lineName;
     c.label = (label || "").trim() || null; // ลบ Username จนว่าง ⇒ กลับไปใช้ username ของบัญชีที่ผูก
+    // ประวัติแก้ไขชื่อ: จดเฉพาะเมื่อชื่อหรือยูสเซอร์เปลี่ยนจริง
+    if (c.name + "|" + userLabel(c) !== before) (c.nameLog || (c.nameLog = [])).unshift({ at: TODAY + " " + nowT(), name: c.name, user: userLabel(c), by: ME });
     ok("บันทึกชื่อและ Username แล้ว");
 }
 export function sendText(c, v) {

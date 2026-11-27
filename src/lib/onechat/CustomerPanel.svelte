@@ -30,6 +30,7 @@
     import BankAccountsBlock from "./panel/BankAccountsBlock.svelte";
     import BindHistoryBlock from "./panel/BindHistoryBlock.svelte";
     import NoteHistoryBlock from "./panel/NoteHistoryBlock.svelte";
+    import NameHistoryBlock from "./panel/NameHistoryBlock.svelte";
     import P2PBlock from "./panel/P2PBlock.svelte";
 
     let { class: className = "" } = $props();
@@ -141,6 +142,7 @@
                     <HistoryBlock {c} look="row" />
                     <BindHistoryBlock {c} look="row" />
                     <NoteHistoryBlock {c} look="row" />
+                    <NameHistoryBlock {c} look="row" />
                 </div>
             </Tabs.Content>
         </Tabs.Root>
@@ -156,6 +158,7 @@
             {#if oaOk}<LineStatusBlock {c} look="row" />{/if}
             <BindHistoryBlock {c} look="row" />
             <NoteHistoryBlock {c} look="row" />
+                    <NameHistoryBlock {c} look="row" />
         </div>
     {/if}
 </section>
