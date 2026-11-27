@@ -18,6 +18,7 @@
     import BankAccountsBlock from "./panel/BankAccountsBlock.svelte";
     import BindHistoryBlock from "./panel/BindHistoryBlock.svelte";
     import NoteHistoryBlock from "./panel/NoteHistoryBlock.svelte";
+    import NameHistoryBlock from "./panel/NameHistoryBlock.svelte";
     import P2PBlock from "./panel/P2PBlock.svelte";
 
     let { class: className = "" } = $props();
@@ -71,6 +72,8 @@
             <BindHistoryBlock {c} />
             <!-- ประวัติโน้ต (เจ้าของงานสั่ง 18 พ.ย. 2026) -->
             <NoteHistoryBlock {c} />
+            <!-- ประวัติแก้ไขชื่อ (เจ้าของงานสั่ง 27 พ.ย. 2026) -->
+            <NameHistoryBlock {c} />
         </div>
     {/if}
     <!-- กดตรวจสอบสลิปแล้ว ⇒ การ์ดผลตรวจขึ้นเป็นการ์ดแรก เหนือการ์ดตรวจสอบ (เจ้าของงานสั่ง 15 ต.ค. 2026) -->
